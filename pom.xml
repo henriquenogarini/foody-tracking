@@ -135,7 +135,7 @@
             </goals>
             <configuration>
               <excludes>
-                <exclude>**/FoodyTrackingApiApplication.class</exclude>
+                <exclude>**/TrackingApplication.class</exclude>
                 <exclude>**/config/**</exclude>
                 <exclude>**/dto/**</exclude>
               </excludes>

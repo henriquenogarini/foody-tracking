@@ -1,0 +1,10 @@
+# Local development profile (active by default).
+app:
+  security:
+    jwt:
+      # Dev-only key. Set APP_SECURITY_JWT_SECRET (env var or .env) to override it.
+      secret: ${APP_SECURITY_JWT_SECRET:6TxraCkFf6oRqgAdVNPUN2zbIVvQziInuKzha8i288LD8pPNB9SpaLEY7FqRHSPf}
+
+logging:
+  level:
+    br.com.foody.tracking: DEBUG

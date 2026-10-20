@@ -2,3 +2,16 @@
 spring:
   datasource:
     url: jdbc:sqlite:file:memdb?mode=memory&cache=shared
+
+app:
+  security:
+    jwt:
+      # Fixed key for tests only.
+      secret: 4F7QtQJCWv6h/csoRdvkKJ8G81a2ugKuXnD3raXwk8+PcTOWFEw1IfGPrOJArc8x
+  cors:
+    allowed-origins: http://localhost:5173
+
+logging:
+  level:
+    root: WARN
+    br.com.foody.tracking: INFO

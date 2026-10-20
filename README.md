@@ -43,7 +43,7 @@ migrations automatically.
 |---|---|---|
 | `SPRING_PROFILES_ACTIVE` | `dev` | Active profile (`dev`, `test`) |
 | `SERVER_PORT` | `8080` | HTTP port |
-| `SPRING_DATASOURCE_URL` | `jdbc:sqlite:./data/foody.db?journal_mode=WAL&busy_timeout=5000` | JDBC URL |
+| `SPRING_DATASOURCE_URL` | `jdbc:sqlite:./data/foody.db?journal_mode=WAL&busy_timeout=5000&foreign_keys=true` | JDBC URL |
 | `APP_SECURITY_JWT_SECRET` | dev-only key in `application-dev.yml` | HS256 key, Base64, at least 32 bytes; required outside `dev` |
 | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated allowed origins |
 
@@ -83,7 +83,7 @@ br.com.foody.tracking
    Hibernate's `validate` unreliable, so the migrations are the single source of truth and
    repository tests prove the entity mapping.
 3. **Single-connection pool for SQLite.** SQLite allows one writer at a time.
-   `maximum-pool-size: 1` with WAL journaling and `busy_timeout=5000` prevents
+   `maximum-pool-size: 1` with WAL journaling and `busy_timeout=5000&foreign_keys=true` prevents
    "database is locked" errors instead of hiding them behind retries.
 4. **Configuration through environment variables, with `.env` for local development.**
    Spring Boot's `spring.config.import` loads `.env` without any extra dependency, so the

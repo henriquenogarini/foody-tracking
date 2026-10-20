@@ -6,8 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class FoodyTrackingApiApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(FoodyTrackingApiApplication.class, args);
-	}
-
+  public static void main(String[] args) {
+    SpringApplication.run(FoodyTrackingApiApplication.class, args);
+  }
 }

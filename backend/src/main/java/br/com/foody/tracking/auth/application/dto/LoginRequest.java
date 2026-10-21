@@ -13,4 +13,10 @@ public record LoginRequest(
             example = "senha-forte-123",
             accessMode = Schema.AccessMode.WRITE_ONLY)
         @NotBlank
-        String password) {}
+        String password) {
+
+  // Same reason as RegisterRequest: strip before @Email sees the value.
+  public LoginRequest {
+    email = email == null ? null : email.strip();
+  }
+}

@@ -22,4 +22,11 @@ public record RegisterRequest(
         @NotBlank
         @Size(min = 8, max = MaxUtf8Bytes.BCRYPT_MAX_BYTES)
         @MaxUtf8Bytes(MaxUtf8Bytes.BCRYPT_MAX_BYTES)
-        String password) {}
+        String password) {
+
+  // Stripped at construction so @Email validates the clean value: Jackson builds the record
+  // before Bean Validation runs, and a padded but otherwise valid e-mail must be accepted.
+  public RegisterRequest {
+    email = email == null ? null : email.strip();
+  }
+}

@@ -80,6 +80,47 @@ class AuthControllerTest {
   }
 
   @Test
+  void shouldPassStrippedEmail_whenRegisterEmailIsPaddedAndMixedCase() throws Exception {
+    // Given
+    when(authService.register(any())).thenReturn(userResponse());
+
+    // When
+    mockMvc
+        .perform(
+            post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {"name": "Ana Souza", "email": " Ana@Exemplo.com ", "password": "senha-forte-123"}
+                    """))
+        .andExpect(status().isCreated());
+
+    // Then: the padding is gone before validation; lowercasing stays in the service
+    ArgumentCaptor<RegisterRequest> request = ArgumentCaptor.forClass(RegisterRequest.class);
+    verify(authService).register(request.capture());
+    assertThat(request.getValue().email()).isEqualTo("Ana@Exemplo.com");
+  }
+
+  @Test
+  void shouldReturnValidationProblem_whenRegisterEmailIsOnlyWhitespace() throws Exception {
+    // When / Then
+    mockMvc
+        .perform(
+            post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {"name": "Ana Souza", "email": "   ", "password": "senha-forte-123"}
+                    """))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        .andExpect(jsonPath("$.errors.length()").value(1))
+        .andExpect(jsonPath("$.errors[0].field").value("email"));
+
+    verifyNoInteractions(authService);
+  }
+
+  @Test
   void shouldReturnValidationProblem_whenRegisterFieldsAreInvalid() throws Exception {
     // When / Then
     mockMvc
@@ -137,6 +178,29 @@ class AuthControllerTest {
         .andExpect(jsonPath("$.accessToken").value("signed.jwt.token"))
         .andExpect(jsonPath("$.tokenType").value("Bearer"))
         .andExpect(jsonPath("$.expiresIn").value(7200));
+  }
+
+  @Test
+  void shouldPassStrippedEmail_whenLoginEmailIsPaddedAndMixedCase() throws Exception {
+    // Given
+    when(authService.login(any(LoginRequest.class)))
+        .thenReturn(TokenResponse.bearer("signed.jwt.token", 7200));
+
+    // When
+    mockMvc
+        .perform(
+            post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {"email": " Ana@Exemplo.com ", "password": "senha-forte-123"}
+                    """))
+        .andExpect(status().isOk());
+
+    // Then
+    ArgumentCaptor<LoginRequest> request = ArgumentCaptor.forClass(LoginRequest.class);
+    verify(authService).login(request.capture());
+    assertThat(request.getValue().email()).isEqualTo("Ana@Exemplo.com");
   }
 
   @Test

@@ -81,8 +81,7 @@ public class AuthService {
 
   // Not transactional: the pool has one connection, and BCrypt plus JWT signing must not hold it.
   public TokenResponseDTO login(LoginRequestDTO request) {
-    if (request.password().getBytes(StandardCharsets.UTF_8).length
-        > MaxUtf8Bytes.BCRYPT_MAX_BYTES) {
+    if (exceedsBcryptLimit(request.password())) {
       log.debug("Login rejected: password longer than the BCrypt limit");
       throw new InvalidCredentialsException();
     }
@@ -102,8 +101,7 @@ public class AuthService {
   // ADMIN) so response time does not reveal which accounts exist; the affected-row count never
   // changes the outcome.
   public void resetPassword(PasswordResetRequestDTO request) {
-    if (request.newPassword().getBytes(StandardCharsets.UTF_8).length
-        > MaxUtf8Bytes.BCRYPT_MAX_BYTES) {
+    if (exceedsBcryptLimit(request.newPassword())) {
       log.debug("Password reset rejected: password longer than the BCrypt limit");
       throw new ApiException(
           ApiErrorCode.VALIDATION_ERROR, "A nova senha excede o limite de 72 bytes.");
@@ -129,5 +127,11 @@ public class AuthService {
               log.debug("Token subject {} has no matching user", principal.id());
               return new InvalidTokenException();
             });
+  }
+
+  // BCrypt only reads 72 bytes (Spring Security rejects longer input with an exception), so each
+  // caller turns an over-long password into its own contract error instead of a 500.
+  private static boolean exceedsBcryptLimit(String password) {
+    return password.getBytes(StandardCharsets.UTF_8).length > MaxUtf8Bytes.BCRYPT_MAX_BYTES;
   }
 }

@@ -84,6 +84,7 @@ deployment put the container behind the reverse proxy described in the deploymen
 | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:4173` | Comma-separated allowed origins |
 | `APP_SECURITY_ADMIN_EMAIL` | none (`dev` ships a dev-only pair) | E-mail of the single bootstrap `ADMIN`; optional, set both admin variables or neither |
 | `APP_SECURITY_ADMIN_PASSWORD` | none (`dev` ships a dev-only pair) | Password of the bootstrap `ADMIN` (8+ characters, at most 72 bytes); optional, set both or neither |
+| `APP_SECURITY_PASSWORD_RESET_ENABLED` | `true` | Demo password reset without e-mail confirmation (decision 30); `false` removes the route (404 `NOT_FOUND`) |
 | `APP_TIME_ZONE` | `America/Sao_Paulo` | Application zone id: drives the `Clock` and the zone of every JSON date |
 | `TZ` | system zone | Process zone used by log timestamps (Docker `--env-file`, compose `env_file`, shell); a `.env` line does not change the JVM zone of IDE or `mvnw` runs. Keep it equal to `APP_TIME_ZONE` |
 

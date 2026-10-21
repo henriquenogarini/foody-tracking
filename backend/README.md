@@ -30,13 +30,17 @@ This project lives in `backend/` of the `foody-tracking` repository (the fronten
 ## Getting started
 
 ```bash
-cp .env.example .env     # then set APP_SECURITY_JWT_SECRET (e.g. openssl rand -base64 48)
+cp .env.example .env     # nothing to set for dev: the secrets stay commented out
 ./mvnw spring-boot:run
 ```
 
 - API base path: `http://localhost:8080/api/v1`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - Health: `http://localhost:8080/actuator/health`
+
+In `.env`, the secret lines (`APP_SECURITY_JWT_SECRET`, `APP_SECURITY_ADMIN_EMAIL`,
+`APP_SECURITY_ADMIN_PASSWORD`) ship commented out on purpose: a blank value would override the
+`dev` defaults (an empty JWT secret fails startup). Uncomment and set them only outside `dev`.
 
 The `dev` profile bootstraps a dev-only admin (`admin@foody.local` / `admin-dev-password`,
 overridable through `APP_SECURITY_ADMIN_EMAIL` / `APP_SECURITY_ADMIN_PASSWORD`). In Swagger UI,
@@ -53,7 +57,7 @@ migrations automatically.
 ### Run with Docker
 
 ```bash
-cp .env.example .env     # set APP_SECURITY_JWT_SECRET; optionally the admin pair
+cp .env.example .env     # uncomment and set APP_SECURITY_JWT_SECRET; optionally the admin pair
 docker compose up --build -d
 curl http://localhost:8080/actuator/health
 docker compose down      # add -v to also drop the database volume

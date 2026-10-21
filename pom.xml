@@ -161,6 +161,8 @@
                 <exclude>**/TrackingApplication.class</exclude>
                 <exclude>**/config/**</exclude>
                 <exclude>**/dto/**</exclude>
+                <!-- Documentation-only Swagger schema, never instantiated. -->
+                <exclude>**/shared/error/ApiErrorResponse.class</exclude>
               </excludes>
               <rules>
                 <rule>

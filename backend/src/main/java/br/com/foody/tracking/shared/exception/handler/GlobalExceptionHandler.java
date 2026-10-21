@@ -41,6 +41,18 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
 
   private static final String INVALID_FIELDS_DETAIL = "Um ou mais campos são inválidos.";
   private static final String INVALID_VALUE = "valor inválido";
+  private static final String TIMESTAMP = "timestamp";
+  private static final String CODE = "code";
+
+  // 413 (multipart) and 503 (async timeout) are unreachable in this API and stay code-less.
+  private static final Map<Integer, ApiErrorCode> FRAMEWORK_CODES =
+      Map.of(
+          400, ApiErrorCode.VALIDATION_ERROR,
+          404, ApiErrorCode.NOT_FOUND,
+          405, ApiErrorCode.METHOD_NOT_ALLOWED,
+          406, ApiErrorCode.NOT_ACCEPTABLE,
+          415, ApiErrorCode.UNSUPPORTED_MEDIA_TYPE,
+          500, ApiErrorCode.INTERNAL_ERROR);
 
   @ExceptionHandler(ApiException.class)
   public ResponseEntity<Object> handleApiException(ApiException ex, WebRequest request) {
@@ -161,13 +173,21 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
         request);
   }
 
-  // Framework-built bodies (404 route, 405, 415...) get the contract's timestamp but no code:
-  // ApiErrorCode is fixed by the API contract and must not grow for them.
+  // Framework-built bodies (unknown route, 405, 406, 415, missing parameter...) get the contract's
+  // timestamp and a code from a small fixed set. Keyed by status because this hook never sees the
+  // exception; bodies built by ProblemDetailFactory already carry their code (ORDER_NOT_FOUND is
+  // also a 404) and are never overwritten.
   @Override
   protected ResponseEntity<Object> createResponseEntity(
       Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
-    if (body instanceof ProblemDetail problem && !hasTimestamp(problem)) {
-      problem.setProperty("timestamp", OffsetDateTime.now(ZoneOffset.UTC));
+    if (body instanceof ProblemDetail problem) {
+      if (!hasProperty(problem, TIMESTAMP)) {
+        problem.setProperty(TIMESTAMP, OffsetDateTime.now(ZoneOffset.UTC));
+      }
+      ApiErrorCode frameworkCode = FRAMEWORK_CODES.get(problem.getStatus());
+      if (frameworkCode != null && !hasProperty(problem, CODE)) {
+        problem.setProperty(CODE, frameworkCode.name());
+      }
     }
     return super.createResponseEntity(body, headers, statusCode, request);
   }
@@ -195,9 +215,9 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
         ex, problem, headers, HttpStatusCode.valueOf(problem.getStatus()), request);
   }
 
-  private static boolean hasTimestamp(ProblemDetail problem) {
+  private static boolean hasProperty(ProblemDetail problem, String name) {
     Map<String, Object> properties = problem.getProperties();
-    return properties != null && properties.containsKey("timestamp");
+    return properties != null && properties.containsKey(name);
   }
 
   private static String fieldPath(JsonMappingException ex) {

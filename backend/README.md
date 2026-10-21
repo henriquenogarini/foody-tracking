@@ -188,9 +188,14 @@ br.com.foody.tracking
    directly on `main`; from the migrations onward each stage is a `feature/<name>` branch
    merged into `main` through a pull request with a merge commit, so history is preserved.
 6. **Error handling extends `ResponseEntityExceptionHandler`, with `createResponseEntity` as the
-   single funnel.** The framework keeps handling its own errors (unknown route, 405, 415...) and
-   every body passes through one hook that stamps `timestamp`. Those framework-built errors carry
-   no `code`: the nine codes of the API contract are the contract and do not grow for them.
+   single funnel.** The framework keeps handling its own errors (unknown route, 405, 406, 415...)
+   and every body passes through one hook that stamps `timestamp` and, when the body has no `code`
+   yet, a code from a small fixed set chosen by status: `NOT_FOUND` (404), `METHOD_NOT_ALLOWED`
+   (405), `NOT_ACCEPTABLE` (406), `UNSUPPORTED_MEDIA_TYPE` (415), plus the existing
+   `VALIDATION_ERROR` (400, e.g. a missing required parameter) and `INTERNAL_ERROR` (500). Every
+   error therefore carries a `code`, so the client has one error path. Contract codes are never
+   overwritten (`ORDER_NOT_FOUND` is also a 404 but is built with its code); statuses the API
+   cannot produce (413, 503) stay code-less.
 7. **`ApiErrorCode` holds an `int` status, not `HttpStatus`.** The enum reaches the entities through
    `DomainException`, so it must not pull Spring Web into the domain model.
 8. **Fixed `pt-BR` locale and translated framework error details.** `spring.web.locale-resolver:

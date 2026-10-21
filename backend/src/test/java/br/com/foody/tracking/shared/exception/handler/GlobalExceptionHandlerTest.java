@@ -48,6 +48,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -293,7 +294,7 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
-  void shouldKeepFrameworkProblemWithTimestampAndNoCode_whenRouteIsUnknown() throws Exception {
+  void shouldStampNotFoundCode_whenRouteIsUnknown() throws Exception {
     // When / Then
     mockMvc
         .perform(get("/test/missing"))
@@ -303,13 +304,13 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.title").value("Not Found"))
         .andExpect(jsonPath("$.detail").value("Recurso não encontrado."))
         .andExpect(jsonPath("$.instance").value("/test/missing"))
-        .andExpect(jsonPath("$.code").doesNotExist())
+        .andExpect(jsonPath("$.code").value("NOT_FOUND"))
         .andExpect(jsonPath("$.errors").doesNotExist())
         .andExpect(applicationZoneTimestamp());
   }
 
   @Test
-  void shouldKeepFrameworkStatus_whenMethodIsNotAllowed() throws Exception {
+  void shouldStampMethodNotAllowedCode_whenMethodIsNotAllowed() throws Exception {
     // When / Then
     mockMvc
         .perform(post("/test/api-exception"))
@@ -320,9 +321,82 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.title").value("Method Not Allowed"))
         .andExpect(jsonPath("$.detail").value("Método POST não suportado."))
         .andExpect(jsonPath("$.instance").value("/test/api-exception"))
-        .andExpect(jsonPath("$.code").doesNotExist())
+        .andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"))
         .andExpect(jsonPath("$.errors").doesNotExist())
         .andExpect(applicationZoneTimestamp());
+  }
+
+  @Test
+  void shouldStampUnsupportedMediaTypeCode_whenContentTypeIsNotSupported() throws Exception {
+    // When / Then
+    mockMvc
+        .perform(post("/test/validate").contentType(MediaType.TEXT_PLAIN).content("name=Ana"))
+        .andExpect(status().isUnsupportedMediaType())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(415))
+        .andExpect(jsonPath("$.title").value("Unsupported Media Type"))
+        .andExpect(jsonPath("$.instance").value("/test/validate"))
+        .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"))
+        .andExpect(jsonPath("$.errors").doesNotExist())
+        .andExpect(applicationZoneTimestamp());
+  }
+
+  @Test
+  void shouldStampNotAcceptableCode_whenAcceptHeaderCannotBeSatisfied() throws Exception {
+    // When / Then
+    mockMvc
+        .perform(get("/test/json").accept(MediaType.APPLICATION_XML))
+        .andExpect(status().isNotAcceptable())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(406))
+        .andExpect(jsonPath("$.title").value("Not Acceptable"))
+        .andExpect(jsonPath("$.detail").value("Formato de resposta não suportado."))
+        .andExpect(jsonPath("$.instance").value("/test/json"))
+        .andExpect(jsonPath("$.code").value("NOT_ACCEPTABLE"))
+        .andExpect(jsonPath("$.errors").doesNotExist())
+        .andExpect(applicationZoneTimestamp());
+  }
+
+  @Test
+  void shouldStampValidationCode_whenRequiredParameterIsMissing() throws Exception {
+    // When / Then
+    mockMvc
+        .perform(get("/test/enum-param"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.detail").value("Parâmetro obrigatório 'status' ausente."))
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        .andExpect(jsonPath("$.errors").doesNotExist())
+        .andExpect(applicationZoneTimestamp());
+  }
+
+  @Test
+  void shouldStampInternalErrorCode_whenFrameworkAnswersServerError() throws Exception {
+    // When / Then
+    mockMvc
+        .perform(get("/test/path-variable"))
+        .andExpect(status().isInternalServerError())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(500))
+        .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
+        .andExpect(applicationZoneTimestamp());
+  }
+
+  @Test
+  void shouldKeepContractCode_whenApiExceptionAnswersWithFrameworkStatus() {
+    // Given
+    ApiException exception =
+        new ApiException(ApiErrorCode.ORDER_NOT_FOUND, "Pedido não encontrado");
+
+    // When
+    ResponseEntity<Object> response =
+        handler.handleApiException(exception, new ServletWebRequest(new MockHttpServletRequest()));
+
+    // Then
+    ProblemDetail problem = (ProblemDetail) response.getBody();
+    assertThat(problem.getStatus()).isEqualTo(404);
+    assertThat(problem.getProperties()).containsEntry("code", "ORDER_NOT_FOUND");
   }
 
   @Test
@@ -419,6 +493,15 @@ class GlobalExceptionHandlerTest {
 
     @GetMapping("/enum-param")
     void enumParam(@RequestParam Status status) {}
+
+    @GetMapping(value = "/json", produces = MediaType.APPLICATION_JSON_VALUE)
+    String json() {
+      return "{}";
+    }
+
+    // The template lacks {id}, so the framework raises MissingPathVariableException (500).
+    @GetMapping("/path-variable")
+    void pathVariable(@PathVariable String id) {}
 
     @GetMapping("/optimistic-lock")
     void optimisticLock() {

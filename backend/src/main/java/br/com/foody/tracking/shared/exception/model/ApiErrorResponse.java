@@ -23,8 +23,12 @@ public record ApiErrorResponse(
         String instance,
     @Schema(
             description =
-                "Stable machine-readable error code; absent on framework-generated errors"
-                    + " (unknown route, unsupported method or media type)",
+                "Stable machine-readable error code, present on every error. Contract codes:"
+                    + " VALIDATION_ERROR, AUTH_INVALID_CREDENTIALS, AUTH_TOKEN_INVALID,"
+                    + " ACCESS_DENIED, ORDER_NOT_FOUND, USER_EMAIL_ALREADY_EXISTS,"
+                    + " ORDER_INVALID_TRANSITION, CONCURRENT_MODIFICATION, INTERNAL_ERROR."
+                    + " Framework-built errors: NOT_FOUND (unknown route), METHOD_NOT_ALLOWED,"
+                    + " NOT_ACCEPTABLE, UNSUPPORTED_MEDIA_TYPE",
             example = "ORDER_INVALID_TRANSITION")
         ApiErrorCode code,
     @Schema(

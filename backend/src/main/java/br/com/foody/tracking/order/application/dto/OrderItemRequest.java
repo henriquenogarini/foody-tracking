@@ -1,6 +1,7 @@
 package br.com.foody.tracking.order.application.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Max;
@@ -19,9 +20,11 @@ public record OrderItemRequest(
     @Schema(description = "Quantity, 1 to 999", example = "1") @NotNull @Min(1) @Max(999)
         Integer quantity,
     @Schema(
-            description = "Unit price with up to 2 decimal places, at least 0.01",
+            description = "Unit price with up to 2 decimal places, from 0.01 to 99999.99",
             example = "59.90")
         @NotNull
         @DecimalMin("0.01")
-        @Digits(integer = 10, fraction = 2)
+        // Bounded so the largest order total stays exact in SQLite's REAL-backed NUMERIC.
+        @DecimalMax("99999.99")
+        @Digits(integer = 5, fraction = 2)
         BigDecimal unitPrice) {}

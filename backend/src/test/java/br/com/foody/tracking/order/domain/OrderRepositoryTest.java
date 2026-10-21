@@ -192,6 +192,36 @@ class OrderRepositoryTest {
   }
 
   @Test
+  void shouldKeepTotalsExact_whenOrderIsAtTheMaximumAcceptedValue() {
+    // Given: the largest order the API accepts (50 items x 999 x 99999.99)
+    List<OrderItem> items = new ArrayList<>();
+    for (int i = 1; i <= 50; i++) {
+      items.add(new OrderItem("Item " + i, 999, new BigDecimal("99999.99")));
+    }
+    Order saved =
+        orderRepository.saveAndFlush(
+            Order.create(
+                ana,
+                new Customer("José da Silva", null, null),
+                items,
+                address("São Paulo"),
+                null,
+                1001L,
+                NOW));
+    entityManager.clear();
+
+    // When
+    Order reloaded = orderRepository.findByPublicId(saved.getPublicId()).orElseThrow();
+
+    // Then: SQLite stores NUMERIC as REAL, so these must survive the double round-trip
+    assertThat(reloaded.getTotal()).isEqualTo(new BigDecimal("4994999500.50"));
+    assertThat(reloaded.getItems())
+        .hasSize(50)
+        .extracting(OrderItem::getSubtotal)
+        .containsOnly(new BigDecimal("99899990.01"));
+  }
+
+  @Test
   void shouldStartAt1001AndThenIncrementMax_whenComputingNextCode() {
     // Given / When / Then
     assertThat(orderRepository.nextCode()).isEqualTo(1001L);

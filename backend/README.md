@@ -263,5 +263,12 @@ br.com.foody.tracking
 28. **One repository, `backend/` and `frontend/` folders.** The API and the web client share
     the contract of this project and are versioned together; each folder keeps its own build,
     `.gitignore` and tooling, and the root holds only what is common.
+29. **Unit price bounded to 99,999.99.** SQLite has no exact decimal type: a `NUMERIC` column
+    stores these values as `REAL` (a double), which is exact only up to about 15 significant
+    digits. `unitPrice` is limited to `@DecimalMax("99999.99")` / `@Digits(integer = 5,
+    fraction = 2)`, so the largest accepted order (50 items x 999 x 99,999.99 =
+    4,994,999,500.50) keeps at most 12 significant digits, fits the declared
+    `precision = 12, scale = 2` and round-trips exactly; the client can never store a value
+    it would later read back differently.
 
 Entries are appended as new decisions are made.

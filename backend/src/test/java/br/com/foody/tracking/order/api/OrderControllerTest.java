@@ -156,6 +156,42 @@ class OrderControllerTest {
   }
 
   @Test
+  void shouldReturnUnitPriceError_whenUnitPriceExceedsMaximum() throws Exception {
+    // Given
+    String tooExpensive = VALID_ORDER.replace("\"unitPrice\": 59.90", "\"unitPrice\": 100000.00");
+
+    // When / Then
+    mockMvc
+        .perform(
+            post("/api/v1/orders")
+                .with(userJwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(tooExpensive))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        .andExpect(jsonPath("$.errors[*].field").value(hasItems("items[0].unitPrice")));
+
+    verifyNoInteractions(orderService);
+  }
+
+  @Test
+  void shouldAcceptOrder_whenUnitPriceIsAtMaximum() throws Exception {
+    // Given
+    when(orderService.create(any(), any())).thenReturn(orderResponse(OrderStatus.RECEBIDO));
+    String atMaximum = VALID_ORDER.replace("\"unitPrice\": 59.90", "\"unitPrice\": 99999.99");
+
+    // When / Then
+    mockMvc
+        .perform(
+            post("/api/v1/orders")
+                .with(userJwt())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(atMaximum))
+        .andExpect(status().isCreated());
+  }
+
+  @Test
   void shouldAcceptOrder_whenOptionalPhoneIsEmpty() throws Exception {
     // Given
     when(orderService.create(any(), any())).thenReturn(orderResponse(OrderStatus.RECEBIDO));

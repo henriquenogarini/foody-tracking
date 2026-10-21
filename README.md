@@ -34,6 +34,15 @@ cp .env.example .env     # then set APP_SECURITY_JWT_SECRET (e.g. openssl rand -
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - Health: `http://localhost:8080/actuator/health`
 
+The `dev` profile bootstraps a dev-only admin (`admin@foody.local` / `admin-dev-password`,
+overridable through `APP_SECURITY_ADMIN_EMAIL` / `APP_SECURITY_ADMIN_PASSWORD`). In Swagger UI,
+register or use that admin, call `POST /api/v1/auth/login`, then paste the `accessToken` into
+the **Authorize** button; the guide at the top of Swagger UI walks through the same steps.
+
+Log timestamps use the JVM zone, so local runs should set it to the application zone:
+`TZ=America/Sao_Paulo ./mvnw spring-boot:run`, or
+`./mvnw spring-boot:run -Dspring-boot.run.jvmArguments="-Duser.timezone=America/Sao_Paulo"`.
+
 The SQLite file is created at `./data/foody.db` on the first start and Flyway applies the
 migrations automatically.
 
@@ -46,6 +55,10 @@ migrations automatically.
 | `SPRING_DATASOURCE_URL` | `jdbc:sqlite:./data/foody.db?journal_mode=WAL&busy_timeout=5000&foreign_keys=true` | JDBC URL |
 | `APP_SECURITY_JWT_SECRET` | dev-only key in `application-dev.yml` | HS256 key, Base64, at least 32 bytes; required outside `dev` |
 | `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated allowed origins |
+| `APP_SECURITY_ADMIN_EMAIL` | none (`dev` ships a dev-only pair) | E-mail of the single bootstrap `ADMIN`; optional, set both admin variables or neither |
+| `APP_SECURITY_ADMIN_PASSWORD` | none (`dev` ships a dev-only pair) | Password of the bootstrap `ADMIN` (8+ characters, at most 72 bytes); optional, set both or neither |
+| `APP_TIME_ZONE` | `America/Sao_Paulo` | Application zone id: drives the `Clock` and the zone of every JSON date |
+| `TZ` | system zone | Process zone used by log timestamps (Docker `--env-file`, compose `env_file`, shell); a `.env` line does not change the JVM zone of IDE or `mvnw` runs. Keep it equal to `APP_TIME_ZONE` |
 
 Variables can be real environment variables (IDE run configuration, Docker `--env-file`, CI)
 or lines in a local `.env` file: `application.yml` imports it with
@@ -100,5 +113,39 @@ br.com.foody.tracking
    fixed` pins the locale regardless of `Accept-Language`, and `messages.properties` translates the
    framework-built `detail`s; the same fixed locale makes Bean Validation default messages
    Portuguese without a `message=` on every annotation.
+9. **MapStruct mappers, one per feature.** Mapping code is generated at compile time (no
+   reflection) and type-checked by the compiler. Derived fields (`id` from `publicId`, and the
+   like) are explicit `@Mapping`s, and every mapper has a unit test through `Mappers.getMapper`
+   because the generated classes count toward coverage.
+10. **Application time zone `America/Sao_Paulo`, declared once.** `app.time-zone` feeds a
+    `ZoneId` bean, the injected `Clock` and Jackson, so services and JSON agree on Brasília time
+    (`-03:00`). The database stores UTC instants; the zone is presentation. A zone id, never a
+    fixed offset, so tzdata handles daylight saving if it returns.
+11. **JWT HS256 through Spring's resource server and Nimbus.** No third-party JWT library; the
+    algorithm is pinned on both sides and the secret is validated at startup. The signed `role`
+    claim is trusted for the 2h token life (no per-request lookup on a single SQLite
+    connection), and a stale bearer header is ignored on login/register.
+12. **Two roles, `USER` and `ADMIN`.** Registration always yields `USER`; the single `ADMIN` is
+    bootstrapped from environment variables and an existing account is never promoted.
+    Admin-only endpoints use `@PreAuthorize`; the data scope (own vs. all orders) is decided in
+    the service and expressed in the repository query.
+13. **Login hardening.** Unknown e-mail and wrong password return the same 401, and the unknown
+    e-mail path still runs one BCrypt match against a dummy hash, so timing does not reveal
+    accounts. Passwords are capped at 72 bytes, BCrypt's input limit. `login` runs outside a
+    transaction, so BCrypt and JWT signing do not hold the single SQLite connection (the lookup
+    uses the repository's own read-only transaction). `register` keeps the hash inside its
+    transaction: the exists-check and the insert must be atomic, and the accepted cost is about
+    100 ms of the single connection per registration.
+14. **Swagger documents errors through `ApiErrorResponse`.** springdoc cannot see the contract
+    extensions stored in `ProblemDetail.properties` (`code`, `timestamp`, `errors`), so a
+    documentation-only record mirrors the full error body and every error response references it.
+15. **E-mail uniqueness: service pre-check first, index last.** SQLite surfaces a violation of
+    the case-insensitive unique index as a generic `JpaSystemException`, not
+    `DataIntegrityViolationException`, so it cannot be mapped reliably. The service checks inside
+    the transaction (pool size 1 serializes writers) and the index stays as the last guard.
+16. **Client `sort` is whitelisted per endpoint.** Spring Data would otherwise accept any entity
+    path from `?sort=` (e.g. `passwordHash`, or `owner.passwordHash` across a join), leaking data
+    through ordering. Each query service checks the requested properties with `SortWhitelist`;
+    a disallowed property answers the same 400 `VALIDATION_ERROR` body as an unknown one.
 
 Entries are appended as new decisions are made.

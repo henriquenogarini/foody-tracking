@@ -19,6 +19,8 @@ import java.security.Principal;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -146,26 +148,29 @@ class SecurityConfigTest {
     mockMvc.perform(get("/api/v1/auth/login")).andExpect(status().isUnauthorized());
   }
 
-  @Test
-  void shouldAllowConfiguredOrigin_whenBrowserSendsPreflight() throws Exception {
+  // The test profile does not override app.cors.allowed-origins, so this pins the default:
+  // the Vite dev server (5173) and `vite preview` (4173).
+  @ParameterizedTest
+  @ValueSource(strings = {"http://localhost:5173", "http://localhost:4173"})
+  void shouldAllowDefaultOrigin_whenBrowserSendsPreflight(String origin) throws Exception {
     // When / Then
     mockMvc
         .perform(
             options("/api/v1/probe")
-                .header(HttpHeaders.ORIGIN, "http://localhost:5173")
+                .header(HttpHeaders.ORIGIN, origin)
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "PATCH"))
         .andExpect(status().isOk())
-        .andExpect(
-            header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://localhost:5173"));
+        .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin));
   }
 
-  @Test
-  void shouldRejectUnknownOrigin_whenBrowserSendsPreflight() throws Exception {
+  @ParameterizedTest
+  @ValueSource(strings = {"http://evil.example", "http://localhost:3000"})
+  void shouldRejectUnlistedOrigin_whenBrowserSendsPreflight(String origin) throws Exception {
     // When / Then
     mockMvc
         .perform(
             options("/api/v1/probe")
-                .header(HttpHeaders.ORIGIN, "http://evil.example")
+                .header(HttpHeaders.ORIGIN, origin)
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
         .andExpect(status().isForbidden());
   }

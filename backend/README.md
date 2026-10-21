@@ -79,7 +79,7 @@ deployment put the container behind the reverse proxy described in the deploymen
 | `SERVER_PORT` | `8080` | HTTP port |
 | `SPRING_DATASOURCE_URL` | `jdbc:sqlite:./data/foody.db?journal_mode=WAL&busy_timeout=5000&foreign_keys=true` | JDBC URL |
 | `APP_SECURITY_JWT_SECRET` | dev-only key in `application-dev.yml` | HS256 key, Base64, at least 32 bytes; required outside `dev` |
-| `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated allowed origins |
+| `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:4173` | Comma-separated allowed origins |
 | `APP_SECURITY_ADMIN_EMAIL` | none (`dev` ships a dev-only pair) | E-mail of the single bootstrap `ADMIN`; optional, set both admin variables or neither |
 | `APP_SECURITY_ADMIN_PASSWORD` | none (`dev` ships a dev-only pair) | Password of the bootstrap `ADMIN` (8+ characters, at most 72 bytes); optional, set both or neither |
 | `APP_TIME_ZONE` | `America/Sao_Paulo` | Application zone id: drives the `Clock` and the zone of every JSON date |

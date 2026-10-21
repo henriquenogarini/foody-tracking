@@ -94,6 +94,13 @@ class OrderFlowIntegrationTest {
     String orderPath = "/api/v1/orders/" + orderId;
     created.andExpect(header().string(HttpHeaders.LOCATION, endsWith(orderPath)));
 
+    // And a later GET returns the same timestamps the POST did (the clock ticks in storage millis)
+    mockMvc
+        .perform(get(orderPath).header(HttpHeaders.AUTHORIZATION, bearer(anaToken)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.createdAt").value(read(created, "$.createdAt")))
+        .andExpect(jsonPath("$.updatedAt").value(read(created, "$.updatedAt")));
+
     // Then she advances it along the state machine
     changeStatus(anaToken, orderPath, "EM_PREPARO")
         .andExpect(status().isOk())

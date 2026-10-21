@@ -174,7 +174,9 @@ br.com.foody.tracking
 10. **Application time zone `America/Sao_Paulo`, declared once.** `app.time-zone` feeds a
     `ZoneId` bean, the injected `Clock` and Jackson, so services and JSON agree on Brasília time
     (`-03:00`). The database stores UTC instants; the zone is presentation. A zone id, never a
-    fixed offset, so tzdata handles daylight saving if it returns.
+    fixed offset, so tzdata handles daylight saving if it returns. The `Clock` ticks in whole
+    milliseconds (`Clock.tick`), the precision SQLite stores, so a date returned on write is
+    identical to the one read back later.
 11. **JWT HS256 through Spring's resource server and Nimbus.** No third-party JWT library; the
     algorithm is pinned on both sides and the secret is validated at startup. The signed `role`
     claim is trusted for the 2h token life (no per-request lookup on a single SQLite

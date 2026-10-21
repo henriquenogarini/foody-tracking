@@ -148,4 +148,29 @@ br.com.foody.tracking
     through ordering. Each query service checks the requested properties with `SortWhitelist`;
     a disallowed property answers the same 400 `VALIDATION_ERROR` body as an unknown one.
 
+17. **Order status state machine lives in the domain.** `OrderStatus.canTransitionTo` owns the
+    matrix and `Order.changeStatus` is the only mutation; the schema guards only what never
+    changes (no same-status row, birth in `RECEBIDO`), so a matrix change never needs a migration.
+
+    | From | Allowed targets |
+    |---|---|
+    | `RECEBIDO` | `EM_PREPARO`, `CANCELADO` |
+    | `EM_PREPARO` | `SAIU_PARA_ENTREGA`, `CANCELADO` |
+    | `SAIU_PARA_ENTREGA` | `ENTREGUE` |
+    | `ENTREGUE`, `CANCELADO` | none (terminal) |
+
+    A transition to the same status is invalid (409). Every order is born in `RECEBIDO` through
+    `Order.create`, which also computes the total and writes the first history row; time is
+    passed in by the caller, never read inside the domain.
+18. **The paged order list reads a projection, not entities.** `OrderSummaryView` selects the
+    flat columns plus `size(o.items)` as `itemsCount`, so one page costs exactly two statements
+    (page + count), with no N+1 and no fetch join on a paged query. SQLite drops trailing zeros
+    from `NUMERIC`, so money getters (and the mapper, for the projection) re-apply scale 2.
+
+19. **Owner scope by the user's public id.** The authenticated principal carries only the
+    user's `publicId` (the JWT `sub`), so the owner-scoped queries filter on
+    `o.owner.publicId` (`findByPublicIdAndOwnerPublicId`, `findSummariesByOwnerPublicId...`)
+    instead of the internal `owner_id` named in the original plan: one statement, backed by the
+    unique `users.public_id` index, and no extra user lookup on every read.
+
 Entries are appended as new decisions are made.

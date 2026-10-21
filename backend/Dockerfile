@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# ---- Build stage: compiles the boot jar. The quality gate (./mvnw verify) runs in CI, not here.
+# ---- Build stage: compiles the boot jar. The quality gate (./mvnw verify) runs before each commit, not here.
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /build
 

@@ -127,6 +127,9 @@ class UserRepositoryTest {
   // The SQL shapes Hibernate 6 generates for findByEmail (full row) and existsByEmail (id + limit).
   // The column has BINARY collation, so only a BINARY index can serve "email = ?"; the NOCASE
   // unique index from V1 cannot, which made every login and register pre-check a table scan.
+  // These strings mirror the derived findByEmail / existsByEmail (plain equality): an IgnoreCase
+  // variant would emit "lower(email) = lower(?)" and scan again, so changing those repository
+  // methods means updating this test.
   @ParameterizedTest
   @ValueSource(
       strings = {

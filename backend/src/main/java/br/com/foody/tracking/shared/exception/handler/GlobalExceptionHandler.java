@@ -20,6 +20,7 @@ import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -43,6 +45,9 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
   private static final String INVALID_VALUE = "valor inválido";
   private static final String TIMESTAMP = "timestamp";
   private static final String CODE = "code";
+
+  private static final Comparator<ValidationError> ERROR_ORDER =
+      Comparator.comparing(ValidationError::field).thenComparing(ValidationError::message);
 
   // 413 (multipart) and 503 (async timeout) are unreachable in this API and stay code-less.
   private static final Map<Integer, ApiErrorCode> FRAMEWORK_CODES =
@@ -118,9 +123,41 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
                             : error.getObjectName(),
                         Objects.requireNonNullElse(error.getDefaultMessage(), INVALID_VALUE)))
             // Violations arrive in hash order; sorting gives clients and tests a stable list.
-            .sorted(
-                Comparator.comparing(ValidationError::field)
-                    .thenComparing(ValidationError::message))
+            .sorted(ERROR_ORDER)
+            .toList();
+    return respond(
+        ex,
+        ProblemDetailFactory.create(ApiErrorCode.VALIDATION_ERROR, INVALID_FIELDS_DETAIL, errors),
+        headers,
+        request);
+  }
+
+  // Constraints on @RequestParam/@PathVariable (Spring 6.1 built-in method validation) answer
+  // like body validation: VALIDATION_ERROR with errors[] naming the parameter. A 500 (return
+  // value validation) is left to the framework.
+  @Override
+  protected ResponseEntity<Object> handleHandlerMethodValidationException(
+      HandlerMethodValidationException ex,
+      HttpHeaders headers,
+      HttpStatusCode status,
+      WebRequest request) {
+    if (status.value() != HttpStatus.BAD_REQUEST.value()) {
+      return super.handleHandlerMethodValidationException(ex, headers, status, request);
+    }
+    List<ValidationError> errors =
+        ex.getParameterValidationResults().stream()
+            .flatMap(
+                result ->
+                    result.getResolvableErrors().stream()
+                        .map(
+                            error ->
+                                new ValidationError(
+                                    error instanceof FieldError fieldError
+                                        ? fieldError.getField()
+                                        : result.getMethodParameter().getParameterName(),
+                                    Objects.requireNonNullElse(
+                                        error.getDefaultMessage(), INVALID_VALUE))))
+            .sorted(ERROR_ORDER)
             .toList();
     return respond(
         ex,

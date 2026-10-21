@@ -22,6 +22,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -105,16 +106,20 @@ public final class OrderController {
   @Operation(
       summary = "List orders",
       description =
-          "Paged order summaries, newest first by default, optionally filtered by status. A"
-              + " `USER` sees only their own orders; an `ADMIN` sees every order. Sortable by"
-              + " `createdAt`, `updatedAt`, `code`, `status` and `total`.")
+          "Paged order summaries, newest first by default, optionally filtered by status and by"
+              + " a search term `q`: a number (optionally `#`-prefixed) matches the order code"
+              + " exactly; any other text matches customer names containing it, ignoring case"
+              + " (ASCII letters only). A `USER` sees only their own orders; an `ADMIN` sees every"
+              + " order. Sortable by `createdAt`, `updatedAt`, `code`, `status` and `total`.")
   // The 200 has no explicit schema: springdoc infers the generic PageResponseDTO<...> from the
   // return type, which @Schema(implementation = PageResponseDTO.class) would erase.
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Page of order summaries"),
     @ApiResponse(
         responseCode = "400",
-        description = "`VALIDATION_ERROR`: unknown status or sort property",
+        description =
+            "`VALIDATION_ERROR`: unknown status or sort property, or `q` longer than 100"
+                + " characters",
         content =
             @Content(
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
@@ -131,11 +136,19 @@ public final class OrderController {
       @Parameter(description = "Only orders in this status", example = "EM_PREPARO")
           @RequestParam(required = false)
           OrderStatus status,
+      @Parameter(
+              description =
+                  "Search term: order code (`1042` or `#1042`) or part of the customer name;"
+                      + " blank means no filter",
+              example = "#1042")
+          @RequestParam(required = false)
+          @Size(max = 100, message = "deve ter no máximo 100 caracteres")
+          String q,
       @ParameterObject
           @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
           Pageable pageable,
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-    return orderQueryService.list(AuthenticatedUser.from(jwt), status, pageable);
+    return orderQueryService.list(AuthenticatedUser.from(jwt), status, q, pageable);
   }
 
   @GetMapping("/{publicId}")

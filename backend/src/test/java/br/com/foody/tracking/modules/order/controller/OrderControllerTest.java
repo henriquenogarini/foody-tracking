@@ -271,7 +271,7 @@ class OrderControllerTest {
   @Test
   void shouldListWithDefaultPagingAndUserScope_whenCallerIsUser() throws Exception {
     // Given
-    when(orderQueryService.list(any(), any(), any()))
+    when(orderQueryService.list(any(), any(), any(), any()))
         .thenReturn(new PageResponseDTO<>(List.of(summary()), 0, 20, 1, 1));
 
     // When
@@ -289,7 +289,7 @@ class OrderControllerTest {
     // Then
     ArgumentCaptor<AuthenticatedUser> actor = ArgumentCaptor.forClass(AuthenticatedUser.class);
     ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
-    verify(orderQueryService).list(actor.capture(), isNull(), pageable.capture());
+    verify(orderQueryService).list(actor.capture(), isNull(), isNull(), pageable.capture());
     assertThat(actor.getValue()).isEqualTo(new AuthenticatedUser(USER_ID, Role.USER));
     assertThat(pageable.getValue().getPageNumber()).isZero();
     assertThat(pageable.getValue().getPageSize()).isEqualTo(20);
@@ -302,7 +302,7 @@ class OrderControllerTest {
   @Test
   void shouldPassStatusFilter_whenStatusParamIsGiven() throws Exception {
     // Given
-    when(orderQueryService.list(any(), any(), any()))
+    when(orderQueryService.list(any(), any(), any(), any()))
         .thenReturn(new PageResponseDTO<>(List.of(), 0, 20, 0, 0));
 
     // When
@@ -311,7 +311,51 @@ class OrderControllerTest {
         .andExpect(status().isOk());
 
     // Then
-    verify(orderQueryService).list(any(), eq(OrderStatus.EM_PREPARO), any());
+    verify(orderQueryService).list(any(), eq(OrderStatus.EM_PREPARO), isNull(), any());
+  }
+
+  @Test
+  void shouldPassSearchTermWithStatus_whenQueryParamIsGiven() throws Exception {
+    // Given
+    when(orderQueryService.list(any(), any(), any(), any()))
+        .thenReturn(new PageResponseDTO<>(List.of(), 0, 20, 0, 0));
+
+    // When
+    mockMvc
+        .perform(
+            get("/api/v1/orders").param("q", "#1042").param("status", "RECEBIDO").with(userJwt()))
+        .andExpect(status().isOk());
+
+    // Then
+    verify(orderQueryService).list(any(), eq(OrderStatus.RECEBIDO), eq("#1042"), any());
+  }
+
+  @Test
+  void shouldReturnValidationProblemNamingQ_whenSearchTermExceeds100Characters() throws Exception {
+    // When / Then
+    mockMvc
+        .perform(get("/api/v1/orders").param("q", "a".repeat(101)).with(userJwt()))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        .andExpect(jsonPath("$.detail").value("Um ou mais campos são inválidos."))
+        .andExpect(jsonPath("$.errors.length()").value(1))
+        .andExpect(jsonPath("$.errors[0].field").value("q"))
+        .andExpect(jsonPath("$.errors[0].message").value("deve ter no máximo 100 caracteres"));
+
+    verifyNoInteractions(orderQueryService);
+  }
+
+  @Test
+  void shouldAcceptSearchTerm_whenItHasExactly100Characters() throws Exception {
+    // Given
+    when(orderQueryService.list(any(), any(), any(), any()))
+        .thenReturn(new PageResponseDTO<>(List.of(), 0, 20, 0, 0));
+
+    // When / Then
+    mockMvc
+        .perform(get("/api/v1/orders").param("q", "a".repeat(100)).with(userJwt()))
+        .andExpect(status().isOk());
   }
 
   @Test
@@ -330,7 +374,7 @@ class OrderControllerTest {
   @Test
   void shouldReturnValidationProblemOnSort_whenSortPropertyIsNotAllowed() throws Exception {
     // Given
-    when(orderQueryService.list(any(), any(), any()))
+    when(orderQueryService.list(any(), any(), any(), any()))
         .thenThrow(new InvalidSortException("owner.email"));
 
     // When / Then
@@ -357,7 +401,7 @@ class OrderControllerTest {
   @Test
   void shouldPassAdminRole_whenCallerIsAdmin() throws Exception {
     // Given
-    when(orderQueryService.list(any(), any(), any()))
+    when(orderQueryService.list(any(), any(), any(), any()))
         .thenReturn(new PageResponseDTO<>(List.of(), 0, 20, 0, 0));
 
     // When
@@ -365,7 +409,7 @@ class OrderControllerTest {
 
     // Then
     ArgumentCaptor<AuthenticatedUser> actor = ArgumentCaptor.forClass(AuthenticatedUser.class);
-    verify(orderQueryService).list(actor.capture(), isNull(), any());
+    verify(orderQueryService).list(actor.capture(), isNull(), isNull(), any());
     assertThat(actor.getValue()).isEqualTo(new AuthenticatedUser(ADMIN_ID, Role.ADMIN));
   }
 

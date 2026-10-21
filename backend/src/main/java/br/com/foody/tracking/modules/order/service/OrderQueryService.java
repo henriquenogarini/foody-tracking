@@ -15,9 +15,12 @@ import br.com.foody.tracking.modules.order.repository.OrderSummaryView;
 import br.com.foody.tracking.shared.web.PageResponseDTO;
 import br.com.foody.tracking.shared.web.SortWhitelist;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +40,8 @@ public class OrderQueryService {
   // under LIMIT/OFFSET instead of repeating or skipping rows between pages.
   private static final String TIE_BREAKER = "code";
 
+  private static final Pattern CODE_QUERY = Pattern.compile("#?(\\d{1,18})");
+
   private final OrderRepository orderRepository;
   private final OrderFinder orderFinder;
   private final OrderMapper orderMapper;
@@ -53,25 +58,42 @@ public class OrderQueryService {
     this.userRepository = userRepository;
   }
 
-  // The role scope is the choice of query: ADMIN reads every order, USER only their own.
+  // The role scope is the choice of query: ADMIN reads every order, USER only their own. The
+  // search term becomes either a code or a name pattern, never both; null disables a filter.
   @Transactional(readOnly = true)
   public PageResponseDTO<OrderSummaryResponseDTO> list(
-      AuthenticatedUser actor, OrderStatus status, Pageable pageable) {
+      AuthenticatedUser actor, OrderStatus status, String q, Pageable pageable) {
     SortWhitelist.requireAllowed(pageable.getSort(), SORTABLE_PROPERTIES);
     Pageable stable = withTieBreaker(pageable);
-    Page<OrderSummaryView> page;
-    if (actor.role() == Role.ADMIN) {
-      page =
-          status == null
-              ? orderRepository.findSummaries(stable)
-              : orderRepository.findSummariesByStatus(status, stable);
-    } else {
-      page =
-          status == null
-              ? orderRepository.findSummariesByOwnerPublicId(actor.id(), stable)
-              : orderRepository.findSummariesByOwnerPublicIdAndStatus(actor.id(), status, stable);
-    }
+    Long code = codeOf(q);
+    String namePattern = code == null ? namePatternOf(q) : null;
+    Page<OrderSummaryView> page =
+        actor.role() == Role.ADMIN
+            ? orderRepository.searchSummaries(status, code, namePattern, stable)
+            : orderRepository.searchSummariesByOwnerPublicId(
+                actor.id(), status, code, namePattern, stable);
     return PageResponseDTO.from(page.map(orderMapper::toSummary));
+  }
+
+  // "#1042", "1042" or " #1042 ". At most 18 digits always fits a long; a longer number falls
+  // through to the name search, where it matches nothing, instead of failing to parse.
+  private static Long codeOf(String q) {
+    if (q == null) {
+      return null;
+    }
+    Matcher matcher = CODE_QUERY.matcher(q.strip());
+    return matcher.matches() ? Long.valueOf(matcher.group(1)) : null;
+  }
+
+  // Lowercased here because SQLite's lower() folds only ASCII: lowering the term in Java at least
+  // matches accented names stored in lowercase. LIKE wildcards typed by the user are escaped.
+  private static String namePatternOf(String q) {
+    if (q == null || q.isBlank()) {
+      return null;
+    }
+    String literal =
+        q.strip().toLowerCase(Locale.ROOT).replace("!", "!!").replace("%", "!%").replace("_", "!_");
+    return "%" + literal + "%";
   }
 
   private static Pageable withTieBreaker(Pageable pageable) {

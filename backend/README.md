@@ -326,5 +326,16 @@ br.com.foody.tracking
     renamed user shows the new name and a missing user gives `null`. The service collects the
     distinct ids and runs one `publicId IN (...)` projection query, then MapStruct fills the name
     from that map (`@Context`), so the endpoint costs three statements whatever the row count.
+32. **Order search `q`: a code or part of the customer name.** Blank means no filter; a number
+    of up to 18 digits, optionally `#`-prefixed (`#1042`), is an exact match on `code`; anything
+    else (including longer numbers, which then match nothing) is a case-insensitive *contains* on
+    the customer name, with `%`, `_` and the escape character `!` taken literally (`ESCAPE '!'`;
+    `!` avoids the backslash-escaping differences between Java, HQL and SQL). Known limitation:
+    SQLite's `lower()` folds only ASCII, so `JOSÉ` does not match a stored `josé` (the term is
+    lowercased in Java, so `JOSÉ` still finds `José`); no ICU extension is loaded. One JPQL per
+    scope with optional parameters (`:p is null or ...`) replaces the four status/no-status
+    queries, keeping the projection, the scoped count and two statements per page. `q` is capped
+    at 100 characters; the parameter constraint answers 400 `VALIDATION_ERROR` with
+    `errors[{field: "q"}]` through the handler's override of `HandlerMethodValidationException`.
 
 Entries are appended as new decisions are made.

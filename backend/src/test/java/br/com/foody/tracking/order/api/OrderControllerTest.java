@@ -170,7 +170,8 @@ class OrderControllerTest {
         .andExpect(status().isBadRequest())
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-        .andExpect(jsonPath("$.errors[*].field").value(hasItems("items[0].unitPrice")));
+        .andExpect(jsonPath("$.errors.length()").value(1))
+        .andExpect(jsonPath("$.errors[0].field").value("items[0].unitPrice"));
 
     verifyNoInteractions(orderService);
   }

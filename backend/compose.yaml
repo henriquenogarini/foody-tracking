@@ -1,0 +1,27 @@
+# SQLite is embedded in the API process, so there is no database container (by the test
+# statement): the database file lives in the foody-data volume mounted on /app/data.
+services:
+  api:
+    build: .
+    image: foody-tracking-api:local
+    env_file: .env
+    environment:
+      # Documents intent only: the image already forces prod with -Dspring.profiles.active.
+      SPRING_PROFILES_ACTIVE: prod
+      TZ: America/Sao_Paulo
+      # The container port is fixed; SERVER_PORT in .env only moves the host side of the mapping.
+      SERVER_PORT: 8080
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+    volumes:
+      - foody-data:/app/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      start_period: 40s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  foody-data:

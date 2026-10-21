@@ -33,6 +33,12 @@ spring:
     locale: pt-BR
     locale-resolver: fixed
 
+  data:
+    web:
+      pageable:
+        # Caps ?size= so a client cannot request an unbounded page.
+        max-page-size: 100
+
 server:
   port: ${SERVER_PORT:8080}
 
@@ -48,9 +54,22 @@ app:
       # HS256 key, Base64-encoded, at least 32 bytes. Required outside the dev profile.
       secret: ${APP_SECURITY_JWT_SECRET}
       expiration-seconds: 7200
+    admin:
+      # Optional single bootstrap ADMIN, created once at startup. Set both or neither; blank = absent.
+      email: ${APP_SECURITY_ADMIN_EMAIL:}
+      password: ${APP_SECURITY_ADMIN_PASSWORD:}
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # Zone id, never a fixed offset: tzdata handles DST if it returns. Drives the Clock and the JSON dates.
+  time-zone: ${APP_TIME_ZONE:America/Sao_Paulo}
 
 logging:
   level:
     br.com.foody.tracking: INFO
+
+springdoc:
+  default-produces-media-type: application/json
+  swagger-ui:
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true

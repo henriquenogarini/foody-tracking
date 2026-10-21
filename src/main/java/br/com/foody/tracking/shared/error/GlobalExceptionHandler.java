@@ -1,5 +1,6 @@
 package br.com.foody.tracking.shared.error;
 
+import br.com.foody.tracking.shared.web.InvalidSortException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import java.time.OffsetDateTime;
@@ -14,11 +15,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -50,6 +54,28 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
             ApiErrorCode.CONCURRENT_MODIFICATION,
             "O registro foi alterado por outra operação. Atualize e tente novamente.");
     return respond(ex, problem, request);
+  }
+
+  @ExceptionHandler(PropertyReferenceException.class)
+  public ResponseEntity<Object> handleUnknownSortProperty(
+      PropertyReferenceException ex, WebRequest request) {
+    log.debug("Unknown sort property on {}", request.getDescription(false));
+    return respondInvalidSort(ex, ex.getPropertyName(), request);
+  }
+
+  @ExceptionHandler(InvalidSortException.class)
+  public ResponseEntity<Object> handleDisallowedSortProperty(
+      InvalidSortException ex, WebRequest request) {
+    log.debug("Disallowed sort property on {}", request.getDescription(false));
+    return respondInvalidSort(ex, ex.getProperty(), request);
+  }
+
+  // Security exceptions raised inside the MVC layer (e.g. @PreAuthorize) must reach Spring
+  // Security's ExceptionTranslationFilter, which answers 401/403 in the contract format; the
+  // catch-all below would otherwise turn them into 500.
+  @ExceptionHandler({AccessDeniedException.class, AuthenticationException.class})
+  public void rethrowSecurityException(RuntimeException ex) {
+    throw ex;
   }
 
   @ExceptionHandler(Exception.class)
@@ -141,6 +167,19 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
       problem.setProperty("timestamp", OffsetDateTime.now(ZoneOffset.UTC));
     }
     return super.createResponseEntity(body, headers, statusCode, request);
+  }
+
+  // Unknown and disallowed sort properties answer with the same body, so a client cannot tell
+  // which entity paths exist.
+  private ResponseEntity<Object> respondInvalidSort(
+      Exception ex, String property, WebRequest request) {
+    ValidationError error =
+        new ValidationError("sort", "propriedade de ordenação inválida: " + property);
+    return respond(
+        ex,
+        ProblemDetailFactory.create(
+            ApiErrorCode.VALIDATION_ERROR, INVALID_FIELDS_DETAIL, List.of(error)),
+        request);
   }
 
   private ResponseEntity<Object> respond(Exception ex, ProblemDetail problem, WebRequest request) {

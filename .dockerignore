@@ -1,0 +1,13 @@
+# Keep the build context small and free of secrets and local state.
+target/
+data/
+.git/
+.idea/
+.vscode/
+.claude/
+CLAUDE.md
+docs/
+.env
+.env.*
+*.log
+HELP.md

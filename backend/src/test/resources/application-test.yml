@@ -12,8 +12,6 @@ app:
       # Bootstrap admin for the full-flow tests only.
       email: admin@foody.test
       password: admin-test-password
-  cors:
-    allowed-origins: http://localhost:5173
 
 logging:
   level:

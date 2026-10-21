@@ -2,6 +2,7 @@ package br.com.foody.tracking.modules.auth.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
@@ -57,6 +58,52 @@ class UserRepositoryTest {
     assertThat(reloaded.getPasswordHash()).isEqualTo("hash");
     assertThat(reloaded.getRole()).isEqualTo(Role.ADMIN);
     assertThat(reloaded.getCreatedAt()).isAtSameInstantAs(NOW);
+  }
+
+  @Test
+  void shouldUpdateOnlyUserRole_whenResettingPasswordHash() {
+    // Given
+    userRepository.saveAndFlush(new User("Ana Souza", "ana@exemplo.com", "old", Role.USER, NOW));
+    userRepository.saveAndFlush(
+        new User("Admin", "admin@exemplo.com", "admin-old", Role.ADMIN, NOW));
+
+    // When
+    int userRows = userRepository.updatePasswordHashOfUser("ana@exemplo.com", "new");
+    int adminRows = userRepository.updatePasswordHashOfUser("admin@exemplo.com", "new");
+    int unknownRows = userRepository.updatePasswordHashOfUser("bruno@exemplo.com", "new");
+
+    // Then the bulk update bypasses the persistence context, so read the stored values
+    assertThat(userRows).isEqualTo(1);
+    assertThat(adminRows).isZero();
+    assertThat(unknownRows).isZero();
+    assertThat(
+            jdbcTemplate.queryForList(
+                "SELECT password_hash FROM users"
+                    + " WHERE email IN ('ana@exemplo.com', 'admin@exemplo.com') ORDER BY email",
+                String.class))
+        .containsExactly("admin-old", "new");
+  }
+
+  @Test
+  void shouldReturnPublicIdAndName_whenSearchingByPublicIdIn() {
+    // Given
+    User ana =
+        userRepository.saveAndFlush(new User("Ana Souza", "ana@exemplo.com", "h", Role.USER, NOW));
+    User bruno =
+        userRepository.saveAndFlush(
+            new User("Bruno Lima", "bruno@exemplo.com", "h", Role.USER, NOW));
+    userRepository.saveAndFlush(new User("Carla Dias", "carla@exemplo.com", "h", Role.USER, NOW));
+
+    // When
+    List<UserNameView> names =
+        userRepository.findByPublicIdIn(
+            List.of(ana.getPublicId(), bruno.getPublicId(), UUID.randomUUID()));
+
+    // Then
+    assertThat(names)
+        .extracting(UserNameView::getPublicId, UserNameView::getName)
+        .containsExactlyInAnyOrder(
+            tuple(ana.getPublicId(), "Ana Souza"), tuple(bruno.getPublicId(), "Bruno Lima"));
   }
 
   @Test

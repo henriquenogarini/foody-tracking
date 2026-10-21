@@ -19,7 +19,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
   String SUMMARY_SELECT =
       "select o.publicId as publicId, o.code as code, o.status as status,"
           + " o.customer.name as customerName, o.total as total,"
-          + " size(o.items) as itemsCount, o.deliveryAddress.city as city,"
+          + " size(o.items) as itemsCount,"
+          + " o.deliveryAddress.neighborhood as neighborhood, o.deliveryAddress.city as city,"
           + " o.createdAt as createdAt, o.updatedAt as updatedAt"
           + " from Order o";
 
@@ -28,30 +29,38 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   Optional<Order> findByPublicId(UUID publicId);
 
-  @Query(
-      value = SUMMARY_SELECT + " where o.owner.publicId = :ownerPublicId",
-      countQuery = "select count(o) from Order o where o.owner.publicId = :ownerPublicId")
-  Page<OrderSummaryView> findSummariesByOwnerPublicId(
-      @Param("ownerPublicId") UUID ownerPublicId, Pageable pageable);
+  boolean existsByOwnerPublicId(UUID ownerPublicId);
+
+  /**
+   * Optional filters shared by both scopes: a null parameter disables its condition, so one query
+   * per scope covers every combination of status and search. {@code namePattern} is an already
+   * lowercased, escaped LIKE pattern ({@code !} escapes {@code %}, {@code _} and itself).
+   */
+  String SUMMARY_FILTERS =
+      " (:status is null or o.status = :status)"
+          + " and (:code is null or o.code = :code)"
+          + " and (:namePattern is null or lower(o.customer.name) like :namePattern escape '!')";
 
   @Query(
-      value = SUMMARY_SELECT + " where o.owner.publicId = :ownerPublicId and o.status = :status",
+      value = SUMMARY_SELECT + " where o.owner.publicId = :ownerPublicId and" + SUMMARY_FILTERS,
       countQuery =
-          "select count(o) from Order o"
-              + " where o.owner.publicId = :ownerPublicId and o.status = :status")
-  Page<OrderSummaryView> findSummariesByOwnerPublicIdAndStatus(
+          "select count(o) from Order o where o.owner.publicId = :ownerPublicId and"
+              + SUMMARY_FILTERS)
+  Page<OrderSummaryView> searchSummariesByOwnerPublicId(
       @Param("ownerPublicId") UUID ownerPublicId,
       @Param("status") OrderStatus status,
+      @Param("code") Long code,
+      @Param("namePattern") String namePattern,
       Pageable pageable);
 
-  @Query(value = SUMMARY_SELECT, countQuery = "select count(o) from Order o")
-  Page<OrderSummaryView> findSummaries(Pageable pageable);
-
   @Query(
-      value = SUMMARY_SELECT + " where o.status = :status",
-      countQuery = "select count(o) from Order o where o.status = :status")
-  Page<OrderSummaryView> findSummariesByStatus(
-      @Param("status") OrderStatus status, Pageable pageable);
+      value = SUMMARY_SELECT + " where" + SUMMARY_FILTERS,
+      countQuery = "select count(o) from Order o where" + SUMMARY_FILTERS)
+  Page<OrderSummaryView> searchSummaries(
+      @Param("status") OrderStatus status,
+      @Param("code") Long code,
+      @Param("namePattern") String namePattern,
+      Pageable pageable);
 
   /**
    * Next readable order code, starting at 1001. Safe only inside the write transaction: the

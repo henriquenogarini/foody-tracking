@@ -18,7 +18,11 @@ class ApiErrorCodeTest {
     "USER_EMAIL_ALREADY_EXISTS, 409",
     "ORDER_INVALID_TRANSITION, 409",
     "CONCURRENT_MODIFICATION, 409",
-    "INTERNAL_ERROR, 500"
+    "INTERNAL_ERROR, 500",
+    "NOT_FOUND, 404",
+    "METHOD_NOT_ALLOWED, 405",
+    "NOT_ACCEPTABLE, 406",
+    "UNSUPPORTED_MEDIA_TYPE, 415"
   })
   void shouldExposeHttpStatus_whenCodeIsMapped(ApiErrorCode code, int expectedStatus) {
     assertThat(code.httpStatus()).isEqualTo(expectedStatus);
@@ -27,7 +31,7 @@ class ApiErrorCodeTest {
   @Test
   void shouldMapEveryCodeToClientOrServerError_whenEnumIsInspected() {
     assertThat(ApiErrorCode.values())
-        .hasSize(9)
+        .hasSize(13)
         .allSatisfy(code -> assertThat(code.httpStatus()).isBetween(400, 599));
   }
 }

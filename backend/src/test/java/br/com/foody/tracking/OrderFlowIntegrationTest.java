@@ -130,7 +130,8 @@ class OrderFlowIntegrationTest {
         .andExpect(jsonPath("$[1].toStatus").value("EM_PREPARO"))
         .andExpect(jsonPath("$[2].fromStatus").value("EM_PREPARO"))
         .andExpect(jsonPath("$[2].toStatus").value("SAIU_PARA_ENTREGA"))
-        .andExpect(jsonPath("$[*].changedBy").value(everyItem(equalTo(anaId))));
+        .andExpect(jsonPath("$[*].changedBy").value(everyItem(equalTo(anaId))))
+        .andExpect(jsonPath("$[*].changedByName").value(everyItem(equalTo("Ana Souza"))));
 
     // Given Bruno, another USER
     register("Bruno Lima", brunoEmail).andExpect(status().isCreated());

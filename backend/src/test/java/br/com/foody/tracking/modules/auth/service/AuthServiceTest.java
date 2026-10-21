@@ -6,13 +6,16 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import br.com.foody.tracking.modules.auth.dto.LoginRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.PasswordResetRequestDTO;
 import br.com.foody.tracking.modules.auth.dto.RegisterRequestDTO;
 import br.com.foody.tracking.modules.auth.dto.TokenResponseDTO;
 import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
@@ -37,6 +40,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mapstruct.factory.Mappers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -50,6 +55,7 @@ class AuthServiceTest {
   private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
   private static final Instant NOW = Instant.parse("2026-10-21T17:13:27Z");
   private static final String PASSWORD = "senha-forte-123";
+  private static final String NEW_PASSWORD = "nova-senha-456";
 
   @Mock private UserRepository userRepository;
 
@@ -177,6 +183,43 @@ class AuthServiceTest {
         .isInstanceOf(InvalidCredentialsException.class);
     verify(passwordEncoder, never()).matches(any(), any());
     verifyNoInteractions(userRepository, tokenService);
+  }
+
+  // The service cannot tell the three apart (the USER-only filter is in the query): it must hash
+  // exactly once on each, so timing is the same whatever the e-mail belongs to.
+  @ParameterizedTest(name = "{0}")
+  @CsvSource({"existing USER, 1", "unknown e-mail, 0", "ADMIN e-mail, 0"})
+  void shouldHashOnceAndUpdateUserOnly_whenResettingPassword(String path, int affectedRows) {
+    // Given
+    clearInvocations(passwordEncoder);
+    when(userRepository.updatePasswordHashOfUser(eq("ana@exemplo.com"), anyString()))
+        .thenReturn(affectedRows);
+
+    // When
+    authService.resetPassword(new PasswordResetRequestDTO(" Ana@Exemplo.COM ", NEW_PASSWORD));
+
+    // Then
+    verify(passwordEncoder, times(1)).encode(any());
+    ArgumentCaptor<String> hash = ArgumentCaptor.forClass(String.class);
+    verify(userRepository).updatePasswordHashOfUser(eq("ana@exemplo.com"), hash.capture());
+    assertThat(passwordEncoder.matches(NEW_PASSWORD, hash.getValue())).isTrue();
+  }
+
+  @Test
+  void shouldRejectWithoutHashing_whenNewPasswordExceedsBcryptBytes() {
+    // Given 60 characters but 120 UTF-8 bytes (a direct call skips Bean Validation)
+    clearInvocations(passwordEncoder);
+    PasswordResetRequestDTO request =
+        new PasswordResetRequestDTO("ana@exemplo.com", "é".repeat(60));
+
+    // When
+    Throwable thrown = catchThrowable(() -> authService.resetPassword(request));
+
+    // Then
+    assertThat(thrown).isInstanceOf(ApiException.class);
+    assertThat(((ApiException) thrown).getCode()).isEqualTo(ApiErrorCode.VALIDATION_ERROR);
+    verify(passwordEncoder, never()).encode(any());
+    verifyNoInteractions(userRepository);
   }
 
   @Test

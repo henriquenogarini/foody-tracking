@@ -30,7 +30,7 @@ This project lives in `backend/` of the `foody-tracking` repository (the fronten
 ## Getting started
 
 ```bash
-cp .env.example .env     # then set APP_SECURITY_JWT_SECRET (e.g. openssl rand -base64 48)
+cp .env.example .env     # nothing to set for dev: the secrets stay commented out
 ./mvnw spring-boot:run
 ```
 
@@ -38,10 +38,16 @@ cp .env.example .env     # then set APP_SECURITY_JWT_SECRET (e.g. openssl rand -
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - Health: `http://localhost:8080/actuator/health`
 
+In `.env`, the secret lines (`APP_SECURITY_JWT_SECRET`, `APP_SECURITY_ADMIN_EMAIL`,
+`APP_SECURITY_ADMIN_PASSWORD`) ship commented out on purpose: a blank value would override the
+`dev` defaults (an empty JWT secret fails startup). Uncomment and set them only outside `dev`.
+
 The `dev` profile bootstraps a dev-only admin (`admin@foody.local` / `admin-dev-password`,
 overridable through `APP_SECURITY_ADMIN_EMAIL` / `APP_SECURITY_ADMIN_PASSWORD`). In Swagger UI,
 register or use that admin, call `POST /api/v1/auth/login`, then paste the `accessToken` into
 the **Authorize** button; the guide at the top of Swagger UI walks through the same steps.
+On the first `dev` start the admin also gets eight demo orders, one or more in every status,
+with their history (decision 33); delete `./data/foody.db` to reseed.
 
 Log timestamps use the JVM zone, so local runs should set it to the application zone:
 `TZ=America/Sao_Paulo ./mvnw spring-boot:run`, or
@@ -53,7 +59,7 @@ migrations automatically.
 ### Run with Docker
 
 ```bash
-cp .env.example .env     # set APP_SECURITY_JWT_SECRET; optionally the admin pair
+cp .env.example .env     # uncomment and set APP_SECURITY_JWT_SECRET; optionally the admin pair
 docker compose up --build -d
 curl http://localhost:8080/actuator/health
 docker compose down      # add -v to also drop the database volume
@@ -75,9 +81,10 @@ deployment put the container behind the reverse proxy described in the deploymen
 | `SERVER_PORT` | `8080` | HTTP port |
 | `SPRING_DATASOURCE_URL` | `jdbc:sqlite:./data/foody.db?journal_mode=WAL&busy_timeout=5000&foreign_keys=true` | JDBC URL |
 | `APP_SECURITY_JWT_SECRET` | dev-only key in `application-dev.yml` | HS256 key, Base64, at least 32 bytes; required outside `dev` |
-| `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated allowed origins |
+| `APP_CORS_ALLOWED_ORIGINS` | `http://localhost:5173,http://localhost:4173` | Comma-separated allowed origins |
 | `APP_SECURITY_ADMIN_EMAIL` | none (`dev` ships a dev-only pair) | E-mail of the single bootstrap `ADMIN`; optional, set both admin variables or neither |
 | `APP_SECURITY_ADMIN_PASSWORD` | none (`dev` ships a dev-only pair) | Password of the bootstrap `ADMIN` (8+ characters, at most 72 bytes); optional, set both or neither |
+| `APP_SECURITY_PASSWORD_RESET_ENABLED` | `true` | Demo password reset without e-mail confirmation (decision 30); `false` removes the route (404 `NOT_FOUND`) |
 | `APP_TIME_ZONE` | `America/Sao_Paulo` | Application zone id: drives the `Clock` and the zone of every JSON date |
 | `TZ` | system zone | Process zone used by log timestamps (Docker `--env-file`, compose `env_file`, shell); a `.env` line does not change the JVM zone of IDE or `mvnw` runs. Keep it equal to `APP_TIME_ZONE` |
 
@@ -188,9 +195,14 @@ br.com.foody.tracking
    directly on `main`; from the migrations onward each stage is a `feature/<name>` branch
    merged into `main` through a pull request with a merge commit, so history is preserved.
 6. **Error handling extends `ResponseEntityExceptionHandler`, with `createResponseEntity` as the
-   single funnel.** The framework keeps handling its own errors (unknown route, 405, 415...) and
-   every body passes through one hook that stamps `timestamp`. Those framework-built errors carry
-   no `code`: the nine codes of the API contract are the contract and do not grow for them.
+   single funnel.** The framework keeps handling its own errors (unknown route, 405, 406, 415...)
+   and every body passes through one hook that stamps `timestamp` and, when the body has no `code`
+   yet, a code from a small fixed set chosen by status: `NOT_FOUND` (404), `METHOD_NOT_ALLOWED`
+   (405), `NOT_ACCEPTABLE` (406), `UNSUPPORTED_MEDIA_TYPE` (415), plus the existing
+   `VALIDATION_ERROR` (400, e.g. a missing required parameter) and `INTERNAL_ERROR` (500). Every
+   error therefore carries a `code`, so the client has one error path. Contract codes are never
+   overwritten (`ORDER_NOT_FOUND` is also a 404 but is built with its code); statuses the API
+   cannot produce (413, 503) stay code-less.
 7. **`ApiErrorCode` holds an `int` status, not `HttpStatus`.** The enum reaches the entities through
    `DomainException`, so it must not pull Spring Web into the domain model.
 8. **Fixed `pt-BR` locale and translated framework error details.** `spring.web.locale-resolver:
@@ -285,11 +297,13 @@ br.com.foody.tracking
     `-Dspring.profiles.active=prod` in the `ENTRYPOINT`, a system property that outranks
     `SPRING_PROFILES_ACTIVE` from any `--env-file`, so a copied dev `.env` can never boot a
     container with the public dev secrets.
-25. **One full-flow `@SpringBootTest`, everything else in slices.** `OrderFlowIntegrationTest`
+25. **One full-flow context, everything else in slices.** `OrderFlowIntegrationTest`
     walks register → login → create → transitions → 409 → cross-user 404 → admin scope → 403 on
-    `/users` against the real context; together with the context smoke test
-    (`TrackingApplicationTests`) these are the only full-context tests, the rest stay fast
-    unit, `@WebMvcTest` and `@DataJpaTest` tests.
+    `/users` against the real context. Other full-context classes are allowed only when they share
+    that context (same annotations and properties, so Spring reuses the cached context and nothing
+    boots again): `PasswordResetIntegrationTest` sits next to it. With the context smoke test
+    (`TrackingApplicationTests`) these are the only full-context tests; the rest stay fast unit,
+    `@WebMvcTest` and `@DataJpaTest` tests.
 26. **Multi-stage image, no database container.** The build stage caches dependencies on
     `pom.xml` and skips tests (the gate already ran before the commit); the runtime is a JRE
     image running as a non-root user with `TZ=America/Sao_Paulo` for log timestamps. SQLite is
@@ -307,5 +321,42 @@ br.com.foody.tracking
     4,994,999,500.50) keeps at most 12 significant digits, fits the declared
     `precision = 12, scale = 2` and round-trips exactly; the client can never store a value
     it would later read back differently.
+30. **Demo password reset, on by default.** `POST /api/v1/auth/password-reset` takes `email` and
+    `newPassword` and always answers 204, with no e-mail confirmation: it exists so the demo can
+    recover a forgotten account. Accepted risks: whoever knows an e-mail can change its password
+    (and register's 409 makes e-mails discoverable); tokens already issued stay valid until they
+    expire (2 h); there is no rate limiting, so each call costs one BCrypt hash of CPU. Mitigations:
+    BCrypt runs on every path before the lookup, so timing does not meaningfully reveal accounts
+    (an existing `USER` also commits a short write, a few ms against BCrypt's tens of ms, and
+    register's 409 already reveals e-mails by contract); the update is one short query restricted to `USER` in the JPQL, so the `ADMIN` is never reset; the
+    route is public and ignores a stale bearer like login. `APP_SECURITY_PASSWORD_RESET_ENABLED=false`
+    removes the controller (`@ConditionalOnProperty`), and the route then answers 404 `NOT_FOUND`.
+31. **History rows carry the actor's current name, resolved in one query.** `changedBy` stays the
+    stored fact (a public id, not a foreign key); `changedByName` is looked up when reading, so a
+    renamed user shows the new name and a missing user gives `null`. The service collects the
+    distinct ids and runs one `publicId IN (...)` projection query, then MapStruct fills the name
+    from that map (`@Context`), so the endpoint costs three statements whatever the row count.
+32. **Order search `q`: a code or part of the customer name.** Blank means no filter; a number
+    of up to 18 digits, optionally `#`-prefixed (`#1042`), is an exact match on `code`; anything
+    else (including longer numbers, which then match nothing) is a case-insensitive *contains* on
+    the customer name, with `%`, `_` and the escape character `!` taken literally (`ESCAPE '!'`;
+    `!` avoids the backslash-escaping differences between Java, HQL and SQL). Known limitation:
+    SQLite's `lower()` folds only ASCII, so `JOSÉ` does not match a stored `josé` (the term is
+    lowercased in Java, so `JOSÉ` still finds `José`); no ICU extension is loaded. One JPQL per
+    scope with optional parameters (`:p is null or ...`) replaces the four status/no-status
+    queries, keeping the projection, the scoped count and two statements per page. The trade-off:
+    `(:status is null or o.status = :status)` lets SQLite use only the `owner_id` prefix of the
+    `orders(owner_id, status)` index, acceptable at this scale; the alternative is one query per
+    filter combination. `q` is capped
+    at 100 characters; the parameter constraint answers 400 `VALIDATION_ERROR` with
+    `errors[{field: "q"}]` through the handler's override of `HandlerMethodValidationException`.
+33. **Demo orders seeded in `dev` only.** `DevOrderSeeder` (`@Profile("dev")`, an
+    `ApplicationRunner` ordered after `AdminBootstrap`) gives the bootstrap admin eight orders
+    covering every status, so the frontend and the demo start with a populated list and
+    timeline. They go through the domain (`Order.create` + `changeStatus` with past instants from
+    the injected `Clock`, codes from `nextCode()`), never SQL, so every history row is a legal
+    transition by the admin. It does nothing without an admin or when the admin already owns
+    an order, so restarts are no-ops and deleting the database reseeds; `test` and `prod` never
+    load the bean.
 
 Entries are appended as new decisions are made.

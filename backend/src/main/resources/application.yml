@@ -58,8 +58,11 @@ app:
       # Optional single bootstrap ADMIN, created once at startup. Set both or neither; blank = absent.
       email: ${APP_SECURITY_ADMIN_EMAIL:}
       password: ${APP_SECURITY_ADMIN_PASSWORD:}
+    password-reset:
+      # Demo reset without e-mail confirmation (README decision 30). false removes the route (404).
+      enabled: ${APP_SECURITY_PASSWORD_RESET_ENABLED:true}
   cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:4173}
   # Zone id, never a fixed offset: tzdata handles DST if it returns. Drives the Clock and the JSON dates.
   time-zone: ${APP_TIME_ZONE:America/Sao_Paulo}
 

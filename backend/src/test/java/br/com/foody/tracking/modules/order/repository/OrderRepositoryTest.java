@@ -33,6 +33,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -45,6 +46,8 @@ class OrderRepositoryTest {
   private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
   private static final OffsetDateTime NOW =
       OffsetDateTime.ofInstant(Instant.parse("2026-10-21T17:13:27Z"), APP_ZONE);
+
+  private static final Pageable BY_CODE = PageRequest.of(0, 20, Sort.by("code"));
 
   @Autowired private OrderRepository orderRepository;
 
@@ -79,6 +82,18 @@ class OrderRepositoryTest {
         "04650-140",
         -23.6578,
         -46.6743);
+  }
+
+  private Order persistNamedOrder(User owner, long code, String customerName) {
+    return orderRepository.saveAndFlush(
+        Order.create(
+            owner,
+            new Customer(customerName, null, null),
+            List.of(new OrderItem("Item", 1, new BigDecimal("10.00"))),
+            address("São Paulo"),
+            null,
+            code,
+            NOW));
   }
 
   private Order persistOrder(User owner, long code, OffsetDateTime createdAt, int itemCount) {
@@ -308,10 +323,10 @@ class OrderRepositoryTest {
 
     // When
     Page<OrderSummaryView> anaPage =
-        orderRepository.findSummariesByOwnerPublicId(ana.getPublicId(), page);
+        orderRepository.searchSummariesByOwnerPublicId(ana.getPublicId(), null, null, null, page);
     Page<OrderSummaryView> strangerPage =
-        orderRepository.findSummariesByOwnerPublicId(UUID.randomUUID(), page);
-    Page<OrderSummaryView> allPage = orderRepository.findSummaries(page);
+        orderRepository.searchSummariesByOwnerPublicId(UUID.randomUUID(), null, null, null, page);
+    Page<OrderSummaryView> allPage = orderRepository.searchSummaries(null, null, null, page);
 
     // Then
     assertThat(anaPage.getTotalElements()).isEqualTo(2);
@@ -322,6 +337,7 @@ class OrderRepositoryTest {
     assertThat(first.getCode()).isEqualTo(1001L);
     assertThat(first.getStatus()).isEqualTo(OrderStatus.RECEBIDO);
     assertThat(first.getCustomerName()).isEqualTo("Cliente 1001");
+    assertThat(first.getNeighborhood()).isEqualTo("Vila São Paulo");
     assertThat(first.getCity()).isEqualTo("Cidade 1001");
     assertThat(first.getItemsCount()).isEqualTo(3);
     assertThat(first.getTotal()).isEqualByComparingTo("60.00");
@@ -347,14 +363,18 @@ class OrderRepositoryTest {
 
     // When
     Page<OrderSummaryView> anaPreparing =
-        orderRepository.findSummariesByOwnerPublicIdAndStatus(
-            ana.getPublicId(), OrderStatus.EM_PREPARO, page);
+        orderRepository.searchSummariesByOwnerPublicId(
+            ana.getPublicId(), OrderStatus.EM_PREPARO, null, null, page);
     // A full first page forces Spring Data to run the scoped count query too.
     Page<OrderSummaryView> anaPreparingCounted =
-        orderRepository.findSummariesByOwnerPublicIdAndStatus(
-            ana.getPublicId(), OrderStatus.EM_PREPARO, PageRequest.of(0, 1, Sort.by("code")));
+        orderRepository.searchSummariesByOwnerPublicId(
+            ana.getPublicId(),
+            OrderStatus.EM_PREPARO,
+            null,
+            null,
+            PageRequest.of(0, 1, Sort.by("code")));
     Page<OrderSummaryView> allPreparing =
-        orderRepository.findSummariesByStatus(OrderStatus.EM_PREPARO, page);
+        orderRepository.searchSummaries(OrderStatus.EM_PREPARO, null, null, page);
 
     // Then
     assertThat(anaPreparing.getContent())
@@ -380,11 +400,13 @@ class OrderRepositoryTest {
     Sort stable = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("code"));
 
     // When
-    Page<OrderSummaryView> first = orderRepository.findSummaries(PageRequest.of(0, 2, stable));
-    Page<OrderSummaryView> second = orderRepository.findSummaries(PageRequest.of(1, 2, stable));
+    Page<OrderSummaryView> first =
+        orderRepository.searchSummaries(null, null, null, PageRequest.of(0, 2, stable));
+    Page<OrderSummaryView> second =
+        orderRepository.searchSummaries(null, null, null, PageRequest.of(1, 2, stable));
     Page<OrderSummaryView> anaOnly =
-        orderRepository.findSummariesByOwnerPublicId(
-            ana.getPublicId(), PageRequest.of(0, 20, stable));
+        orderRepository.searchSummariesByOwnerPublicId(
+            ana.getPublicId(), null, null, null, PageRequest.of(0, 20, stable));
 
     // Then: no row repeats or goes missing across pages
     assertThat(first.getContent())
@@ -408,8 +430,12 @@ class OrderRepositoryTest {
 
     // When
     Page<OrderSummaryView> page =
-        orderRepository.findSummariesByOwnerPublicId(
-            ana.getPublicId(), PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
+        orderRepository.searchSummariesByOwnerPublicId(
+            ana.getPublicId(),
+            null,
+            null,
+            null,
+            PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt")));
 
     // Then
     assertThat(page.getContent())
@@ -427,9 +453,10 @@ class OrderRepositoryTest {
 
     // When
     Page<OrderSummaryView> ascending =
-        orderRepository.findSummaries(PageRequest.of(0, 20, Sort.by("total")));
+        orderRepository.searchSummaries(null, null, null, PageRequest.of(0, 20, Sort.by("total")));
     Page<OrderSummaryView> descending =
-        orderRepository.findSummaries(PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "total")));
+        orderRepository.searchSummaries(
+            null, null, null, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "total")));
 
     // Then
     assertThat(ascending.getContent())
@@ -454,10 +481,10 @@ class OrderRepositoryTest {
 
     // When
     Page<OrderSummaryView> byStatus =
-        orderRepository.findSummaries(PageRequest.of(0, 20, Sort.by("status")));
+        orderRepository.searchSummaries(null, null, null, PageRequest.of(0, 20, Sort.by("status")));
     Page<OrderSummaryView> byUpdatedAt =
-        orderRepository.findSummaries(
-            PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "updatedAt")));
+        orderRepository.searchSummaries(
+            null, null, null, PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "updatedAt")));
 
     // Then: status sorts by its stored text
     assertThat(byStatus.getContent())
@@ -481,7 +508,8 @@ class OrderRepositoryTest {
 
     // When
     Page<OrderSummaryView> page =
-        orderRepository.findSummaries(PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "code")));
+        orderRepository.searchSummaries(
+            null, null, null, PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "code")));
 
     // Then
     assertThat(page.getContent()).extracting(OrderSummaryView::getItemsCount).containsExactly(4, 2);
@@ -504,8 +532,12 @@ class OrderRepositoryTest {
 
     // When
     Page<OrderSummaryView> page =
-        orderRepository.findSummariesByOwnerPublicId(
-            ana.getPublicId(), PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "code")));
+        orderRepository.searchSummariesByOwnerPublicId(
+            ana.getPublicId(),
+            null,
+            null,
+            null,
+            PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "code")));
 
     // Then
     assertThat(page.getContent())
@@ -515,6 +547,133 @@ class OrderRepositoryTest {
     assertThat(page.getTotalElements()).isEqualTo(3);
     // The owner join is implicit in each statement: still one page select plus one count.
     assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
+  }
+
+  @Test
+  void shouldMatchNameContainsIgnoringAsciiCase_whenSearchingByNamePattern() {
+    // Given
+    persistNamedOrder(ana, 2001L, "José da Silva");
+    persistNamedOrder(ana, 2002L, "Maria SILVEIRA");
+    persistNamedOrder(ana, 2003L, "Ana Souza");
+    entityManager.clear();
+
+    // When
+    Page<OrderSummaryView> page = orderRepository.searchSummaries(null, null, "%silv%", BY_CODE);
+
+    // Then
+    assertThat(page.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(2001L, 2002L);
+    assertThat(page.getTotalElements()).isEqualTo(2);
+  }
+
+  @Test
+  void shouldMatchOnlyThatCode_whenSearchingByCode() {
+    // Given
+    persistNamedOrder(ana, 2001L, "Cliente 2001");
+    persistNamedOrder(ana, 2002L, "Cliente 2001 bis");
+    entityManager.clear();
+
+    // When
+    Page<OrderSummaryView> page = orderRepository.searchSummaries(null, 2001L, null, BY_CODE);
+
+    // Then
+    assertThat(page.getContent()).extracting(OrderSummaryView::getCode).containsExactly(2001L);
+    assertThat(page.getTotalElements()).isEqualTo(1);
+  }
+
+  @Test
+  void shouldCombineSearchWithStatusAndOwnerScope_whenUserSearches() {
+    // Given
+    Order preparing = persistNamedOrder(ana, 2001L, "Ana Souza");
+    preparing.changeStatus(OrderStatus.EM_PREPARO, ana.getPublicId(), NOW.plusMinutes(1));
+    orderRepository.saveAndFlush(preparing);
+    persistNamedOrder(ana, 2002L, "Ana Souza");
+    persistNamedOrder(bruno, 2003L, "Ana Souza");
+    entityManager.clear();
+
+    // When
+    Page<OrderSummaryView> anaPreparing =
+        orderRepository.searchSummariesByOwnerPublicId(
+            ana.getPublicId(), OrderStatus.EM_PREPARO, null, "%ana%", BY_CODE);
+    Page<OrderSummaryView> anaAll =
+        orderRepository.searchSummariesByOwnerPublicId(
+            ana.getPublicId(), null, null, "%ana%", BY_CODE);
+    Page<OrderSummaryView> brunoCode =
+        orderRepository.searchSummariesByOwnerPublicId(
+            bruno.getPublicId(), null, 2001L, null, BY_CODE);
+
+    // Then
+    assertThat(anaPreparing.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(2001L);
+    assertThat(anaAll.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(2001L, 2002L);
+    assertThat(anaAll.getTotalElements()).isEqualTo(2);
+    // Another owner's order is invisible even when its exact code is searched.
+    assertThat(brunoCode.getContent()).isEmpty();
+    assertThat(brunoCode.getTotalElements()).isZero();
+  }
+
+  @Test
+  void shouldTreatEscapedWildcardsLiterally_whenNameContainsPercentOrUnderscore() {
+    // Given
+    persistNamedOrder(ana, 2001L, "Promo 50% off");
+    persistNamedOrder(ana, 2002L, "Promo 500 off");
+    persistNamedOrder(ana, 2003L, "a_b");
+    persistNamedOrder(ana, 2004L, "axb");
+    persistNamedOrder(ana, 2005L, "Bang! Lanches");
+    entityManager.clear();
+
+    // When
+    Page<OrderSummaryView> percent = orderRepository.searchSummaries(null, null, "%50!%%", BY_CODE);
+    Page<OrderSummaryView> underscore =
+        orderRepository.searchSummaries(null, null, "%a!_b%", BY_CODE);
+    Page<OrderSummaryView> bang = orderRepository.searchSummaries(null, null, "%g!!%", BY_CODE);
+
+    // Then
+    assertThat(percent.getContent()).extracting(OrderSummaryView::getCode).containsExactly(2001L);
+    assertThat(underscore.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(2003L);
+    assertThat(bang.getContent()).extracting(OrderSummaryView::getCode).containsExactly(2005L);
+  }
+
+  @Test
+  void shouldStillUseTwoStatements_whenEveryFilterIsActive() {
+    // Given
+    for (long code = 2001L; code <= 2004L; code++) {
+      persistNamedOrder(ana, code, "Ana Souza");
+    }
+    entityManager.clear();
+    Statistics statistics =
+        entityManager.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
+    statistics.clear();
+
+    // When
+    Page<OrderSummaryView> page =
+        orderRepository.searchSummariesByOwnerPublicId(
+            ana.getPublicId(),
+            OrderStatus.RECEBIDO,
+            null,
+            "%souza%",
+            PageRequest.of(0, 2, BY_CODE.getSort()));
+
+    // Then
+    assertThat(page.getContent()).hasSize(2);
+    assertThat(page.getTotalElements()).isEqualTo(4);
+    assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
+  }
+
+  @Test
+  void shouldReportOwnership_whenCheckingIfOwnerHasOrders() {
+    // Given
+    persistOrder(ana, 1001L, NOW, 1);
+
+    // When / Then
+    assertThat(orderRepository.existsByOwnerPublicId(ana.getPublicId())).isTrue();
+    assertThat(orderRepository.existsByOwnerPublicId(bruno.getPublicId())).isFalse();
   }
 
   @Test

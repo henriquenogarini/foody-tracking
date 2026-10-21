@@ -25,6 +25,8 @@ public interface OrderSummaryView {
 
   int getItemsCount();
 
+  String getNeighborhood();
+
   String getCity();
 
   OffsetDateTime getCreatedAt();

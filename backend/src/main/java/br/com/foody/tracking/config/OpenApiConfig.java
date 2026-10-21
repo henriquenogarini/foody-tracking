@@ -58,7 +58,8 @@ public final class OpenApiConfig {
       ## Errors
       Every error is an RFC 9457 `ProblemDetail` (`application/problem+json`) extended with \
       `code`, `timestamp` and, on validation errors, `errors[]` (`field`, `message`). \
-      `detail` and `errors[].message` are in Portuguese.
+      `detail` and `errors[].message` are in Portuguese. Every error carries a `code`, \
+      including the ones built by the framework (last four rows).
 
       | Code | HTTP | When |
       |---|---|---|
@@ -71,6 +72,10 @@ public final class OpenApiConfig {
       | `ORDER_INVALID_TRANSITION` | 409 | The status change breaks the state machine |
       | `CONCURRENT_MODIFICATION` | 409 | The order was changed by another request; reload it |
       | `INTERNAL_ERROR` | 500 | Unexpected failure |
+      | `NOT_FOUND` | 404 | Unknown route |
+      | `METHOD_NOT_ALLOWED` | 405 | The route does not accept this HTTP method |
+      | `NOT_ACCEPTABLE` | 406 | The `Accept` header asks for an unsupported format |
+      | `UNSUPPORTED_MEDIA_TYPE` | 415 | The request `Content-Type` is not supported |
 
       ## Dates and money
       Dates are ISO-8601 in the application zone `America/Sao_Paulo` \

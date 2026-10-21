@@ -98,20 +98,59 @@ class OrderRepositoryTest {
 
   private void insertOrderRow(
       String publicId, long code, long ownerId, String latLngSql, String status) {
+    insertOrderRow(publicId, code, ownerId, latLngSql, status, "Cliente", "SP", "10.00");
+  }
+
+  private void insertOrderRow(String customerName, String state, String total) {
+    insertOrderRow(
+        UUID.randomUUID().toString(),
+        2001L,
+        ana.getId(),
+        "NULL, NULL",
+        "RECEBIDO",
+        customerName,
+        state,
+        total);
+  }
+
+  private void insertOrderRow(
+      String publicId,
+      long code,
+      long ownerId,
+      String latLngSql,
+      String status,
+      String customerName,
+      String state,
+      String total) {
     jdbcTemplate.update(
         "INSERT INTO orders (public_id, code, owner_id, customer_name, address_street,"
             + " address_number, address_neighborhood, address_city, address_state,"
             + " address_postal_code, address_lat, address_lng, status, total, created_at,"
-            + " updated_at) VALUES (?, ?, ?, 'Cliente', 'Rua', '1', 'Bairro', 'Cidade', 'SP',"
+            + " updated_at) VALUES (?, ?, ?, ?, 'Rua', '1', 'Bairro', 'Cidade', ?,"
             + " '04650-140', "
             + latLngSql
-            + ", ?, 10.00, ?, ?)",
+            + ", ?, ?, ?, ?)",
         publicId,
         code,
         ownerId,
+        customerName,
+        state,
         status,
+        new BigDecimal(total),
         Timestamp.from(NOW.toInstant()),
         Timestamp.from(NOW.toInstant()));
+  }
+
+  private void insertItemRow(
+      long orderId, String description, int quantity, String unitPrice, String subtotal) {
+    jdbcTemplate.update(
+        "INSERT INTO order_items (order_id, description, quantity, unit_price, subtotal)"
+            + " VALUES (?, ?, ?, ?, ?)",
+        orderId,
+        description,
+        quantity,
+        new BigDecimal(unitPrice),
+        new BigDecimal(subtotal));
   }
 
   private void insertHistoryRow(long orderId, String fromStatus, String toStatus) {
@@ -604,5 +643,73 @@ class OrderRepositoryTest {
     assertThatThrownBy(() -> insertHistoryRow(999_999L, "RECEBIDO", "EM_PREPARO"))
         .isInstanceOf(DataAccessException.class)
         .hasMessageContaining("FOREIGN KEY constraint failed");
+  }
+
+  @Test
+  void shouldRejectInsert_whenCustomerNameIsEmpty() {
+    // When / Then
+    assertThatThrownBy(() -> insertOrderRow("", "SP", "10.00"))
+        .isInstanceOf(DataAccessException.class)
+        .hasMessageContaining("CHECK constraint failed: length(customer_name) > 0");
+  }
+
+  @Test
+  void shouldRejectInsert_whenStateIsNotTwoLetters() {
+    // When / Then
+    assertThatThrownBy(() -> insertOrderRow("Cliente", "SPX", "10.00"))
+        .isInstanceOf(DataAccessException.class)
+        .hasMessageContaining("CHECK constraint failed: length(address_state) = 2");
+  }
+
+  @Test
+  void shouldRejectInsert_whenTotalIsNegative() {
+    // When / Then
+    assertThatThrownBy(() -> insertOrderRow("Cliente", "SP", "-0.01"))
+        .isInstanceOf(DataAccessException.class)
+        .hasMessageContaining("CHECK constraint failed: total >= 0");
+  }
+
+  @Test
+  void shouldRejectItemRow_whenDescriptionIsEmpty() {
+    // Given
+    Long orderId = persistOrder(ana, 1001L, NOW, 1).getId();
+
+    // When / Then
+    assertThatThrownBy(() -> insertItemRow(orderId, "", 1, "10.00", "10.00"))
+        .isInstanceOf(DataAccessException.class)
+        .hasMessageContaining("CHECK constraint failed: length(description) > 0");
+  }
+
+  @Test
+  void shouldRejectItemRow_whenQuantityIsZero() {
+    // Given
+    Long orderId = persistOrder(ana, 1001L, NOW, 1).getId();
+
+    // When / Then
+    assertThatThrownBy(() -> insertItemRow(orderId, "Item", 0, "10.00", "0.00"))
+        .isInstanceOf(DataAccessException.class)
+        .hasMessageContaining("CHECK constraint failed: quantity >= 1");
+  }
+
+  @Test
+  void shouldRejectItemRow_whenUnitPriceIsBelowOneCent() {
+    // Given
+    Long orderId = persistOrder(ana, 1001L, NOW, 1).getId();
+
+    // When / Then
+    assertThatThrownBy(() -> insertItemRow(orderId, "Item", 1, "0.00", "0.00"))
+        .isInstanceOf(DataAccessException.class)
+        .hasMessageContaining("CHECK constraint failed: unit_price >= 0.01");
+  }
+
+  @Test
+  void shouldRejectItemRow_whenSubtotalIsNegative() {
+    // Given
+    Long orderId = persistOrder(ana, 1001L, NOW, 1).getId();
+
+    // When / Then
+    assertThatThrownBy(() -> insertItemRow(orderId, "Item", 1, "10.00", "-0.01"))
+        .isInstanceOf(DataAccessException.class)
+        .hasMessageContaining("CHECK constraint failed: subtotal >= 0");
   }
 }

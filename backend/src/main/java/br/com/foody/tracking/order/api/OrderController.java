@@ -1,6 +1,7 @@
 package br.com.foody.tracking.order.api;
 
 import br.com.foody.tracking.auth.application.AuthenticatedUser;
+import br.com.foody.tracking.config.OpenApiConfig;
 import br.com.foody.tracking.order.application.OrderQueryService;
 import br.com.foody.tracking.order.application.OrderService;
 import br.com.foody.tracking.order.application.dto.CreateOrderRequest;
@@ -44,7 +45,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/v1/orders")
-@Tag(name = "Orders", description = "Delivery orders and their status lifecycle")
+@Tag(name = OpenApiConfig.TAG_ORDERS, description = OpenApiConfig.TAG_ORDERS_DESCRIPTION)
 @SecurityRequirement(name = "bearerAuth")
 public final class OrderController {
 

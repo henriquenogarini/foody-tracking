@@ -15,6 +15,17 @@ public final class OpenApiConfig {
 
   static final String BEARER_AUTH = "bearerAuth";
 
+  // Shared with the controllers' @Tag: springdoc emits one tag entry per distinct
+  // (name, description) pair, so a second wording of the same tag shows up twice.
+  public static final String TAG_AUTH = "Auth";
+  public static final String TAG_AUTH_DESCRIPTION =
+      "Registration, login and the authenticated user";
+  public static final String TAG_USERS = "Users";
+  public static final String TAG_USERS_DESCRIPTION = "User accounts (ADMIN only)";
+  public static final String TAG_ORDERS = "Orders";
+  public static final String TAG_ORDERS_DESCRIPTION =
+      "Delivery orders, status changes and their history";
+
   // Rendered by Swagger UI at the top of the page: it doubles as the usage guide of the API.
   private static final String DESCRIPTION =
       """
@@ -89,12 +100,8 @@ public final class OpenApiConfig {
                         .description("Access token returned by POST /api/v1/auth/login")))
         .tags(
             List.of(
-                new Tag()
-                    .name("Auth")
-                    .description("Registration, login and the authenticated user"),
-                new Tag().name("Users").description("User accounts (ADMIN only)"),
-                new Tag()
-                    .name("Orders")
-                    .description("Delivery orders, status changes and their history")));
+                new Tag().name(TAG_AUTH).description(TAG_AUTH_DESCRIPTION),
+                new Tag().name(TAG_USERS).description(TAG_USERS_DESCRIPTION),
+                new Tag().name(TAG_ORDERS).description(TAG_ORDERS_DESCRIPTION)));
   }
 }

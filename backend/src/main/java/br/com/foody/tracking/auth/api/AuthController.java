@@ -6,6 +6,7 @@ import br.com.foody.tracking.auth.application.dto.LoginRequest;
 import br.com.foody.tracking.auth.application.dto.RegisterRequest;
 import br.com.foody.tracking.auth.application.dto.TokenResponse;
 import br.com.foody.tracking.auth.application.dto.UserResponse;
+import br.com.foody.tracking.config.OpenApiConfig;
 import br.com.foody.tracking.shared.error.ApiErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-@Tag(name = "Auth", description = "Registration, login and the authenticated user")
+@Tag(name = OpenApiConfig.TAG_AUTH, description = OpenApiConfig.TAG_AUTH_DESCRIPTION)
 public final class AuthController {
 
   private final AuthService authService;

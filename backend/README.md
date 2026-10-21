@@ -174,7 +174,9 @@ br.com.foody.tracking
 10. **Application time zone `America/Sao_Paulo`, declared once.** `app.time-zone` feeds a
     `ZoneId` bean, the injected `Clock` and Jackson, so services and JSON agree on Brasília time
     (`-03:00`). The database stores UTC instants; the zone is presentation. A zone id, never a
-    fixed offset, so tzdata handles daylight saving if it returns.
+    fixed offset, so tzdata handles daylight saving if it returns. The `Clock` ticks in whole
+    milliseconds (`Clock.tick`), the precision SQLite stores, so a date returned on write is
+    identical to the one read back later.
 11. **JWT HS256 through Spring's resource server and Nimbus.** No third-party JWT library; the
     algorithm is pinned on both sides and the secret is validated at startup. The signed `role`
     claim is trusted for the 2h token life (no per-request lookup on a single SQLite
@@ -197,10 +199,15 @@ br.com.foody.tracking
     the case-insensitive unique index as a generic `JpaSystemException`, not
     `DataIntegrityViolationException`, so it cannot be mapped reliably. The service checks inside
     the transaction (pool size 1 serializes writers) and the index stays as the last guard.
+    Lookups by e-mail use a separate plain index (`idx_users_email`, V5): the column compares with
+    BINARY collation, so `WHERE email = ?` cannot use the NOCASE unique index, and values are
+    always stored lowercase, so the BINARY index answers the lookup exactly.
 16. **Client `sort` is whitelisted per endpoint.** Spring Data would otherwise accept any entity
     path from `?sort=` (e.g. `passwordHash`, or `owner.passwordHash` across a join), leaking data
     through ordering. Each query service checks the requested properties with `SortWhitelist`;
     a disallowed property answers the same 400 `VALIDATION_ERROR` body as an unknown one.
+    The order list then appends `code DESC` (unique) as a tie-breaker unless the client already
+    sorts by `code`, so rows with equal sort values page deterministically.
 
 17. **Order status state machine lives in the domain.** `OrderStatus.canTransitionTo` owns the
     matrix and `Order.changeStatus` is the only mutation; the schema guards only what never
@@ -263,5 +270,12 @@ br.com.foody.tracking
 28. **One repository, `backend/` and `frontend/` folders.** The API and the web client share
     the contract of this project and are versioned together; each folder keeps its own build,
     `.gitignore` and tooling, and the root holds only what is common.
+29. **Unit price bounded to 99,999.99.** SQLite has no exact decimal type: a `NUMERIC` column
+    stores these values as `REAL` (a double), which is exact only up to about 15 significant
+    digits. `unitPrice` is limited to `@DecimalMax("99999.99")` (`@Digits` only guards the 2
+    decimal places), so the largest accepted order (50 items x 999 x 99,999.99 =
+    4,994,999,500.50) keeps at most 12 significant digits, fits the declared
+    `precision = 12, scale = 2` and round-trips exactly; the client can never store a value
+    it would later read back differently.
 
 Entries are appended as new decisions are made.

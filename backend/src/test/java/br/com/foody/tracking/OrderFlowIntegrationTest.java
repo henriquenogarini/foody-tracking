@@ -16,6 +16,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.jayway.jsonpath.JsonPath;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,6 +94,13 @@ class OrderFlowIntegrationTest {
     String orderId = read(created, "$.id");
     String orderPath = "/api/v1/orders/" + orderId;
     created.andExpect(header().string(HttpHeaders.LOCATION, endsWith(orderPath)));
+
+    // And a later GET returns the same timestamps the POST did (the clock ticks in storage millis)
+    mockMvc
+        .perform(get(orderPath).header(HttpHeaders.AUTHORIZATION, bearer(anaToken)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.createdAt").value(read(created, "$.createdAt")))
+        .andExpect(jsonPath("$.updatedAt").value(read(created, "$.updatedAt")));
 
     // Then she advances it along the state machine
     changeStatus(anaToken, orderPath, "EM_PREPARO")
@@ -213,6 +221,9 @@ class OrderFlowIntegrationTest {
             .getResponse()
             .getContentAsString();
     assertThat(body).contains("/api/v1/orders/{publicId}/status");
+    // And each tag is declared once, with the description from OpenApiConfig
+    List<String> tagNames = JsonPath.read(body, "$.tags[*].name");
+    assertThat(tagNames).containsExactlyInAnyOrder("Auth", "Users", "Orders");
   }
 
   private ResultActions register(String name, String email) throws Exception {

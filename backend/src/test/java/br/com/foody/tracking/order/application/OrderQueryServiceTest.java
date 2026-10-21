@@ -3,6 +3,8 @@ package br.com.foody.tracking.order.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -33,6 +35,7 @@ import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
+import org.mockito.ArgumentCaptor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -46,6 +49,9 @@ class OrderQueryServiceTest {
       OffsetDateTime.ofInstant(Instant.parse("2026-10-21T17:13:27Z"), APP_ZONE);
   private static final Pageable PAGEABLE =
       PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+  // What the repository receives: the client's sort plus the code tie-breaker.
+  private static final Pageable STABLE_PAGEABLE =
+      PageRequest.of(0, 20, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("code")));
 
   private final OrderRepository orderRepository = mock(OrderRepository.class);
   private final OrderQueryService service =
@@ -60,7 +66,7 @@ class OrderQueryServiceTest {
   void shouldUseUnscopedQuery_whenAdminListsWithoutStatus() {
     // Given
     Page<OrderSummaryView> summaries = pageOf(summaryView());
-    when(orderRepository.findSummaries(PAGEABLE)).thenReturn(summaries);
+    when(orderRepository.findSummaries(STABLE_PAGEABLE)).thenReturn(summaries);
 
     // When
     PageResponse<OrderSummaryResponse> page = service.list(adminActor, null, PAGEABLE);
@@ -69,21 +75,21 @@ class OrderQueryServiceTest {
     assertThat(page.totalElements()).isEqualTo(1);
     assertThat(page.content().get(0).total()).isEqualByComparingTo("59.90");
     assertThat(page.content().get(0).total().scale()).isEqualTo(2);
-    verify(orderRepository).findSummaries(PAGEABLE);
+    verify(orderRepository).findSummaries(STABLE_PAGEABLE);
     verifyNoMoreInteractions(orderRepository);
   }
 
   @Test
   void shouldUseUnscopedStatusQuery_whenAdminFiltersByStatus() {
     // Given
-    when(orderRepository.findSummariesByStatus(OrderStatus.EM_PREPARO, PAGEABLE))
+    when(orderRepository.findSummariesByStatus(OrderStatus.EM_PREPARO, STABLE_PAGEABLE))
         .thenReturn(pageOf());
 
     // When
     service.list(adminActor, OrderStatus.EM_PREPARO, PAGEABLE);
 
     // Then
-    verify(orderRepository).findSummariesByStatus(OrderStatus.EM_PREPARO, PAGEABLE);
+    verify(orderRepository).findSummariesByStatus(OrderStatus.EM_PREPARO, STABLE_PAGEABLE);
     verifyNoMoreInteractions(orderRepository);
   }
 
@@ -91,7 +97,7 @@ class OrderQueryServiceTest {
   void shouldUseOwnerScopedQuery_whenUserListsWithoutStatus() {
     // Given
     Page<OrderSummaryView> summaries = pageOf(summaryView());
-    when(orderRepository.findSummariesByOwnerPublicId(userActor.id(), PAGEABLE))
+    when(orderRepository.findSummariesByOwnerPublicId(userActor.id(), STABLE_PAGEABLE))
         .thenReturn(summaries);
 
     // When
@@ -99,7 +105,7 @@ class OrderQueryServiceTest {
 
     // Then
     assertThat(page.content()).hasSize(1);
-    verify(orderRepository).findSummariesByOwnerPublicId(userActor.id(), PAGEABLE);
+    verify(orderRepository).findSummariesByOwnerPublicId(userActor.id(), STABLE_PAGEABLE);
     verifyNoMoreInteractions(orderRepository);
   }
 
@@ -107,7 +113,7 @@ class OrderQueryServiceTest {
   void shouldUseOwnerScopedStatusQuery_whenUserFiltersByStatus() {
     // Given
     when(orderRepository.findSummariesByOwnerPublicIdAndStatus(
-            userActor.id(), OrderStatus.ENTREGUE, PAGEABLE))
+            userActor.id(), OrderStatus.ENTREGUE, STABLE_PAGEABLE))
         .thenReturn(pageOf());
 
     // When
@@ -115,8 +121,56 @@ class OrderQueryServiceTest {
 
     // Then
     verify(orderRepository)
-        .findSummariesByOwnerPublicIdAndStatus(userActor.id(), OrderStatus.ENTREGUE, PAGEABLE);
+        .findSummariesByOwnerPublicIdAndStatus(
+            userActor.id(), OrderStatus.ENTREGUE, STABLE_PAGEABLE);
     verifyNoMoreInteractions(orderRepository);
+  }
+
+  @Test
+  void shouldAppendCodeDescending_whenListingWithDefaultSort() {
+    // Given
+    when(orderRepository.findSummariesByOwnerPublicId(any(), any())).thenReturn(pageOf());
+
+    // When
+    service.list(userActor, null, PageRequest.of(2, 10, Sort.by(Sort.Direction.DESC, "createdAt")));
+
+    // Then
+    ArgumentCaptor<Pageable> sent = ArgumentCaptor.forClass(Pageable.class);
+    verify(orderRepository).findSummariesByOwnerPublicId(eq(userActor.id()), sent.capture());
+    assertThat(sent.getValue().getPageNumber()).isEqualTo(2);
+    assertThat(sent.getValue().getPageSize()).isEqualTo(10);
+    assertThat(sent.getValue().getSort())
+        .containsExactly(Sort.Order.desc("createdAt"), Sort.Order.desc("code"));
+  }
+
+  @Test
+  void shouldKeepClientSort_whenItAlreadyContainsCode() {
+    // Given
+    Pageable byCodeAscending = PageRequest.of(0, 20, Sort.by(Sort.Direction.ASC, "code"));
+    when(orderRepository.findSummaries(any())).thenReturn(pageOf());
+
+    // When
+    service.list(adminActor, null, byCodeAscending);
+
+    // Then
+    ArgumentCaptor<Pageable> sent = ArgumentCaptor.forClass(Pageable.class);
+    verify(orderRepository).findSummaries(sent.capture());
+    assertThat(sent.getValue().getSort()).containsExactly(Sort.Order.asc("code"));
+  }
+
+  @Test
+  void shouldPassPageableUnchanged_whenItIsUnpaged() {
+    // Given
+    Pageable unpaged = Pageable.unpaged();
+    when(orderRepository.findSummaries(any())).thenReturn(pageOf());
+
+    // When
+    service.list(adminActor, null, unpaged);
+
+    // Then: no page number to rebuild from, so the tie-breaker is skipped instead of throwing
+    ArgumentCaptor<Pageable> sent = ArgumentCaptor.forClass(Pageable.class);
+    verify(orderRepository).findSummaries(sent.capture());
+    assertThat(sent.getValue()).isSameAs(unpaged);
   }
 
   @Test
@@ -241,6 +295,6 @@ class OrderQueryServiceTest {
   }
 
   private static Page<OrderSummaryView> pageOf(OrderSummaryView... views) {
-    return new PageImpl<>(List.of(views), PAGEABLE, views.length);
+    return new PageImpl<>(List.of(views), STABLE_PAGEABLE, views.length);
   }
 }

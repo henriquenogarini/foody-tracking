@@ -2,6 +2,7 @@ package br.com.foody.tracking.auth.api;
 
 import br.com.foody.tracking.auth.application.UserQueryService;
 import br.com.foody.tracking.auth.application.dto.UserResponse;
+import br.com.foody.tracking.config.OpenApiConfig;
 import br.com.foody.tracking.shared.error.ApiErrorResponse;
 import br.com.foody.tracking.shared.web.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 // Not final: @PreAuthorize needs a CGLIB subclass proxy.
 @RestController
 @RequestMapping("/api/v1/users")
-@Tag(name = "Users", description = "User accounts (ADMIN only)")
+@Tag(name = OpenApiConfig.TAG_USERS, description = OpenApiConfig.TAG_USERS_DESCRIPTION)
 @SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
@@ -44,6 +45,13 @@ public class UserController {
   // the return type, which @Schema(implementation = PageResponse.class) would erase.
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Page of users"),
+    @ApiResponse(
+        responseCode = "400",
+        description = "`VALIDATION_ERROR`: sort property outside the allowed list",
+        content =
+            @Content(
+                mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                schema = @Schema(implementation = ApiErrorResponse.class))),
     @ApiResponse(
         responseCode = "401",
         description = "`AUTH_TOKEN_INVALID`: missing, invalid or expired token",

@@ -1,6 +1,7 @@
 package br.com.foody.tracking.config;
 
 import java.time.Clock;
+import java.time.Duration;
 import java.time.ZoneId;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,8 +17,10 @@ public final class ClockConfig {
     return ZoneId.of(timeZone);
   }
 
+  // SQLite stores instants as epoch millis; truncating at the source keeps the value returned on
+  // write equal to the one read back later (no micro/nanosecond digits that vanish on reload).
   @Bean
   Clock clock(ZoneId appZone) {
-    return Clock.system(appZone);
+    return Clock.tick(Clock.system(appZone), Duration.ofMillis(1));
   }
 }

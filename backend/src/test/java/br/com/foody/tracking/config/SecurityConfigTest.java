@@ -10,9 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import br.com.foody.tracking.auth.application.TokenService;
-import br.com.foody.tracking.auth.domain.Role;
-import br.com.foody.tracking.auth.domain.User;
+import br.com.foody.tracking.modules.auth.entity.User;
+import br.com.foody.tracking.modules.auth.enums.Role;
+import br.com.foody.tracking.modules.auth.security.TokenService;
+import br.com.foody.tracking.shared.exception.type.InvalidTokenException;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
 import java.time.Clock;
@@ -71,7 +72,7 @@ class SecurityConfigTest {
             .perform(get("/api/v1/probe").header(HttpHeaders.AUTHORIZATION, "Bearer not.a.jwt"))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.code").value("AUTH_TOKEN_INVALID"))
-            .andExpect(jsonPath("$.detail").value(ProblemDetailAuthenticationEntryPoint.DETAIL))
+            .andExpect(jsonPath("$.detail").value(InvalidTokenException.DETAIL))
             .andReturn()
             .getResponse()
             .getContentAsString(StandardCharsets.UTF_8);
@@ -106,7 +107,7 @@ class SecurityConfigTest {
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
         .andExpect(jsonPath("$.status").value(403))
         .andExpect(jsonPath("$.code").value("ACCESS_DENIED"))
-        .andExpect(jsonPath("$.detail").value(ProblemDetailAccessDeniedHandler.DETAIL))
+        .andExpect(jsonPath("$.detail").value("Acesso negado."))
         .andExpect(jsonPath("$.instance").value("/api/v1/probe/admin"));
   }
 

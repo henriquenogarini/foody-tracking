@@ -15,7 +15,7 @@ public final class JacksonConfig {
   // OffsetDateTime leaves as ISO-8601 re-zoned to the application zone (values read back from the
   // database carry Z), and incoming offsets are adjusted to that same zone.
   @Bean
-  Jackson2ObjectMapperBuilderCustomizer applicationZoneIsoDates(ZoneId appZone) {
+  public Jackson2ObjectMapperBuilderCustomizer applicationZoneIsoDates(ZoneId appZone) {
     return builder ->
         builder
             .featuresToDisable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)

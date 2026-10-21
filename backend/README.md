@@ -129,22 +129,52 @@ There is no CI pipeline (decision 27): `./mvnw verify` is run locally before eve
 
 ## Project structure
 
-The code is organized by feature package. Packages are added incrementally; this is the
-target layout.
+The code is organized in modules by feature, and inside each module in folders by
+responsibility. Errors, pagination and validation shared by every module live in `shared/`.
 
 ```
 br.com.foody.tracking
-├── config/      security, JWT, OpenAPI and Jackson configuration
-├── shared/      error model (RFC 9457 ProblemDetail) and pagination response
-├── auth/        registration, login, current user      (api → application → domain)
-└── order/       orders, items, status state machine    (api → application → domain)
+├── TrackingApplication
+├── config/                 Clock, Jackson, JWT, OpenAPI and security configuration
+├── modules/
+│   ├── auth/               registration, login, current user, admin user listing
+│   │   ├── controller/     AuthController, UserController
+│   │   ├── dto/            request/response records (`*DTO`)
+│   │   ├── entity/         User
+│   │   ├── enums/          Role
+│   │   ├── helper/         EmailNormalizer
+│   │   ├── mapper/         UserMapper (MapStruct)
+│   │   ├── repository/     UserRepository
+│   │   ├── security/       AuthenticatedUser, TokenService
+│   │   └── service/        AuthService, UserQueryService, AdminBootstrap
+│   └── order/              orders, items, status state machine
+│       ├── controller/     OrderController
+│       ├── dto/            request/response records (`*DTO`) + the lat/lng validator
+│       ├── entity/         Order, OrderItem, OrderStatusHistory, Customer, DeliveryAddress
+│       ├── enums/          OrderStatus (state machine)
+│       ├── event/          OrderStatusChangedEvent
+│       ├── listener/       OrderStatusChangedListener (after commit)
+│       ├── mapper/         OrderMapper (MapStruct)
+│       ├── repository/     OrderRepository, OrderSummaryView
+│       └── service/        OrderService, OrderQueryService, OrderFinder
+└── shared/
+    ├── exception/
+    │   ├── handler/        GlobalExceptionHandler, ProblemDetailFactory, 401/403 security handlers
+    │   ├── model/          ApiErrorCode, ApiErrorResponse, ValidationError
+    │   └── type/           ApiException, DomainException and the named exceptions
+    ├── validation/         MaxUtf8Bytes
+    └── web/                PageResponseDTO, SortWhitelist
 ```
 
 ## Architectural decisions
 
-1. **Layered monolith organized by feature.** Each feature owns its `api`, `application`
-   and `domain` layers. Dependencies always point `api → application → domain`, and
-   `domain` knows nothing about Spring Web or DTOs.
+1. **Layered monolith organized in modules by feature, folders by responsibility.** Each
+   module under `modules/` (`auth`, `order`) groups its classes by role: `controller`, `dto`,
+   `entity`, `enums`, `mapper`, `repository`, `service` and, where needed, `event`, `listener`,
+   `security`, `helper`. Exceptions shared by every module live in `shared/exception`
+   (`handler`, `model`, `type`). Dependencies always point `controller → service →
+   repository/entity`; `entity`, `enums` and `repository` know nothing about Spring Web or DTOs,
+   and `shared`/`config` import nothing from `modules`.
 2. **Flyway owns the schema (`ddl-auto: none`).** SQLite's loose column typing makes
    Hibernate's `validate` unreliable, so the migrations are the single source of truth and
    repository tests prove the entity mapping.
@@ -161,8 +191,8 @@ br.com.foody.tracking
    single funnel.** The framework keeps handling its own errors (unknown route, 405, 415...) and
    every body passes through one hook that stamps `timestamp`. Those framework-built errors carry
    no `code`: the nine codes of the API contract are the contract and do not grow for them.
-7. **`ApiErrorCode` holds an `int` status, not `HttpStatus`.** The enum reaches `domain` through
-   `DomainException`, so it must not pull Spring Web into the domain layer.
+7. **`ApiErrorCode` holds an `int` status, not `HttpStatus`.** The enum reaches the entities through
+   `DomainException`, so it must not pull Spring Web into the domain model.
 8. **Fixed `pt-BR` locale and translated framework error details.** `spring.web.locale-resolver:
    fixed` pins the locale regardless of `Accept-Language`, and `messages.properties` translates the
    framework-built `detail`s; the same fixed locale makes Bean Validation default messages

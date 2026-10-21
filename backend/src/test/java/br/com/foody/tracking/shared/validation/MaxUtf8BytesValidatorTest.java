@@ -2,7 +2,7 @@ package br.com.foody.tracking.shared.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import br.com.foody.tracking.auth.application.dto.RegisterRequest;
+import br.com.foody.tracking.modules.auth.dto.RegisterRequestDTO;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
@@ -52,7 +52,8 @@ class MaxUtf8BytesValidatorTest {
   @Test
   void shouldRejectRegisterPassword_whenSeventyTwoAccentedCharactersExceedBcryptBytes() {
     // Given
-    RegisterRequest request = new RegisterRequest("Ana Souza", "ana@exemplo.com", "ã".repeat(72));
+    RegisterRequestDTO request =
+        new RegisterRequestDTO("Ana Souza", "ana@exemplo.com", "ã".repeat(72));
 
     // When / Then
     assertThat(validator.validate(request))

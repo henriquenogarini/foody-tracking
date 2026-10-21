@@ -26,14 +26,19 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-// The in-memory database is shared with other test classes, so e-mails are unique per run and
-// assertions are relative (contains / does not contain), never absolute counts.
+// Own in-memory database: this flow commits rows that must not leak into the classes sharing
+// `memdb`. E-mails stay unique per run and assertions relative (contains / does not contain), so
+// the class does not depend on what else ran in the JVM.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@TestPropertySource(
+    properties =
+        "spring.datasource.url=jdbc:sqlite:file:flowdb?mode=memory&cache=shared&foreign_keys=true")
 class OrderFlowIntegrationTest {
 
   private static final String ORDER_PAYLOAD =

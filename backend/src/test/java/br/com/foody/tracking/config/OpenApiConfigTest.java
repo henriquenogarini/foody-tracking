@@ -2,7 +2,7 @@ package br.com.foody.tracking.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import br.com.foody.tracking.shared.error.ApiErrorCode;
+import br.com.foody.tracking.shared.exception.model.ApiErrorCode;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.tags.Tag;

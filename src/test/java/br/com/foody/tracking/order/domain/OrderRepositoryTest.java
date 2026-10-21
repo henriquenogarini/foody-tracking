@@ -314,6 +314,57 @@ class OrderRepositoryTest {
   }
 
   @Test
+  void shouldSortUnscopedSummariesByTotal_whenPageableAsksForIt() {
+    // Given: totals 60.00, 10.00 and 30.00
+    persistOrder(ana, 1001L, NOW, 3);
+    persistOrder(ana, 1002L, NOW, 1);
+    persistOrder(bruno, 1003L, NOW, 2);
+    entityManager.clear();
+
+    // When
+    Page<OrderSummaryView> ascending =
+        orderRepository.findSummaries(PageRequest.of(0, 20, Sort.by("total")));
+    Page<OrderSummaryView> descending =
+        orderRepository.findSummaries(PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "total")));
+
+    // Then
+    assertThat(ascending.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(1002L, 1003L, 1001L);
+    assertThat(descending.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(1001L, 1003L, 1002L);
+  }
+
+  @Test
+  void shouldSortUnscopedSummariesByStatusThenUpdatedAt_whenPageableAsksForThem() {
+    // Given: RECEBIDO, EM_PREPARO (changed later) and CANCELADO (changed earlier)
+    persistOrder(ana, 1001L, NOW, 1);
+    Order preparing = persistOrder(bruno, 1002L, NOW, 1);
+    preparing.changeStatus(OrderStatus.EM_PREPARO, bruno.getPublicId(), NOW.plusMinutes(10));
+    orderRepository.saveAndFlush(preparing);
+    Order cancelled = persistOrder(ana, 1003L, NOW, 1);
+    cancelled.changeStatus(OrderStatus.CANCELADO, ana.getPublicId(), NOW.plusMinutes(5));
+    orderRepository.saveAndFlush(cancelled);
+    entityManager.clear();
+
+    // When
+    Page<OrderSummaryView> byStatus =
+        orderRepository.findSummaries(PageRequest.of(0, 20, Sort.by("status")));
+    Page<OrderSummaryView> byUpdatedAt =
+        orderRepository.findSummaries(
+            PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "updatedAt")));
+
+    // Then: status sorts by its stored text
+    assertThat(byStatus.getContent())
+        .extracting(OrderSummaryView::getStatus)
+        .containsExactly(OrderStatus.CANCELADO, OrderStatus.EM_PREPARO, OrderStatus.RECEBIDO);
+    assertThat(byUpdatedAt.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(1002L, 1003L, 1001L);
+  }
+
+  @Test
   void shouldLoadSummariesWithoutPerOrderQueries_whenOrdersHaveSeveralItems() {
     // Given
     persistOrder(ana, 1001L, NOW, 3);

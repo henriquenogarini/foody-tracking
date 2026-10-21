@@ -1,0 +1,20 @@
+package br.com.foody.tracking.order.application.dto;
+
+import br.com.foody.tracking.order.domain.OrderStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.OffsetDateTime;
+import java.util.UUID;
+
+@Schema(description = "One status change of an order, including its creation")
+public record StatusHistoryResponse(
+    @Schema(description = "Previous status; null on the creation row", example = "RECEBIDO")
+        OrderStatus fromStatus,
+    @Schema(description = "New status", example = "EM_PREPARO") OrderStatus toStatus,
+    @Schema(
+            description = "Change instant in the application zone (America/Sao_Paulo)",
+            example = "2026-10-20T14:05:00-03:00")
+        OffsetDateTime changedAt,
+    @Schema(
+            description = "Public identifier of the user who made the change",
+            example = "3f6c1a2e-8d4b-4c7a-9e1f-2b5d7a9c0e11")
+        UUID changedBy) {}

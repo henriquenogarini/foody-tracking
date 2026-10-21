@@ -33,6 +33,12 @@ spring:
     locale: pt-BR
     locale-resolver: fixed
 
+  data:
+    web:
+      pageable:
+        # Caps ?size= so a client cannot request an unbounded page.
+        max-page-size: 100
+
 server:
   port: ${SERVER_PORT:8080}
 

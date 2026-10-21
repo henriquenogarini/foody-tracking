@@ -1,6 +1,7 @@
 package br.com.foody.tracking.shared.error;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -10,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import br.com.foody.tracking.config.ClockConfig;
 import br.com.foody.tracking.config.JacksonConfig;
+import br.com.foody.tracking.shared.web.InvalidSortException;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -24,6 +26,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.MethodParameter;
+import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,6 +35,8 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -315,6 +321,59 @@ class GlobalExceptionHandlerTest {
         .andExpect(applicationZoneTimestamp());
   }
 
+  @Test
+  void shouldReturnSortFieldError_whenSortPropertyIsUnknown() throws Exception {
+    // When / Then
+    mockMvc
+        .perform(get("/test/unknown-sort"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.detail").value(INVALID_FIELDS_DETAIL))
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        .andExpect(jsonPath("$.instance").value("/test/unknown-sort"))
+        .andExpect(jsonPath("$.errors.length()").value(1))
+        .andExpect(jsonPath("$.errors[0].field").value("sort"))
+        .andExpect(
+            jsonPath("$.errors[0].message").value("propriedade de ordenação inválida: unknown"))
+        .andExpect(applicationZoneTimestamp());
+  }
+
+  @Test
+  void shouldReturnSameSortFieldError_whenSortPropertyIsNotWhitelisted() throws Exception {
+    // When / Then
+    mockMvc
+        .perform(get("/test/disallowed-sort"))
+        .andExpect(status().isBadRequest())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.status").value(400))
+        .andExpect(jsonPath("$.detail").value(INVALID_FIELDS_DETAIL))
+        .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+        .andExpect(jsonPath("$.instance").value("/test/disallowed-sort"))
+        .andExpect(jsonPath("$.errors.length()").value(1))
+        .andExpect(jsonPath("$.errors[0].field").value("sort"))
+        .andExpect(
+            jsonPath("$.errors[0].message")
+                .value("propriedade de ordenação inválida: passwordHash"))
+        .andExpect(applicationZoneTimestamp());
+  }
+
+  // Filters are off in this slice, so the rethrown exception surfaces from MockMvc; in the app,
+  // Spring Security's ExceptionTranslationFilter turns it into the 403/401 ProblemDetail.
+  @Test
+  void shouldRethrowInsteadOfInternalError_whenAccessIsDenied() {
+    // When / Then
+    assertThatThrownBy(() -> mockMvc.perform(get("/test/access-denied")))
+        .hasCauseInstanceOf(AuthorizationDeniedException.class);
+  }
+
+  @Test
+  void shouldRethrowInsteadOfInternalError_whenAuthenticationFails() {
+    // When / Then
+    assertThatThrownBy(() -> mockMvc.perform(get("/test/authentication")))
+        .hasCauseInstanceOf(BadCredentialsException.class);
+  }
+
   private static ResultMatcher applicationZoneTimestamp() {
     return result -> {
       String json = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -365,6 +424,26 @@ class GlobalExceptionHandlerTest {
     @GetMapping("/unexpected")
     void unexpected() {
       throw new IllegalStateException(SECRET_CAUSE);
+    }
+
+    @GetMapping("/unknown-sort")
+    void unknownSort() {
+      throw new PropertyReferenceException("unknown", TypeInformation.of(Payload.class), List.of());
+    }
+
+    @GetMapping("/disallowed-sort")
+    void disallowedSort() {
+      throw new InvalidSortException("passwordHash");
+    }
+
+    @GetMapping("/access-denied")
+    void accessDenied() {
+      throw new AuthorizationDeniedException("Access Denied");
+    }
+
+    @GetMapping("/authentication")
+    void authentication() {
+      throw new BadCredentialsException("bad credentials");
     }
   }
 

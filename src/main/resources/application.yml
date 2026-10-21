@@ -29,6 +29,10 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  web:
+    locale: pt-BR
+    locale-resolver: fixed
+
 server:
   port: ${SERVER_PORT:8080}
 

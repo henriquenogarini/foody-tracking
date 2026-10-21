@@ -8,6 +8,10 @@ app:
     jwt:
       # Fixed key for tests only.
       secret: 4F7QtQJCWv6h/csoRdvkKJ8G81a2ugKuXnD3raXwk8+PcTOWFEw1IfGPrOJArc8x
+    admin:
+      # Bootstrap admin for the full-flow tests only.
+      email: admin@foody.test
+      password: admin-test-password
   cors:
     allowed-origins: http://localhost:5173
 

@@ -11,7 +11,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { Link, Outlet, useMatch } from 'react-router'
-import { BrandLogo } from './BrandLogo'
+import { BrandLogo } from '@/shared/components/BrandLogo'
 
 const NAV_ITEMS = [
   { to: '/orders', label: 'Pedidos', icon: <ListIcon /> },

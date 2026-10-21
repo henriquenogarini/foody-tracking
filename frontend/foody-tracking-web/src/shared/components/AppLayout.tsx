@@ -41,7 +41,14 @@ export function AppLayout() {
             component={Link}
             to="/orders"
             aria-label="Foody Tracking, início"
-            sx={{ display: 'flex', color: 'inherit', textDecoration: 'none' }}
+            // 44px tall hit area around the 28-32px logo: the touch-target minimum.
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              minHeight: 44,
+              color: 'inherit',
+              textDecoration: 'none',
+            }}
           >
             <BrandLogo height={isDesktop ? 32 : 28} />
           </Box>

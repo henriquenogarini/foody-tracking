@@ -1,9 +1,22 @@
-# Dependencies and build output
-node_modules
-dist
-dist-ssr
-coverage
+# foody-tracking-web. Self-contained on purpose: the root .gitignore is only a safety net.
+
+# Dependencies
+node_modules/
+
+# Build output and reports
+dist/
+dist-ssr/
+coverage/
 *.tsbuildinfo
+
+# Tool caches and temp files
+.eslintcache
+.prettiercache
+.cache/
+.vite/
+.vitest/
+vite.config.*.timestamp-*
+vitest.config.*.timestamp-*
 
 # Environment: only the example is versioned
 .env
@@ -11,22 +24,28 @@ coverage
 !.env.example
 *.local
 
+# Claude Code: per-developer instructions, agents and hooks
+CLAUDE.md
+.claude/
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-lerna-debug.log*
 
-# Editor and OS
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
+# Editors
+.vscode/
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

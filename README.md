@@ -173,4 +173,21 @@ br.com.foody.tracking
     instead of the internal `owner_id` named in the original plan: one statement, backed by the
     unique `users.public_id` index, and no extra user lookup on every read.
 
+20. **Role scope is chosen in the service, expressed in the query.** `USER` reads and writes go
+    through the owner-scoped repository methods and `ADMIN` through the unscoped ones; another
+    user's order answers 404 `ORDER_NOT_FOUND`, never 403, so its existence is not revealed.
+    One package-private `OrderFinder` holds that choice for both services, and the controller
+    only turns the JWT into `AuthenticatedUser` and delegates.
+21. **Order code = `COALESCE(MAX(code), 1000) + 1` inside the write transaction.** SQLite allows
+    one `AUTOINCREMENT` per table (taken by `id`), and the single-connection pool serializes
+    writers, so two orders cannot compute the same code; `uq_orders_code` is the last guard.
+22. **Status changes publish `OrderStatusChangedEvent`, delivered after commit.** The
+    `@TransactionalEventListener(AFTER_COMMIT)` listener only logs today; it is the extension
+    point for a webhook or queue, and a rolled-back change notifies no one. The service flushes
+    before publishing, so a stale `@Version` fails inside the request as 409
+    `CONCURRENT_MODIFICATION` instead of at commit time.
+23. **Commands and queries are separate services.** `OrderService` (writes, events, locking) and
+    `OrderQueryService` (`readOnly`, projections for the list) have different transaction
+    semantics and fetch shapes; each stays small.
+
 Entries are appended as new decisions are made.

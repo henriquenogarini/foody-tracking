@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import br.com.foody.tracking.config.ClockConfig;
 import br.com.foody.tracking.config.JacksonConfig;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.validation.Valid;
@@ -45,7 +46,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
 @WebMvcTest(controllers = GlobalExceptionHandlerTest.ThrowingController.class)
-@Import({JacksonConfig.class, GlobalExceptionHandlerTest.ThrowingController.class})
+@Import({
+  ClockConfig.class,
+  JacksonConfig.class,
+  GlobalExceptionHandlerTest.ThrowingController.class
+})
 @AutoConfigureMockMvc(addFilters = false)
 class GlobalExceptionHandlerTest {
 
@@ -69,7 +74,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.code").value("ORDER_NOT_FOUND"))
         .andExpect(jsonPath("$.instance").value("/test/api-exception"))
         .andExpect(jsonPath("$.errors").doesNotExist())
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -85,7 +90,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.code").value("ORDER_INVALID_TRANSITION"))
         .andExpect(jsonPath("$.instance").value("/test/domain-exception"))
         .andExpect(jsonPath("$.errors").doesNotExist())
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -108,7 +113,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.errors[0].message").value("não pode ficar em branco"))
         .andExpect(jsonPath("$.errors[1].field").value("status"))
         .andExpect(jsonPath("$.errors[1].message").value("é obrigatório"))
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -161,7 +166,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
         .andExpect(jsonPath("$.instance").value("/test/validate"))
         .andExpect(jsonPath("$.errors").doesNotExist())
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -180,7 +185,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(
             jsonPath("$.errors[0].message")
                 .value("valor inválido; valores aceitos: ACTIVE, INACTIVE"))
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -197,7 +202,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.errors.length()").value(1))
         .andExpect(jsonPath("$.errors[0].field").value("items"))
         .andExpect(jsonPath("$.errors[0].message").value("valor inválido"))
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -233,7 +238,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(
             jsonPath("$.errors[0].message")
                 .value("valor inválido; valores aceitos: ACTIVE, INACTIVE"))
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -251,7 +256,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.code").value("CONCURRENT_MODIFICATION"))
         .andExpect(jsonPath("$.instance").value("/test/optimistic-lock"))
         .andExpect(jsonPath("$.errors").doesNotExist())
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -268,7 +273,7 @@ class GlobalExceptionHandlerTest {
             .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"))
             .andExpect(jsonPath("$.instance").value("/test/unexpected"))
             .andExpect(jsonPath("$.errors").doesNotExist())
-            .andExpect(utcTimestamp())
+            .andExpect(applicationZoneTimestamp())
             .andReturn()
             .getResponse()
             .getContentAsString(StandardCharsets.UTF_8);
@@ -290,7 +295,7 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.instance").value("/test/missing"))
         .andExpect(jsonPath("$.code").doesNotExist())
         .andExpect(jsonPath("$.errors").doesNotExist())
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
   @Test
@@ -307,15 +312,14 @@ class GlobalExceptionHandlerTest {
         .andExpect(jsonPath("$.instance").value("/test/api-exception"))
         .andExpect(jsonPath("$.code").doesNotExist())
         .andExpect(jsonPath("$.errors").doesNotExist())
-        .andExpect(utcTimestamp());
+        .andExpect(applicationZoneTimestamp());
   }
 
-  private static ResultMatcher utcTimestamp() {
+  private static ResultMatcher applicationZoneTimestamp() {
     return result -> {
       String json = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
       String timestamp = JsonPath.read(json, "$.timestamp");
-      assertThat(timestamp).endsWith("Z");
-      assertThat(OffsetDateTime.parse(timestamp).getOffset()).isEqualTo(ZoneOffset.UTC);
+      assertThat(OffsetDateTime.parse(timestamp).getOffset()).isEqualTo(ZoneOffset.ofHours(-3));
     };
   }
 

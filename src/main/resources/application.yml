@@ -50,6 +50,8 @@ app:
       expiration-seconds: 7200
   cors:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # Zone id, never a fixed offset: tzdata handles DST if it returns. Drives the Clock and the JSON dates.
+  time-zone: ${APP_TIME_ZONE:America/Sao_Paulo}
 
 logging:
   level:

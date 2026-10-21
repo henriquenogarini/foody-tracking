@@ -203,6 +203,8 @@ br.com.foody.tracking
     path from `?sort=` (e.g. `passwordHash`, or `owner.passwordHash` across a join), leaking data
     through ordering. Each query service checks the requested properties with `SortWhitelist`;
     a disallowed property answers the same 400 `VALIDATION_ERROR` body as an unknown one.
+    The order list then appends `code DESC` (unique) as a tie-breaker unless the client already
+    sorts by `code`, so rows with equal sort values page deterministically.
 
 17. **Order status state machine lives in the domain.** `OrderStatus.canTransitionTo` owns the
     matrix and `Order.changeStatus` is the only mutation; the schema guards only what never

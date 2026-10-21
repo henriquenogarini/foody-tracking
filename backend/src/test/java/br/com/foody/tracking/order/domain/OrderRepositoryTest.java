@@ -325,6 +325,35 @@ class OrderRepositoryTest {
   }
 
   @Test
+  void shouldPageDeterministicallyByCode_whenCreatedAtTiesAndCodeBreaksThem() {
+    // Given: four orders created in the same millisecond, two of them by another owner
+    persistOrder(ana, 1001L, NOW, 1);
+    persistOrder(bruno, 1002L, NOW, 1);
+    persistOrder(ana, 1003L, NOW, 1);
+    persistOrder(bruno, 1004L, NOW, 1);
+    entityManager.clear();
+    Sort stable = Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("code"));
+
+    // When
+    Page<OrderSummaryView> first = orderRepository.findSummaries(PageRequest.of(0, 2, stable));
+    Page<OrderSummaryView> second = orderRepository.findSummaries(PageRequest.of(1, 2, stable));
+    Page<OrderSummaryView> anaOnly =
+        orderRepository.findSummariesByOwnerPublicId(
+            ana.getPublicId(), PageRequest.of(0, 20, stable));
+
+    // Then: no row repeats or goes missing across pages
+    assertThat(first.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(1004L, 1003L);
+    assertThat(second.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(1002L, 1001L);
+    assertThat(anaOnly.getContent())
+        .extracting(OrderSummaryView::getCode)
+        .containsExactly(1003L, 1001L);
+  }
+
+  @Test
   void shouldSortSummariesByCreatedAtDescending_whenPageableAsksForIt() {
     // Given
     persistOrder(ana, 1001L, NOW.plusHours(1), 1);

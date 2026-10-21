@@ -19,7 +19,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
   String SUMMARY_SELECT =
       "select o.publicId as publicId, o.code as code, o.status as status,"
           + " o.customer.name as customerName, o.total as total,"
-          + " size(o.items) as itemsCount, o.deliveryAddress.city as city,"
+          + " size(o.items) as itemsCount,"
+          + " o.deliveryAddress.neighborhood as neighborhood, o.deliveryAddress.city as city,"
           + " o.createdAt as createdAt, o.updatedAt as updatedAt"
           + " from Order o";
 

@@ -322,6 +322,7 @@ class OrderRepositoryTest {
     assertThat(first.getCode()).isEqualTo(1001L);
     assertThat(first.getStatus()).isEqualTo(OrderStatus.RECEBIDO);
     assertThat(first.getCustomerName()).isEqualTo("Cliente 1001");
+    assertThat(first.getNeighborhood()).isEqualTo("Vila São Paulo");
     assertThat(first.getCity()).isEqualTo("Cidade 1001");
     assertThat(first.getItemsCount()).isEqualTo(3);
     assertThat(first.getTotal()).isEqualByComparingTo("60.00");

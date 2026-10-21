@@ -111,6 +111,7 @@ class OrderMapperTest {
     when(view.getCustomerName()).thenReturn("José da Silva");
     when(view.getTotal()).thenReturn(new BigDecimal("59.9"));
     when(view.getItemsCount()).thenReturn(3);
+    when(view.getNeighborhood()).thenReturn("Moema");
     when(view.getCity()).thenReturn("São Paulo");
     when(view.getCreatedAt()).thenReturn(NOW);
     when(view.getUpdatedAt()).thenReturn(LATER);
@@ -125,6 +126,7 @@ class OrderMapperTest {
     assertThat(summary.customerName()).isEqualTo("José da Silva");
     assertThat(summary.total().toPlainString()).isEqualTo("59.90");
     assertThat(summary.itemsCount()).isEqualTo(3);
+    assertThat(summary.neighborhood()).isEqualTo("Moema");
     assertThat(summary.city()).isEqualTo("São Paulo");
     assertThat(summary.createdAt()).isAtSameInstantAs(NOW);
     assertThat(summary.updatedAt()).isAtSameInstantAs(LATER);

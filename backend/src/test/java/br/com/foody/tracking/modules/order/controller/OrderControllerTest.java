@@ -281,6 +281,7 @@ class OrderControllerTest {
         .andExpect(jsonPath("$.content[0].id").value(ORDER_ID.toString()))
         .andExpect(jsonPath("$.content[0].customerName").value("José da Silva"))
         .andExpect(jsonPath("$.content[0].itemsCount").value(1))
+        .andExpect(jsonPath("$.content[0].neighborhood").value("Moema"))
         .andExpect(jsonPath("$.content[0].city").value("São Paulo"))
         .andExpect(jsonPath("$.content[0].createdAt").value("2026-10-21T14:13:27-03:00"))
         .andExpect(jsonPath("$.totalElements").value(1));
@@ -650,6 +651,7 @@ class OrderControllerTest {
         "José da Silva",
         new BigDecimal("59.90"),
         1,
+        "Moema",
         "São Paulo",
         CREATED_AT,
         CREATED_AT);

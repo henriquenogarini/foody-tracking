@@ -17,6 +17,7 @@ public record OrderSummaryResponseDTO(
     @Schema(description = "Customer full name", example = "José da Silva") String customerName,
     @Schema(description = "Order total, scale 2", example = "59.90") BigDecimal total,
     @Schema(description = "Number of item lines", example = "1") int itemsCount,
+    @Schema(description = "Delivery neighborhood", example = "Moema") String neighborhood,
     @Schema(description = "Delivery city", example = "São Paulo") String city,
     @Schema(
             description = "Creation instant in the application zone (America/Sao_Paulo)",

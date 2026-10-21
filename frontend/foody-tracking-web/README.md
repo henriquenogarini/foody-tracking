@@ -69,3 +69,8 @@ Only `.env.example` is versioned. Vite inlines `VITE_*` values at build time, so
 2. **`@hookform/resolvers` pinned to 5.x.** 6.0 ships a self-conflicting optional peer tree (`effect` 3 vs 4) that
    only installs with `--legacy-peer-deps`; 5.x already supports zod 4.
 3. **React Router pinned to 7.x**, the major this project was designed against.
+4. **No CI pipeline**, matching the backend: the quality gate above runs locally before every commit.
+5. **The design is the visual reference, the API is the boundary.** Where the mockups in `design/` show data the API does
+   not provide, the UI adapts instead of faking it: status counts and summary cards come from `totalElements` of
+   per-status queries (all-time totals, no "today" metrics), and the search box, dark-mode toggle, "remember me" and
+   "forgot password" are left out.

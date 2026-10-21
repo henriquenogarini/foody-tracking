@@ -90,5 +90,15 @@ br.com.foody.tracking
    same file works for the IDE, Docker and CI.
 5. **Small Conventional Commits on `main`** during the initial setup. A branch flow is
    introduced once the core features start.
+6. **Error handling extends `ResponseEntityExceptionHandler`, with `createResponseEntity` as the
+   single funnel.** The framework keeps handling its own errors (unknown route, 405, 415...) and
+   every body passes through one hook that stamps `timestamp`. Those framework-built errors carry
+   no `code`: the nine codes of the API contract are the contract and do not grow for them.
+7. **`ApiErrorCode` holds an `int` status, not `HttpStatus`.** The enum reaches `domain` through
+   `DomainException`, so it must not pull Spring Web into the domain layer.
+8. **Fixed `pt-BR` locale and translated framework error details.** `spring.web.locale-resolver:
+   fixed` pins the locale regardless of `Accept-Language`, and `messages.properties` translates the
+   framework-built `detail`s; the same fixed locale makes Bean Validation default messages
+   Portuguese without a `message=` on every annotation.
 
 Entries are appended as new decisions are made.

@@ -1,5 +1,6 @@
 package br.com.foody.tracking.shared.web;
 
+import br.com.foody.tracking.shared.exception.type.InvalidSortException;
 import java.util.Set;
 import org.springframework.data.domain.Sort;
 

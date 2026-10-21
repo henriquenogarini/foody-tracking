@@ -3,7 +3,8 @@ package br.com.foody.tracking.shared.web;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import br.com.foody.tracking.shared.error.ApiErrorCode;
+import br.com.foody.tracking.shared.exception.model.ApiErrorCode;
+import br.com.foody.tracking.shared.exception.type.InvalidSortException;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;

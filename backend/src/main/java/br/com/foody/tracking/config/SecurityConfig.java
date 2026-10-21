@@ -1,5 +1,7 @@
 package br.com.foody.tracking.config;
 
+import br.com.foody.tracking.shared.exception.handler.ProblemDetailAccessDeniedHandler;
+import br.com.foody.tracking.shared.exception.handler.ProblemDetailAuthenticationEntryPoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.DispatcherType;
 import java.util.Arrays;

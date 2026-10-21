@@ -2,7 +2,7 @@ package br.com.foody.tracking.shared.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import br.com.foody.tracking.auth.application.dto.RegisterRequest;
+import br.com.foody.tracking.modules.auth.dto.RegisterRequest;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;

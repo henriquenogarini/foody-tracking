@@ -60,6 +60,30 @@ class UserRepositoryTest {
   }
 
   @Test
+  void shouldUpdateOnlyUserRole_whenResettingPasswordHash() {
+    // Given
+    userRepository.saveAndFlush(new User("Ana Souza", "ana@exemplo.com", "old", Role.USER, NOW));
+    userRepository.saveAndFlush(
+        new User("Admin", "admin@exemplo.com", "admin-old", Role.ADMIN, NOW));
+
+    // When
+    int userRows = userRepository.updatePasswordHashOfUser("ana@exemplo.com", "new");
+    int adminRows = userRepository.updatePasswordHashOfUser("admin@exemplo.com", "new");
+    int unknownRows = userRepository.updatePasswordHashOfUser("bruno@exemplo.com", "new");
+
+    // Then the bulk update bypasses the persistence context, so read the stored values
+    assertThat(userRows).isEqualTo(1);
+    assertThat(adminRows).isZero();
+    assertThat(unknownRows).isZero();
+    assertThat(
+            jdbcTemplate.queryForList(
+                "SELECT password_hash FROM users"
+                    + " WHERE email IN ('ana@exemplo.com', 'admin@exemplo.com') ORDER BY email",
+                String.class))
+        .containsExactly("admin-old", "new");
+  }
+
+  @Test
   void shouldReturnEmpty_whenPublicIdIsUnknown() {
     // When / Then
     assertThat(userRepository.findByPublicId(UUID.randomUUID())).isEmpty();

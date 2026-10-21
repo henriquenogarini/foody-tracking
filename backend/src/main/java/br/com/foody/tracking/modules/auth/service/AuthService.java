@@ -1,6 +1,7 @@
 package br.com.foody.tracking.modules.auth.service;
 
 import br.com.foody.tracking.modules.auth.dto.LoginRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.PasswordResetRequestDTO;
 import br.com.foody.tracking.modules.auth.dto.RegisterRequestDTO;
 import br.com.foody.tracking.modules.auth.dto.TokenResponseDTO;
 import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
@@ -11,6 +12,8 @@ import br.com.foody.tracking.modules.auth.mapper.UserMapper;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
 import br.com.foody.tracking.modules.auth.security.TokenService;
+import br.com.foody.tracking.shared.exception.model.ApiErrorCode;
+import br.com.foody.tracking.shared.exception.type.ApiException;
 import br.com.foody.tracking.shared.exception.type.InvalidCredentialsException;
 import br.com.foody.tracking.shared.exception.type.InvalidTokenException;
 import br.com.foody.tracking.shared.exception.type.UserEmailAlreadyExistsException;
@@ -92,6 +95,27 @@ public class AuthService {
     }
     log.info("User {} logged in", user.get().getPublicId());
     return tokenService.issue(user.get());
+  }
+
+  // Demo feature, no e-mail confirmation. Not transactional, like login: BCrypt runs before the
+  // single short update. The hash is computed on every path (existing USER, unknown e-mail,
+  // ADMIN) so response time does not reveal which accounts exist; the affected-row count never
+  // changes the outcome.
+  public void resetPassword(PasswordResetRequestDTO request) {
+    if (request.newPassword().getBytes(StandardCharsets.UTF_8).length
+        > MaxUtf8Bytes.BCRYPT_MAX_BYTES) {
+      log.debug("Password reset rejected: password longer than the BCrypt limit");
+      throw new ApiException(
+          ApiErrorCode.VALIDATION_ERROR, "A nova senha excede o limite de 72 bytes.");
+    }
+    String hash = passwordEncoder.encode(request.newPassword());
+    int updated =
+        userRepository.updatePasswordHashOfUser(EmailNormalizer.normalize(request.email()), hash);
+    if (updated > 0) {
+      log.info("Password reset applied");
+    } else {
+      log.debug("Password reset no-op");
+    }
   }
 
   // A valid token whose user no longer exists (database reset) is treated as an invalid token.

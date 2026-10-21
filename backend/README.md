@@ -312,5 +312,14 @@ br.com.foody.tracking
     4,994,999,500.50) keeps at most 12 significant digits, fits the declared
     `precision = 12, scale = 2` and round-trips exactly; the client can never store a value
     it would later read back differently.
+30. **Demo password reset, on by default.** `POST /api/v1/auth/password-reset` takes `email` and
+    `newPassword` and always answers 204, with no e-mail confirmation: it exists so the demo can
+    recover a forgotten account. Accepted risks: whoever knows an e-mail can change its password
+    (and register's 409 makes e-mails discoverable); tokens already issued stay valid until they
+    expire (2 h); there is no rate limiting, so each call costs one BCrypt hash of CPU. Mitigations:
+    the hash is computed on every path before the lookup, so timing does not reveal accounts; the
+    update is one short query restricted to `USER` in the JPQL, so the `ADMIN` is never reset; the
+    route is public and ignores a stale bearer like login. `APP_SECURITY_PASSWORD_RESET_ENABLED=false`
+    removes the controller (`@ConditionalOnProperty`), and the route then answers 404 `NOT_FOUND`.
 
 Entries are appended as new decisions are made.

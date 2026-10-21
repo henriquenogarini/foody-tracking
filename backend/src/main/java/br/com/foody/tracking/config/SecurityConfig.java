@@ -34,7 +34,9 @@ public final class SecurityConfig {
 
   private static final String REGISTER_PATH = "/api/v1/auth/register";
   private static final String LOGIN_PATH = "/api/v1/auth/login";
-  private static final Set<String> PUBLIC_POST_PATHS = Set.of(REGISTER_PATH, LOGIN_PATH);
+  private static final String PASSWORD_RESET_PATH = "/api/v1/auth/password-reset";
+  private static final Set<String> PUBLIC_POST_PATHS =
+      Set.of(REGISTER_PATH, LOGIN_PATH, PASSWORD_RESET_PATH);
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectMapper objectMapper)
@@ -55,7 +57,8 @@ public final class SecurityConfig {
             auth ->
                 auth.dispatcherTypeMatchers(DispatcherType.ERROR)
                     .permitAll()
-                    .requestMatchers(HttpMethod.POST, REGISTER_PATH, LOGIN_PATH)
+                    .requestMatchers(
+                        HttpMethod.POST, REGISTER_PATH, LOGIN_PATH, PASSWORD_RESET_PATH)
                     .permitAll()
                     .requestMatchers(
                         "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/actuator/health")
@@ -114,7 +117,7 @@ public final class SecurityConfig {
     return converter;
   }
 
-  // A stale Authorization header left by the client must not turn login/register into a 401.
+  // A stale Authorization header left by the client must not turn a public POST into a 401.
   private static BearerTokenResolver publicRouteAwareBearerTokenResolver() {
     DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
     return request -> {

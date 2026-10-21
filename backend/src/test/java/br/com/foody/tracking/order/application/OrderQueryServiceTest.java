@@ -159,6 +159,21 @@ class OrderQueryServiceTest {
   }
 
   @Test
+  void shouldPassPageableUnchanged_whenItIsUnpaged() {
+    // Given
+    Pageable unpaged = Pageable.unpaged();
+    when(orderRepository.findSummaries(any())).thenReturn(pageOf());
+
+    // When
+    service.list(adminActor, null, unpaged);
+
+    // Then: no page number to rebuild from, so the tie-breaker is skipped instead of throwing
+    ArgumentCaptor<Pageable> sent = ArgumentCaptor.forClass(Pageable.class);
+    verify(orderRepository).findSummaries(sent.capture());
+    assertThat(sent.getValue()).isSameAs(unpaged);
+  }
+
+  @Test
   void shouldRejectBeforeQuerying_whenSortPropertyIsNotWhitelisted() {
     // Given
     Pageable pageable = PageRequest.of(0, 20, Sort.by("owner.email"));

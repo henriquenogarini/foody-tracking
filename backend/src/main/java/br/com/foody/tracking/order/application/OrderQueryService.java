@@ -64,6 +64,9 @@ public class OrderQueryService {
   }
 
   private static Pageable withTieBreaker(Pageable pageable) {
+    if (!pageable.isPaged()) {
+      return pageable;
+    }
     Sort sort = pageable.getSort();
     if (sort.getOrderFor(TIE_BREAKER) != null) {
       return pageable;

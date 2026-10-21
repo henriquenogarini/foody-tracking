@@ -1,0 +1,10 @@
+/* Minimal reset until MUI CssBaseline takes over (implementation stage 2). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}

@@ -14,12 +14,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 // Provisions the single ADMIN at startup; the API never creates or promotes one.
 @Component
+@Order(AdminBootstrap.RUNNER_ORDER)
 public final class AdminBootstrap implements ApplicationRunner {
+
+  /** Runners that need the admin (the dev order seeder) declare a higher order. */
+  public static final int RUNNER_ORDER = 0;
 
   private static final Logger log = LoggerFactory.getLogger(AdminBootstrap.class);
 

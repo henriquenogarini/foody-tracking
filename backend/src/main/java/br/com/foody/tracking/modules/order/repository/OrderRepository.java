@@ -29,6 +29,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   Optional<Order> findByPublicId(UUID publicId);
 
+  boolean existsByOwnerPublicId(UUID ownerPublicId);
+
   /**
    * Optional filters shared by both scopes: a null parameter disables its condition, so one query
    * per scope covers every combination of status and search. {@code namePattern} is an already

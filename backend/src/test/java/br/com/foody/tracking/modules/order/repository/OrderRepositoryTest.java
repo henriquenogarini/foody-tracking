@@ -667,6 +667,16 @@ class OrderRepositoryTest {
   }
 
   @Test
+  void shouldReportOwnership_whenCheckingIfOwnerHasOrders() {
+    // Given
+    persistOrder(ana, 1001L, NOW, 1);
+
+    // When / Then
+    assertThat(orderRepository.existsByOwnerPublicId(ana.getPublicId())).isTrue();
+    assertThat(orderRepository.existsByOwnerPublicId(bruno.getPublicId())).isFalse();
+  }
+
+  @Test
   void shouldPersistHistoryInOrderAndBumpVersion_whenStatusChanges() {
     // Given
     Order order = persistOrder(ana, 1001L, NOW, 1);

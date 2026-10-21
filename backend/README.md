@@ -46,6 +46,8 @@ The `dev` profile bootstraps a dev-only admin (`admin@foody.local` / `admin-dev-
 overridable through `APP_SECURITY_ADMIN_EMAIL` / `APP_SECURITY_ADMIN_PASSWORD`). In Swagger UI,
 register or use that admin, call `POST /api/v1/auth/login`, then paste the `accessToken` into
 the **Authorize** button; the guide at the top of Swagger UI walks through the same steps.
+On the first `dev` start the admin also gets eight demo orders, one or more in every status,
+with their history (decision 33); delete `./data/foody.db` to reseed.
 
 Log timestamps use the JVM zone, so local runs should set it to the application zone:
 `TZ=America/Sao_Paulo ./mvnw spring-boot:run`, or
@@ -341,5 +343,13 @@ br.com.foody.tracking
     queries, keeping the projection, the scoped count and two statements per page. `q` is capped
     at 100 characters; the parameter constraint answers 400 `VALIDATION_ERROR` with
     `errors[{field: "q"}]` through the handler's override of `HandlerMethodValidationException`.
+33. **Demo orders seeded in `dev` only.** `DevOrderSeeder` (`@Profile("dev")`, an
+    `ApplicationRunner` ordered after `AdminBootstrap`) gives the bootstrap admin eight orders
+    covering every status, so the frontend and the demo start with a populated list and
+    timeline. They go through the domain (`Order.create` + `changeStatus` with past instants from
+    the injected `Clock`, codes from `nextCode()`), never SQL, so every history row is a legal
+    transition by the admin. It does nothing without an admin or when the admin already owns
+    an order, so restarts are no-ops and deleting the database reseeds; `test` and `prod` never
+    load the bean.
 
 Entries are appended as new decisions are made.

@@ -8,8 +8,11 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace;
@@ -119,5 +122,33 @@ class UserRepositoryTest {
     // Then
     assertThat(reloaded.getRole()).isEqualTo(Role.USER);
     assertThat(reloaded.getCreatedAt()).isAtSameInstantAs(NOW);
+  }
+
+  // The SQL shapes Hibernate 6 generates for findByEmail (full row) and existsByEmail (id + limit).
+  // The column has BINARY collation, so only a BINARY index can serve "email = ?"; the NOCASE
+  // unique index from V1 cannot, which made every login and register pre-check a table scan.
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "select u1_0.id,u1_0.created_at,u1_0.email,u1_0.name,u1_0.password_hash,u1_0.public_id,"
+            + "u1_0.role from users u1_0 where u1_0.email=?",
+        "select u1_0.id from users u1_0 where u1_0.email=? limit ?"
+      })
+  void shouldSearchByEmailIndex_whenLookingUpUserByEmail(String query) {
+    // Given
+    Object[] args =
+        query.endsWith("limit ?")
+            ? new Object[] {"ana@exemplo.com", 1}
+            : new Object[] {"ana@exemplo.com"};
+
+    // When
+    List<String> plan =
+        jdbcTemplate.query(
+            "EXPLAIN QUERY PLAN " + query, (rs, rowNum) -> rs.getString("detail"), args);
+
+    // Then
+    assertThat(plan)
+        .anySatisfy(step -> assertThat(step).startsWith("SEARCH").contains("idx_users_email"))
+        .noneSatisfy(step -> assertThat(step).startsWith("SCAN"));
   }
 }

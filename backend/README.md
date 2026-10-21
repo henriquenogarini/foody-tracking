@@ -199,6 +199,9 @@ br.com.foody.tracking
     the case-insensitive unique index as a generic `JpaSystemException`, not
     `DataIntegrityViolationException`, so it cannot be mapped reliably. The service checks inside
     the transaction (pool size 1 serializes writers) and the index stays as the last guard.
+    Lookups by e-mail use a separate plain index (`idx_users_email`, V5): the column compares with
+    BINARY collation, so `WHERE email = ?` cannot use the NOCASE unique index, and values are
+    always stored lowercase, so the BINARY index answers the lookup exactly.
 16. **Client `sort` is whitelisted per endpoint.** Spring Data would otherwise accept any entity
     path from `?sort=` (e.g. `passwordHash`, or `owner.passwordHash` across a join), leaking data
     through ordering. Each query service checks the requested properties with `SortWhitelist`;

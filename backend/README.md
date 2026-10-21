@@ -22,6 +22,10 @@ before dispatch). Data is persisted in SQLite, with the schema managed by Flyway
 
 - JDK 21. Maven is not required: the project ships the Maven Wrapper
   (`./mvnw`, or `mvnw.cmd` on Windows PowerShell).
+- Docker with Compose v2, only to run the API in a container.
+
+This project lives in `backend/` of the `foody-tracking` repository (the frontend goes in
+`frontend/`); every command below runs from `backend/`.
 
 ## Getting started
 
@@ -46,11 +50,28 @@ Log timestamps use the JVM zone, so local runs should set it to the application 
 The SQLite file is created at `./data/foody.db` on the first start and Flyway applies the
 migrations automatically.
 
+### Run with Docker
+
+```bash
+cp .env.example .env     # set APP_SECURITY_JWT_SECRET; optionally the admin pair
+docker compose up --build -d
+curl http://localhost:8080/actuator/health
+docker compose down      # add -v to also drop the database volume
+```
+
+The image always boots the `prod` profile (decision 24): `APP_SECURITY_JWT_SECRET` is
+mandatory and there is no dev admin, so set `APP_SECURITY_ADMIN_EMAIL` /
+`APP_SECURITY_ADMIN_PASSWORD` in `.env` to get one. SQLite is embedded in the API process, so
+there is no database container; the file lives in the `foody-data` volume mounted on
+`/app/data`. `SERVER_PORT` in `.env` moves only the host side of the port mapping.
+This compose file is for local runs: it publishes the port on every interface, so in a real
+deployment put the container behind the reverse proxy described in the deployment notes.
+
 ### Configuration
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `SPRING_PROFILES_ACTIVE` | `dev` | Active profile (`dev`, `test`) |
+| `SPRING_PROFILES_ACTIVE` | `dev` | Active profile for local runs (`dev`); the Docker image always forces `prod`, and `test` is used only by the test suite |
 | `SERVER_PORT` | `8080` | HTTP port |
 | `SPRING_DATASOURCE_URL` | `jdbc:sqlite:./data/foody.db?journal_mode=WAL&busy_timeout=5000&foreign_keys=true` | JDBC URL |
 | `APP_SECURITY_JWT_SECRET` | dev-only key in `application-dev.yml` | HS256 key, Base64, at least 32 bytes; required outside `dev` |
@@ -60,7 +81,7 @@ migrations automatically.
 | `APP_TIME_ZONE` | `America/Sao_Paulo` | Application zone id: drives the `Clock` and the zone of every JSON date |
 | `TZ` | system zone | Process zone used by log timestamps (Docker `--env-file`, compose `env_file`, shell); a `.env` line does not change the JVM zone of IDE or `mvnw` runs. Keep it equal to `APP_TIME_ZONE` |
 
-Variables can be real environment variables (IDE run configuration, Docker `--env-file`, CI)
+Variables can be real environment variables (IDE run configuration, Docker `--env-file`)
 or lines in a local `.env` file: `application.yml` imports it with
 `spring.config.import=optional:file:.env[.properties]`. `.env` is gitignored; `.env.example`
 is versioned with names only.
@@ -73,6 +94,38 @@ is versioned with names only.
 ```
 
 Coverage report: `target/site/jacoco/index.html`.
+
+There is no CI pipeline (decision 27): `./mvnw verify` is run locally before every commit.
+
+## Deployment notes
+
+- **Always the `prod` profile.** It has no secret defaults, so the API refuses to start
+  without `APP_SECURITY_JWT_SECRET`; never deploy with `dev`, whose secrets are public.
+- **TLS terminates at the reverse proxy.** `prod` sets
+  `server.forward-headers-strategy: framework`, so the `Location` header and the Swagger server
+  URL use the public scheme and host from `X-Forwarded-*`. Only expose the container behind a
+  trusted proxy that overwrites those headers.
+- **Single instance.** SQLite is a single-writer file on a local volume: run one replica and
+  back up the `foody-data` volume. Scaling out means moving to PostgreSQL.
+- **Path to PostgreSQL (e.g. Cloud SQL), not shipped.** A profile like the one below plus the
+  `org.postgresql:postgresql` driver and `org.flywaydb:flyway-database-postgresql` (Flyway core
+  no longer bundles PostgreSQL support) would be the starting point; the migrations would need a
+  PostgreSQL review (types, `NOCASE` index) before use.
+
+  ```yaml
+  # application-postgres.yml (sketch, not part of the build)
+  # spring:
+  #   datasource:
+  #     url: ${SPRING_DATASOURCE_URL}        # jdbc:postgresql://host:5432/foody
+  #     username: ${SPRING_DATASOURCE_USERNAME}
+  #     password: ${SPRING_DATASOURCE_PASSWORD}
+  #     driver-class-name: org.postgresql.Driver
+  #     hikari:
+  #       maximum-pool-size: 10
+  #   jpa:
+  #     properties:
+  #       hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect
+  ```
 
 ## Project structure
 
@@ -100,9 +153,10 @@ br.com.foody.tracking
    "database is locked" errors instead of hiding them behind retries.
 4. **Configuration through environment variables, with `.env` for local development.**
    Spring Boot's `spring.config.import` loads `.env` without any extra dependency, so the
-   same file works for the IDE, Docker and CI.
-5. **Small Conventional Commits on `main`** during the initial setup. A branch flow is
-   introduced once the core features start.
+   same file works for the IDE and Docker.
+5. **Small Conventional Commits, one feature branch per stage.** The initial setup went
+   directly on `main`; from the migrations onward each stage is a `feature/<name>` branch
+   merged into `main` through a pull request with a merge commit, so history is preserved.
 6. **Error handling extends `ResponseEntityExceptionHandler`, with `createResponseEntity` as the
    single funnel.** The framework keeps handling its own errors (unknown route, 405, 415...) and
    every body passes through one hook that stamps `timestamp`. Those framework-built errors carry
@@ -189,5 +243,25 @@ br.com.foody.tracking
 23. **Commands and queries are separate services.** `OrderService` (writes, events, locking) and
     `OrderQueryService` (`readOnly`, projections for the list) have different transaction
     semantics and fetch shapes; each stays small.
+
+24. **The Docker image forces the `prod` profile.** It is passed as
+    `-Dspring.profiles.active=prod` in the `ENTRYPOINT`, a system property that outranks
+    `SPRING_PROFILES_ACTIVE` from any `--env-file`, so a copied dev `.env` can never boot a
+    container with the public dev secrets.
+25. **One full-flow `@SpringBootTest`, everything else in slices.** `OrderFlowIntegrationTest`
+    walks register → login → create → transitions → 409 → cross-user 404 → admin scope → 403 on
+    `/users` against the real context; together with the context smoke test
+    (`TrackingApplicationTests`) these are the only full-context tests, the rest stay fast
+    unit, `@WebMvcTest` and `@DataJpaTest` tests.
+26. **Multi-stage image, no database container.** The build stage caches dependencies on
+    `pom.xml` and skips tests (the gate already ran before the commit); the runtime is a JRE
+    image running as a non-root user with `TZ=America/Sao_Paulo` for log timestamps. SQLite is
+    embedded, so compose has a single `api` service and a named volume for the file.
+27. **No CI pipeline.** Out of scope for this test by the owner's decision: the same gate
+    (`./mvnw verify`: tests, JaCoCo, SpotBugs, Spotless) runs locally before every commit and
+    no pull request is merged without it.
+28. **One repository, `backend/` and `frontend/` folders.** The API and the web client share
+    the contract of this project and are versioned together; each folder keeps its own build,
+    `.gitignore` and tooling, and the root holds only what is common.
 
 Entries are appended as new decisions are made.

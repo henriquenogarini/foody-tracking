@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
@@ -146,17 +147,20 @@ class OrderMapperTest {
     order.changeStatus(OrderStatus.EM_PREPARO, actor, LATER);
 
     // When
-    List<StatusHistoryResponseDTO> history = mapper.toHistory(order.getStatusHistory());
+    List<StatusHistoryResponseDTO> history =
+        mapper.toHistory(order.getStatusHistory(), Map.of(owner.getPublicId(), "Ana Souza"));
 
     // Then
     assertThat(history)
         .extracting(
             StatusHistoryResponseDTO::fromStatus,
             StatusHistoryResponseDTO::toStatus,
-            StatusHistoryResponseDTO::changedBy)
+            StatusHistoryResponseDTO::changedBy,
+            StatusHistoryResponseDTO::changedByName)
         .containsExactly(
-            tuple(null, OrderStatus.RECEBIDO, owner.getPublicId()),
-            tuple(OrderStatus.RECEBIDO, OrderStatus.EM_PREPARO, actor));
+            tuple(null, OrderStatus.RECEBIDO, owner.getPublicId(), "Ana Souza"),
+            // An actor with no matching user (changedBy is not a foreign key) has no name.
+            tuple(OrderStatus.RECEBIDO, OrderStatus.EM_PREPARO, actor, null));
     assertThat(history.get(0).changedAt()).isAtSameInstantAs(NOW);
     assertThat(history.get(1).changedAt()).isAtSameInstantAs(LATER);
   }
@@ -269,7 +273,7 @@ class OrderMapperTest {
     // When / Then
     assertThat(mapper.toResponse(null)).isNull();
     assertThat(mapper.toSummary(null)).isNull();
-    assertThat(mapper.toHistory(null)).isNull();
+    assertThat(mapper.toHistory(null, Map.of())).isNull();
     assertThat(mapper.toCustomer(null)).isNull();
     assertThat(mapper.toAddress(null)).isNull();
     assertThat(mapper.toItem(null)).isNull();

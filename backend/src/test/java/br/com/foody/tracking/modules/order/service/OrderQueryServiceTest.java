@@ -13,6 +13,8 @@ import static org.mockito.Mockito.when;
 
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
+import br.com.foody.tracking.modules.auth.repository.UserNameView;
+import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
 import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
 import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
@@ -32,6 +34,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -56,9 +59,13 @@ class OrderQueryServiceTest {
       PageRequest.of(0, 20, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("code")));
 
   private final OrderRepository orderRepository = mock(OrderRepository.class);
+  private final UserRepository userRepository = mock(UserRepository.class);
   private final OrderQueryService service =
       new OrderQueryService(
-          orderRepository, new OrderFinder(orderRepository), Mappers.getMapper(OrderMapper.class));
+          orderRepository,
+          new OrderFinder(orderRepository),
+          Mappers.getMapper(OrderMapper.class),
+          userRepository);
 
   private final User owner = new User("Ana Souza", "ana@exemplo.com", "hash", Role.USER, NOW);
   private final AuthenticatedUser userActor = new AuthenticatedUser(owner.getPublicId(), Role.USER);
@@ -260,6 +267,34 @@ class OrderQueryServiceTest {
             tuple(null, OrderStatus.RECEBIDO), tuple(OrderStatus.RECEBIDO, OrderStatus.EM_PREPARO));
     assertThat(history.get(1).changedBy()).isEqualTo(owner.getPublicId());
   }
+
+  @Test
+  void shouldResolveActorNamesInOneQuery_whenHistoryHasRowsByTwoActors() {
+    // Given three rows by two actors: Ana (creation, delivery) and an admin (preparation)
+    UUID adminId = adminActor.id();
+    Order order = newOrder();
+    order.changeStatus(OrderStatus.EM_PREPARO, adminId, NOW.plusMinutes(5));
+    order.changeStatus(OrderStatus.SAIU_PARA_ENTREGA, owner.getPublicId(), NOW.plusMinutes(10));
+    when(orderRepository.findByPublicId(order.getPublicId())).thenReturn(Optional.of(order));
+    when(userRepository.findByPublicIdIn(any()))
+        .thenReturn(
+            List.of(
+                new NameView(owner.getPublicId(), "Ana Souza"), new NameView(adminId, "Admin")));
+
+    // When
+    List<StatusHistoryResponseDTO> history = service.history(order.getPublicId(), adminActor);
+
+    // Then
+    assertThat(history)
+        .extracting(StatusHistoryResponseDTO::changedByName)
+        .containsExactly("Ana Souza", "Admin", "Ana Souza");
+    ArgumentCaptor<Collection<UUID>> ids = ArgumentCaptor.captor();
+    verify(userRepository).findByPublicIdIn(ids.capture());
+    assertThat(ids.getValue()).containsExactlyInAnyOrder(owner.getPublicId(), adminId);
+    verifyNoMoreInteractions(userRepository);
+  }
+
+  private record NameView(UUID getPublicId, String getName) implements UserNameView {}
 
   private Order newOrder() {
     return Order.create(

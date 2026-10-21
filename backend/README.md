@@ -321,5 +321,10 @@ br.com.foody.tracking
     update is one short query restricted to `USER` in the JPQL, so the `ADMIN` is never reset; the
     route is public and ignores a stale bearer like login. `APP_SECURITY_PASSWORD_RESET_ENABLED=false`
     removes the controller (`@ConditionalOnProperty`), and the route then answers 404 `NOT_FOUND`.
+31. **History rows carry the actor's current name, resolved in one query.** `changedBy` stays the
+    stored fact (a public id, not a foreign key); `changedByName` is looked up when reading, so a
+    renamed user shows the new name and a missing user gives `null`. The service collects the
+    distinct ids and runs one `publicId IN (...)` projection query, then MapStruct fills the name
+    from that map (`@Context`), so the endpoint costs three statements whatever the row count.
 
 Entries are appended as new decisions are made.

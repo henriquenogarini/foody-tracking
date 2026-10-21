@@ -562,12 +562,14 @@ class OrderControllerTest {
     when(orderQueryService.history(ORDER_ID, new AuthenticatedUser(USER_ID, Role.USER)))
         .thenReturn(
             List.of(
-                new StatusHistoryResponseDTO(null, OrderStatus.RECEBIDO, CREATED_AT, USER_ID),
+                new StatusHistoryResponseDTO(
+                    null, OrderStatus.RECEBIDO, CREATED_AT, USER_ID, "Ana Souza"),
                 new StatusHistoryResponseDTO(
                     OrderStatus.RECEBIDO,
                     OrderStatus.EM_PREPARO,
                     CREATED_AT.plusMinutes(5),
-                    USER_ID)));
+                    USER_ID,
+                    "Ana Souza")));
 
     // When / Then
     mockMvc
@@ -579,7 +581,8 @@ class OrderControllerTest {
         .andExpect(jsonPath("$[1].fromStatus").value("RECEBIDO"))
         .andExpect(jsonPath("$[1].toStatus").value("EM_PREPARO"))
         .andExpect(jsonPath("$[1].changedAt").value("2026-10-21T14:18:27-03:00"))
-        .andExpect(jsonPath("$[1].changedBy").value(USER_ID.toString()));
+        .andExpect(jsonPath("$[1].changedBy").value(USER_ID.toString()))
+        .andExpect(jsonPath("$[1].changedByName").value("Ana Souza"));
   }
 
   @Test

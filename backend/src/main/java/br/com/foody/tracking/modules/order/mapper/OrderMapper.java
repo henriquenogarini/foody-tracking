@@ -18,6 +18,9 @@ import br.com.foody.tracking.modules.order.repository.OrderSummaryView;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -38,9 +41,20 @@ public interface OrderMapper {
   @Mapping(target = "total", source = "total", qualifiedByName = "money")
   OrderSummaryResponseDTO toSummary(OrderSummaryView view);
 
-  List<StatusHistoryResponseDTO> toHistory(List<OrderStatusHistory> history);
+  // actorNames (publicId -> current name) is resolved by the service in one query, so mapping
+  // never touches the database.
+  List<StatusHistoryResponseDTO> toHistory(
+      List<OrderStatusHistory> history, @Context Map<UUID, String> actorNames);
 
-  StatusHistoryResponseDTO toHistoryResponse(OrderStatusHistory entry);
+  @Mapping(target = "changedByName", source = "changedBy", qualifiedByName = "actorName")
+  StatusHistoryResponseDTO toHistoryResponse(
+      OrderStatusHistory entry, @Context Map<UUID, String> actorNames);
+
+  // changedBy is not a foreign key: an id without a user maps to null.
+  @Named("actorName")
+  default String actorName(UUID changedBy, @Context Map<UUID, String> actorNames) {
+    return changedBy == null ? null : actorNames.get(changedBy);
+  }
 
   @Mapping(target = "phone", source = "phone", qualifiedByName = "blankToNull")
   @Mapping(target = "email", source = "email", qualifiedByName = "blankToNull")

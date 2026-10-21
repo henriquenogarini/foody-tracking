@@ -24,6 +24,9 @@ vitest.config.*.timestamp-*
 !.env.example
 *.local
 
+# Local design reference (Claude Design export, kept out of the repository)
+design/
+
 # Claude Code: per-developer instructions, agents and hooks
 CLAUDE.md
 .claude/

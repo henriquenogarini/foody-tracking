@@ -1,6 +1,6 @@
 package br.com.foody.tracking.modules.auth.mapper;
 
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -9,5 +9,5 @@ import org.mapstruct.Mapping;
 public interface UserMapper {
 
   @Mapping(target = "id", source = "publicId")
-  UserResponse toResponse(User user);
+  UserResponseDTO toResponse(User user);
 }

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "Who receives the order (plain data, not a user account)")
-public record CustomerRequest(
+public record CustomerRequestDTO(
     @Schema(description = "Customer full name", example = "José da Silva")
         @NotBlank
         @Size(max = 120)

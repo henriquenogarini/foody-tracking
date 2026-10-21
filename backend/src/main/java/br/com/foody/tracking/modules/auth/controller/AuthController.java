@@ -1,10 +1,10 @@
 package br.com.foody.tracking.modules.auth.controller;
 
 import br.com.foody.tracking.config.OpenApiConfig;
-import br.com.foody.tracking.modules.auth.dto.LoginRequest;
-import br.com.foody.tracking.modules.auth.dto.RegisterRequest;
-import br.com.foody.tracking.modules.auth.dto.TokenResponse;
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.LoginRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.RegisterRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.TokenResponseDTO;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
 import br.com.foody.tracking.modules.auth.service.AuthService;
 import br.com.foody.tracking.shared.exception.model.ApiErrorResponse;
@@ -54,7 +54,7 @@ public final class AuthController {
         content =
             @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = UserResponse.class))),
+                schema = @Schema(implementation = UserResponseDTO.class))),
     @ApiResponse(
         responseCode = "400",
         description = "`VALIDATION_ERROR`: invalid or missing fields, or malformed body",
@@ -70,7 +70,7 @@ public final class AuthController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public UserResponse register(@Valid @RequestBody RegisterRequest request) {
+  public UserResponseDTO register(@Valid @RequestBody RegisterRequestDTO request) {
     return authService.register(request);
   }
 
@@ -87,7 +87,7 @@ public final class AuthController {
         content =
             @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = TokenResponse.class))),
+                schema = @Schema(implementation = TokenResponseDTO.class))),
     @ApiResponse(
         responseCode = "400",
         description = "`VALIDATION_ERROR`: invalid or missing fields, or malformed body",
@@ -104,7 +104,7 @@ public final class AuthController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public TokenResponse login(@Valid @RequestBody LoginRequest request) {
+  public TokenResponseDTO login(@Valid @RequestBody LoginRequestDTO request) {
     return authService.login(request);
   }
 
@@ -120,7 +120,7 @@ public final class AuthController {
         content =
             @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = UserResponse.class))),
+                schema = @Schema(implementation = UserResponseDTO.class))),
     @ApiResponse(
         responseCode = "401",
         description = "`AUTH_TOKEN_INVALID`: missing, invalid or expired token",
@@ -129,7 +129,7 @@ public final class AuthController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public UserResponse me(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
+  public UserResponseDTO me(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
     return authService.me(AuthenticatedUser.from(jwt));
   }
 }

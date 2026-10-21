@@ -8,14 +8,14 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 @Schema(description = "Data to create an order; it is always born in RECEBIDO")
-public record CreateOrderRequest(
-    @Schema(description = "Who receives the order") @NotNull @Valid CustomerRequest customer,
+public record CreateOrderRequestDTO(
+    @Schema(description = "Who receives the order") @NotNull @Valid CustomerRequestDTO customer,
     @Schema(description = "Ordered items, 1 to 50")
         @NotEmpty(message = "deve conter ao menos 1 item")
         @Size(max = 50)
-        List<@NotNull @Valid OrderItemRequest> items,
+        List<@NotNull @Valid OrderItemRequestDTO> items,
     @Schema(description = "Where the order is delivered") @NotNull @Valid
-        AddressRequest deliveryAddress,
+        AddressRequestDTO deliveryAddress,
     @Schema(description = "Optional notes for the kitchen or the courier", example = "sem cebola")
         @Size(max = 500)
         String notes) {}

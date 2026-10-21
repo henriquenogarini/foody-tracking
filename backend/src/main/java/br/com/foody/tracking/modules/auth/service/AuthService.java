@@ -1,9 +1,9 @@
 package br.com.foody.tracking.modules.auth.service;
 
-import br.com.foody.tracking.modules.auth.dto.LoginRequest;
-import br.com.foody.tracking.modules.auth.dto.RegisterRequest;
-import br.com.foody.tracking.modules.auth.dto.TokenResponse;
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.LoginRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.RegisterRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.TokenResponseDTO;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.helper.EmailNormalizer;
@@ -58,7 +58,7 @@ public class AuthService {
   // Pre-check only: pool size 1 serializes writers, and the NOCASE unique index stays the last
   // guard (SQLite surfaces it as a generic JpaSystemException, so it is not caught by type here).
   @Transactional
-  public UserResponse register(RegisterRequest request) {
+  public UserResponseDTO register(RegisterRequestDTO request) {
     String email = EmailNormalizer.normalize(request.email());
     if (userRepository.existsByEmail(email)) {
       log.warn("Registration rejected: e-mail already in use");
@@ -77,7 +77,7 @@ public class AuthService {
   }
 
   // Not transactional: the pool has one connection, and BCrypt plus JWT signing must not hold it.
-  public TokenResponse login(LoginRequest request) {
+  public TokenResponseDTO login(LoginRequestDTO request) {
     if (request.password().getBytes(StandardCharsets.UTF_8).length
         > MaxUtf8Bytes.BCRYPT_MAX_BYTES) {
       log.debug("Login rejected: password longer than the BCrypt limit");
@@ -96,7 +96,7 @@ public class AuthService {
 
   // A valid token whose user no longer exists (database reset) is treated as an invalid token.
   @Transactional(readOnly = true)
-  public UserResponse me(AuthenticatedUser principal) {
+  public UserResponseDTO me(AuthenticatedUser principal) {
     return userRepository
         .findByPublicId(principal.id())
         .map(userMapper::toResponse)

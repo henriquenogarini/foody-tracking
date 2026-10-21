@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import br.com.foody.tracking.config.JwtConfig;
 import br.com.foody.tracking.config.JwtProperties;
-import br.com.foody.tracking.modules.auth.dto.TokenResponse;
+import br.com.foody.tracking.modules.auth.dto.TokenResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import java.time.Clock;
@@ -49,7 +49,7 @@ class TokenServiceTest {
     TokenService service = new TokenService(encoder, clock, properties);
 
     // When
-    TokenResponse response = service.issue(user);
+    TokenResponseDTO response = service.issue(user);
     Jwt jwt = decoder.decode(response.accessToken());
 
     // Then

@@ -1,9 +1,9 @@
 package br.com.foody.tracking.modules.auth.service;
 
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.mapper.UserMapper;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
-import br.com.foody.tracking.shared.web.PageResponse;
+import br.com.foody.tracking.shared.web.PageResponseDTO;
 import br.com.foody.tracking.shared.web.SortWhitelist;
 import java.util.Set;
 import org.springframework.data.domain.Pageable;
@@ -26,8 +26,8 @@ public class UserQueryService {
 
   // Admin-only at the endpoint, so the query is unscoped by design.
   @Transactional(readOnly = true)
-  public PageResponse<UserResponse> list(Pageable pageable) {
+  public PageResponseDTO<UserResponseDTO> list(Pageable pageable) {
     SortWhitelist.requireAllowed(pageable.getSort(), SORTABLE_PROPERTIES);
-    return PageResponse.from(userRepository.findAll(pageable).map(userMapper::toResponse));
+    return PageResponseDTO.from(userRepository.findAll(pageable).map(userMapper::toResponse));
   }
 }

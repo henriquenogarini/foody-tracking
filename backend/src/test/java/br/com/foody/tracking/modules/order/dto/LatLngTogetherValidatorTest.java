@@ -33,11 +33,11 @@ class LatLngTogetherValidatorTest {
     factory.close();
   }
 
-  private static CreateOrderRequest request(Double lat, Double lng) {
-    return new CreateOrderRequest(
-        new CustomerRequest("José da Silva", "+5511987521144", "jose@exemplo.com"),
-        List.of(new OrderItemRequest("Pizza calabresa G", 1, new BigDecimal("59.90"))),
-        new AddressRequest(
+  private static CreateOrderRequestDTO request(Double lat, Double lng) {
+    return new CreateOrderRequestDTO(
+        new CustomerRequestDTO("José da Silva", "+5511987521144", "jose@exemplo.com"),
+        List.of(new OrderItemRequestDTO("Pizza calabresa G", 1, new BigDecimal("59.90"))),
+        new AddressRequestDTO(
             "Rua José Neves",
             "590",
             "sala 03",
@@ -51,7 +51,7 @@ class LatLngTogetherValidatorTest {
   }
 
   private static List<Tuple> pathsAndMessages(
-      Set<ConstraintViolation<CreateOrderRequest>> violations) {
+      Set<ConstraintViolation<CreateOrderRequestDTO>> violations) {
     return violations.stream()
         .map(v -> tuple(v.getPropertyPath().toString(), v.getMessage()))
         .toList();
@@ -72,7 +72,7 @@ class LatLngTogetherValidatorTest {
   @Test
   void shouldReportLng_whenOnlyLatIsPresent() {
     // When
-    Set<ConstraintViolation<CreateOrderRequest>> violations =
+    Set<ConstraintViolation<CreateOrderRequestDTO>> violations =
         validator.validate(request(-23.6578, null));
 
     // Then: nested path is what the GlobalExceptionHandler exposes as errors[].field
@@ -82,7 +82,7 @@ class LatLngTogetherValidatorTest {
   @Test
   void shouldReportLat_whenOnlyLngIsPresent() {
     // When
-    Set<ConstraintViolation<CreateOrderRequest>> violations =
+    Set<ConstraintViolation<CreateOrderRequestDTO>> violations =
         validator.validate(request(null, -46.6743));
 
     // Then

@@ -17,10 +17,10 @@ import br.com.foody.tracking.config.ClockConfig;
 import br.com.foody.tracking.config.JacksonConfig;
 import br.com.foody.tracking.config.JwtConfig;
 import br.com.foody.tracking.config.SecurityConfig;
-import br.com.foody.tracking.modules.auth.dto.LoginRequest;
-import br.com.foody.tracking.modules.auth.dto.RegisterRequest;
-import br.com.foody.tracking.modules.auth.dto.TokenResponse;
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.LoginRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.RegisterRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.TokenResponseDTO;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
 import br.com.foody.tracking.modules.auth.service.AuthService;
@@ -74,7 +74,7 @@ class AuthControllerTest {
         .andExpect(jsonPath("$.createdAt").value("2026-10-21T14:13:27-03:00"))
         .andExpect(jsonPath("$.password").doesNotExist());
 
-    ArgumentCaptor<RegisterRequest> request = ArgumentCaptor.forClass(RegisterRequest.class);
+    ArgumentCaptor<RegisterRequestDTO> request = ArgumentCaptor.forClass(RegisterRequestDTO.class);
     verify(authService).register(request.capture());
     assertThat(request.getValue().email()).isEqualTo("ana@exemplo.com");
   }
@@ -96,7 +96,7 @@ class AuthControllerTest {
         .andExpect(status().isCreated());
 
     // Then: the padding is gone before validation; lowercasing stays in the service
-    ArgumentCaptor<RegisterRequest> request = ArgumentCaptor.forClass(RegisterRequest.class);
+    ArgumentCaptor<RegisterRequestDTO> request = ArgumentCaptor.forClass(RegisterRequestDTO.class);
     verify(authService).register(request.capture());
     assertThat(request.getValue().email()).isEqualTo("Ana@Exemplo.com");
   }
@@ -162,8 +162,8 @@ class AuthControllerTest {
   @Test
   void shouldReturnToken_whenCredentialsAreValid() throws Exception {
     // Given
-    when(authService.login(any(LoginRequest.class)))
-        .thenReturn(TokenResponse.bearer("signed.jwt.token", 7200));
+    when(authService.login(any(LoginRequestDTO.class)))
+        .thenReturn(TokenResponseDTO.bearer("signed.jwt.token", 7200));
 
     // When / Then
     mockMvc
@@ -183,8 +183,8 @@ class AuthControllerTest {
   @Test
   void shouldPassStrippedEmail_whenLoginEmailIsPaddedAndMixedCase() throws Exception {
     // Given
-    when(authService.login(any(LoginRequest.class)))
-        .thenReturn(TokenResponse.bearer("signed.jwt.token", 7200));
+    when(authService.login(any(LoginRequestDTO.class)))
+        .thenReturn(TokenResponseDTO.bearer("signed.jwt.token", 7200));
 
     // When
     mockMvc
@@ -198,7 +198,7 @@ class AuthControllerTest {
         .andExpect(status().isOk());
 
     // Then
-    ArgumentCaptor<LoginRequest> request = ArgumentCaptor.forClass(LoginRequest.class);
+    ArgumentCaptor<LoginRequestDTO> request = ArgumentCaptor.forClass(LoginRequestDTO.class);
     verify(authService).login(request.capture());
     assertThat(request.getValue().email()).isEqualTo("Ana@Exemplo.com");
   }
@@ -225,7 +225,8 @@ class AuthControllerTest {
   @Test
   void shouldReturnUnauthorizedProblem_whenCredentialsAreInvalid() throws Exception {
     // Given
-    when(authService.login(any(LoginRequest.class))).thenThrow(new InvalidCredentialsException());
+    when(authService.login(any(LoginRequestDTO.class)))
+        .thenThrow(new InvalidCredentialsException());
 
     // When / Then
     mockMvc
@@ -291,7 +292,7 @@ class AuthControllerTest {
         .andExpect(jsonPath("$.instance").value("/api/v1/auth/me"));
   }
 
-  private static UserResponse userResponse() {
-    return new UserResponse(USER_ID, "Ana Souza", "ana@exemplo.com", Role.USER, CREATED_AT);
+  private static UserResponseDTO userResponse() {
+    return new UserResponseDTO(USER_ID, "Ana Souza", "ana@exemplo.com", Role.USER, CREATED_AT);
   }
 }

@@ -12,10 +12,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import br.com.foody.tracking.modules.auth.dto.LoginRequest;
-import br.com.foody.tracking.modules.auth.dto.RegisterRequest;
-import br.com.foody.tracking.modules.auth.dto.TokenResponse;
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.LoginRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.RegisterRequestDTO;
+import br.com.foody.tracking.modules.auth.dto.TokenResponseDTO;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.mapper.UserMapper;
@@ -74,12 +74,13 @@ class AuthServiceTest {
   @Test
   void shouldCreateUserWithNormalizedEmailAndHashedPassword_whenRegistering() {
     // Given
-    RegisterRequest request = new RegisterRequest("Ana Souza", "  Ana@Exemplo.COM ", PASSWORD);
+    RegisterRequestDTO request =
+        new RegisterRequestDTO("Ana Souza", "  Ana@Exemplo.COM ", PASSWORD);
     when(userRepository.existsByEmail("ana@exemplo.com")).thenReturn(false);
     when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // When
-    UserResponse response = authService.register(request);
+    UserResponseDTO response = authService.register(request);
 
     // Then
     ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
@@ -98,7 +99,7 @@ class AuthServiceTest {
   @Test
   void shouldRejectRegistration_whenEmailAlreadyExists() {
     // Given
-    RegisterRequest request = new RegisterRequest("Ana Souza", "ANA@exemplo.com", PASSWORD);
+    RegisterRequestDTO request = new RegisterRequestDTO("Ana Souza", "ANA@exemplo.com", PASSWORD);
     when(userRepository.existsByEmail("ana@exemplo.com")).thenReturn(true);
 
     // When / Then
@@ -112,17 +113,17 @@ class AuthServiceTest {
     // Given: unknown properties are ignored, as in Boot's ObjectMapper
     JsonMapper mapper =
         JsonMapper.builder().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES).build();
-    RegisterRequest request =
+    RegisterRequestDTO request =
         mapper.readValue(
             """
             {"name": "Eve", "email": "eve@exemplo.com", "password": "senha-forte-123",
              "role": "ADMIN"}
             """,
-            RegisterRequest.class);
+            RegisterRequestDTO.class);
     when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // When
-    UserResponse response = authService.register(request);
+    UserResponseDTO response = authService.register(request);
 
     // Then
     assertThat(response.role()).isEqualTo(Role.USER);
@@ -132,12 +133,13 @@ class AuthServiceTest {
   void shouldIssueToken_whenCredentialsAreValid() {
     // Given
     User user = existingUser(passwordEncoder.encode(PASSWORD));
-    TokenResponse token = TokenResponse.bearer("signed.jwt", 7200);
+    TokenResponseDTO token = TokenResponseDTO.bearer("signed.jwt", 7200);
     when(userRepository.findByEmail("ana@exemplo.com")).thenReturn(Optional.of(user));
     when(tokenService.issue(user)).thenReturn(token);
 
     // When
-    TokenResponse response = authService.login(new LoginRequest(" ANA@exemplo.com", PASSWORD));
+    TokenResponseDTO response =
+        authService.login(new LoginRequestDTO(" ANA@exemplo.com", PASSWORD));
 
     // Then
     assertThat(response).isEqualTo(token);
@@ -152,10 +154,10 @@ class AuthServiceTest {
 
     // When
     Throwable unknownEmail =
-        catchThrowable(() -> authService.login(new LoginRequest("ghost@exemplo.com", PASSWORD)));
+        catchThrowable(() -> authService.login(new LoginRequestDTO("ghost@exemplo.com", PASSWORD)));
     Throwable wrongPassword =
         catchThrowable(
-            () -> authService.login(new LoginRequest("ana@exemplo.com", "senha-errada-123")));
+            () -> authService.login(new LoginRequestDTO("ana@exemplo.com", "senha-errada-123")));
 
     // Then
     assertThat(unknownEmail).isInstanceOf(InvalidCredentialsException.class);
@@ -168,7 +170,7 @@ class AuthServiceTest {
   @Test
   void shouldRejectWithoutHashing_whenPasswordExceedsBcryptByteLimit() {
     // Given: 37 two-byte characters = 74 UTF-8 bytes
-    LoginRequest request = new LoginRequest("ana@exemplo.com", "é".repeat(37));
+    LoginRequestDTO request = new LoginRequestDTO("ana@exemplo.com", "é".repeat(37));
 
     // When / Then
     assertThatThrownBy(() -> authService.login(request))
@@ -184,7 +186,7 @@ class AuthServiceTest {
     when(userRepository.findByPublicId(user.getPublicId())).thenReturn(Optional.of(user));
 
     // When
-    UserResponse response = authService.me(new AuthenticatedUser(user.getPublicId(), Role.USER));
+    UserResponseDTO response = authService.me(new AuthenticatedUser(user.getPublicId(), Role.USER));
 
     // Then
     assertThat(response.id()).isEqualTo(user.getPublicId());

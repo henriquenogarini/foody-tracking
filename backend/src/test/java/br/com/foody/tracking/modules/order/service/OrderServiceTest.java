@@ -13,12 +13,12 @@ import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
-import br.com.foody.tracking.modules.order.dto.AddressRequest;
-import br.com.foody.tracking.modules.order.dto.CreateOrderRequest;
-import br.com.foody.tracking.modules.order.dto.CustomerRequest;
-import br.com.foody.tracking.modules.order.dto.OrderItemRequest;
-import br.com.foody.tracking.modules.order.dto.OrderResponse;
-import br.com.foody.tracking.modules.order.dto.UpdateStatusRequest;
+import br.com.foody.tracking.modules.order.dto.AddressRequestDTO;
+import br.com.foody.tracking.modules.order.dto.CreateOrderRequestDTO;
+import br.com.foody.tracking.modules.order.dto.CustomerRequestDTO;
+import br.com.foody.tracking.modules.order.dto.OrderItemRequestDTO;
+import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
+import br.com.foody.tracking.modules.order.dto.UpdateStatusRequestDTO;
 import br.com.foody.tracking.modules.order.entity.Customer;
 import br.com.foody.tracking.modules.order.entity.DeliveryAddress;
 import br.com.foody.tracking.modules.order.entity.Order;
@@ -79,7 +79,7 @@ class OrderServiceTest {
         .thenAnswer(invocation -> invocation.getArgument(0));
 
     // When
-    OrderResponse response = service.create(createRequest(), ownerActor);
+    OrderResponseDTO response = service.create(createRequest(), ownerActor);
 
     // Then
     ArgumentCaptor<Order> saved = ArgumentCaptor.forClass(Order.class);
@@ -117,9 +117,9 @@ class OrderServiceTest {
     when(orderRepository.saveAndFlush(order)).thenReturn(order);
 
     // When
-    OrderResponse response =
+    OrderResponseDTO response =
         service.changeStatus(
-            order.getPublicId(), new UpdateStatusRequest(OrderStatus.EM_PREPARO), ownerActor);
+            order.getPublicId(), new UpdateStatusRequestDTO(OrderStatus.EM_PREPARO), ownerActor);
 
     // Then
     assertThat(response.status()).isEqualTo(OrderStatus.EM_PREPARO);
@@ -136,7 +136,7 @@ class OrderServiceTest {
 
     // When
     service.changeStatus(
-        order.getPublicId(), new UpdateStatusRequest(OrderStatus.CANCELADO), adminActor);
+        order.getPublicId(), new UpdateStatusRequestDTO(OrderStatus.CANCELADO), adminActor);
 
     // Then
     verify(orderRepository, never()).findByPublicIdAndOwnerPublicId(any(), any());
@@ -157,7 +157,7 @@ class OrderServiceTest {
     assertThatThrownBy(
             () ->
                 service.changeStatus(
-                    publicId, new UpdateStatusRequest(OrderStatus.EM_PREPARO), ownerActor))
+                    publicId, new UpdateStatusRequestDTO(OrderStatus.EM_PREPARO), ownerActor))
         .isInstanceOf(OrderNotFoundException.class);
     verifyNoInteractions(eventPublisher);
   }
@@ -173,7 +173,9 @@ class OrderServiceTest {
     assertThatThrownBy(
             () ->
                 service.changeStatus(
-                    order.getPublicId(), new UpdateStatusRequest(OrderStatus.ENTREGUE), ownerActor))
+                    order.getPublicId(),
+                    new UpdateStatusRequestDTO(OrderStatus.ENTREGUE),
+                    ownerActor))
         .isInstanceOf(InvalidStatusTransitionException.class)
         .hasMessage("Transição de RECEBIDO para ENTREGUE não é permitida");
     assertThat(order.getStatus()).isEqualTo(OrderStatus.RECEBIDO);
@@ -192,7 +194,9 @@ class OrderServiceTest {
     assertThatThrownBy(
             () ->
                 service.changeStatus(
-                    order.getPublicId(), new UpdateStatusRequest(OrderStatus.RECEBIDO), ownerActor))
+                    order.getPublicId(),
+                    new UpdateStatusRequestDTO(OrderStatus.RECEBIDO),
+                    ownerActor))
         .isInstanceOf(InvalidStatusTransitionException.class);
     verifyNoInteractions(eventPublisher);
   }
@@ -207,7 +211,7 @@ class OrderServiceTest {
 
     // When
     service.changeStatus(
-        order.getPublicId(), new UpdateStatusRequest(OrderStatus.EM_PREPARO), ownerActor);
+        order.getPublicId(), new UpdateStatusRequestDTO(OrderStatus.EM_PREPARO), ownerActor);
 
     // Then
     ArgumentCaptor<OrderStatusChangedEvent> event =
@@ -235,7 +239,7 @@ class OrderServiceTest {
             () ->
                 service.changeStatus(
                     order.getPublicId(),
-                    new UpdateStatusRequest(OrderStatus.EM_PREPARO),
+                    new UpdateStatusRequestDTO(OrderStatus.EM_PREPARO),
                     ownerActor))
         .isInstanceOf(ObjectOptimisticLockingFailureException.class);
     verifyNoInteractions(eventPublisher);
@@ -248,11 +252,11 @@ class OrderServiceTest {
     when(orderRepository.nextCode()).thenReturn(1042L);
     when(orderRepository.save(any(Order.class)))
         .thenAnswer(invocation -> invocation.getArgument(0));
-    CreateOrderRequest request =
-        new CreateOrderRequest(
-            new CustomerRequest("José da Silva", "", " "),
-            List.of(new OrderItemRequest("Pizza calabresa G", 1, new BigDecimal("59.90"))),
-            new AddressRequest(
+    CreateOrderRequestDTO request =
+        new CreateOrderRequestDTO(
+            new CustomerRequestDTO("José da Silva", "", " "),
+            List.of(new OrderItemRequestDTO("Pizza calabresa G", 1, new BigDecimal("59.90"))),
+            new AddressRequestDTO(
                 "Rua José Neves",
                 "590",
                 "  ",
@@ -265,7 +269,7 @@ class OrderServiceTest {
             "   ");
 
     // When
-    OrderResponse response = service.create(request, ownerActor);
+    OrderResponseDTO response = service.create(request, ownerActor);
 
     // Then
     assertThat(response.notes()).isNull();
@@ -294,13 +298,13 @@ class OrderServiceTest {
         CREATED_AT);
   }
 
-  private static CreateOrderRequest createRequest() {
-    return new CreateOrderRequest(
-        new CustomerRequest("José da Silva", "+5511987521144", "jose@exemplo.com"),
+  private static CreateOrderRequestDTO createRequest() {
+    return new CreateOrderRequestDTO(
+        new CustomerRequestDTO("José da Silva", "+5511987521144", "jose@exemplo.com"),
         List.of(
-            new OrderItemRequest("Pizza calabresa G", 2, new BigDecimal("59.90")),
-            new OrderItemRequest("Refrigerante", 1, new BigDecimal("8.50"))),
-        new AddressRequest(
+            new OrderItemRequestDTO("Pizza calabresa G", 2, new BigDecimal("59.90")),
+            new OrderItemRequestDTO("Refrigerante", 1, new BigDecimal("8.50"))),
+        new AddressRequestDTO(
             "Rua José Neves",
             "590",
             "sala 03",

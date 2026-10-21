@@ -6,7 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Schema(description = "One status change of an order, including its creation")
-public record StatusHistoryResponse(
+public record StatusHistoryResponseDTO(
     @Schema(description = "Previous status; null on the creation row", example = "RECEBIDO")
         OrderStatus fromStatus,
     @Schema(description = "New status", example = "EM_PREPARO") OrderStatus toStatus,

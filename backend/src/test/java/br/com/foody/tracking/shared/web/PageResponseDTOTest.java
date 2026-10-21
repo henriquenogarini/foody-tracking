@@ -10,7 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-class PageResponseTest {
+class PageResponseDTOTest {
 
   @Test
   void shouldMapEveryField_whenCreatedFromPage() {
@@ -18,7 +18,7 @@ class PageResponseTest {
     Page<String> page = new PageImpl<>(List.of("a", "b"), PageRequest.of(1, 2), 5);
 
     // When
-    PageResponse<String> response = PageResponse.from(page);
+    PageResponseDTO<String> response = PageResponseDTO.from(page);
 
     // Then
     assertThat(response.content()).containsExactly("a", "b");
@@ -32,7 +32,7 @@ class PageResponseTest {
   void shouldExposeUnmodifiableContent_whenSourceListChanges() {
     // Given
     List<String> source = new ArrayList<>(List.of("a"));
-    PageResponse<String> response = new PageResponse<>(source, 0, 1, 1, 1);
+    PageResponseDTO<String> response = new PageResponseDTO<>(source, 0, 1, 1, 1);
 
     // When
     source.add("b");

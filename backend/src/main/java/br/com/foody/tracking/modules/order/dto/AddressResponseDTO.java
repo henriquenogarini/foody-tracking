@@ -3,7 +3,7 @@ package br.com.foody.tracking.modules.order.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Delivery address")
-public record AddressResponse(
+public record AddressResponseDTO(
     @Schema(description = "Street name", example = "Rua José Neves") String street,
     @Schema(description = "Street number", example = "590") String number,
     @Schema(description = "Complement, when informed", example = "sala 03") String complement,

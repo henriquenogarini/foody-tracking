@@ -24,20 +24,20 @@ import br.com.foody.tracking.config.JwtConfig;
 import br.com.foody.tracking.config.SecurityConfig;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
-import br.com.foody.tracking.modules.order.dto.AddressResponse;
-import br.com.foody.tracking.modules.order.dto.CustomerResponse;
-import br.com.foody.tracking.modules.order.dto.OrderItemResponse;
-import br.com.foody.tracking.modules.order.dto.OrderResponse;
-import br.com.foody.tracking.modules.order.dto.OrderSummaryResponse;
-import br.com.foody.tracking.modules.order.dto.StatusHistoryResponse;
-import br.com.foody.tracking.modules.order.dto.UpdateStatusRequest;
+import br.com.foody.tracking.modules.order.dto.AddressResponseDTO;
+import br.com.foody.tracking.modules.order.dto.CustomerResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderItemResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
+import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
+import br.com.foody.tracking.modules.order.dto.UpdateStatusRequestDTO;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.modules.order.service.OrderQueryService;
 import br.com.foody.tracking.modules.order.service.OrderService;
 import br.com.foody.tracking.shared.exception.type.InvalidSortException;
 import br.com.foody.tracking.shared.exception.type.InvalidStatusTransitionException;
 import br.com.foody.tracking.shared.exception.type.OrderNotFoundException;
-import br.com.foody.tracking.shared.web.PageResponse;
+import br.com.foody.tracking.shared.web.PageResponseDTO;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -272,7 +272,7 @@ class OrderControllerTest {
   void shouldListWithDefaultPagingAndUserScope_whenCallerIsUser() throws Exception {
     // Given
     when(orderQueryService.list(any(), any(), any()))
-        .thenReturn(new PageResponse<>(List.of(summary()), 0, 20, 1, 1));
+        .thenReturn(new PageResponseDTO<>(List.of(summary()), 0, 20, 1, 1));
 
     // When
     mockMvc
@@ -302,7 +302,7 @@ class OrderControllerTest {
   void shouldPassStatusFilter_whenStatusParamIsGiven() throws Exception {
     // Given
     when(orderQueryService.list(any(), any(), any()))
-        .thenReturn(new PageResponse<>(List.of(), 0, 20, 0, 0));
+        .thenReturn(new PageResponseDTO<>(List.of(), 0, 20, 0, 0));
 
     // When
     mockMvc
@@ -357,7 +357,7 @@ class OrderControllerTest {
   void shouldPassAdminRole_whenCallerIsAdmin() throws Exception {
     // Given
     when(orderQueryService.list(any(), any(), any()))
-        .thenReturn(new PageResponse<>(List.of(), 0, 20, 0, 0));
+        .thenReturn(new PageResponseDTO<>(List.of(), 0, 20, 0, 0));
 
     // When
     mockMvc.perform(get("/api/v1/orders").with(adminJwt())).andExpect(status().isOk());
@@ -439,7 +439,7 @@ class OrderControllerTest {
     verify(orderService)
         .changeStatus(
             ORDER_ID,
-            new UpdateStatusRequest(OrderStatus.EM_PREPARO),
+            new UpdateStatusRequestDTO(OrderStatus.EM_PREPARO),
             new AuthenticatedUser(USER_ID, Role.USER));
   }
 
@@ -561,8 +561,8 @@ class OrderControllerTest {
     when(orderQueryService.history(ORDER_ID, new AuthenticatedUser(USER_ID, Role.USER)))
         .thenReturn(
             List.of(
-                new StatusHistoryResponse(null, OrderStatus.RECEBIDO, CREATED_AT, USER_ID),
-                new StatusHistoryResponse(
+                new StatusHistoryResponseDTO(null, OrderStatus.RECEBIDO, CREATED_AT, USER_ID),
+                new StatusHistoryResponseDTO(
                     OrderStatus.RECEBIDO,
                     OrderStatus.EM_PREPARO,
                     CREATED_AT.plusMinutes(5),
@@ -618,15 +618,15 @@ class OrderControllerTest {
         .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"));
   }
 
-  private static OrderResponse orderResponse(OrderStatus status) {
+  private static OrderResponseDTO orderResponse(OrderStatus status) {
     BigDecimal price = new BigDecimal("59.90");
-    return new OrderResponse(
+    return new OrderResponseDTO(
         ORDER_ID,
         1042L,
         status,
-        new CustomerResponse("José da Silva", "+5511987521144", "jose@exemplo.com"),
-        List.of(new OrderItemResponse("Pizza calabresa G", 1, price, price)),
-        new AddressResponse(
+        new CustomerResponseDTO("José da Silva", "+5511987521144", "jose@exemplo.com"),
+        List.of(new OrderItemResponseDTO("Pizza calabresa G", 1, price, price)),
+        new AddressResponseDTO(
             "Rua José Neves",
             "590",
             "sala 03",
@@ -642,8 +642,8 @@ class OrderControllerTest {
         CREATED_AT);
   }
 
-  private static OrderSummaryResponse summary() {
-    return new OrderSummaryResponse(
+  private static OrderSummaryResponseDTO summary() {
+    return new OrderSummaryResponseDTO(
         ORDER_ID,
         1042L,
         OrderStatus.RECEBIDO,

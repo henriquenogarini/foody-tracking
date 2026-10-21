@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 
 @Schema(description = "One line of the order")
-public record OrderItemResponse(
+public record OrderItemResponseDTO(
     @Schema(description = "What was ordered", example = "Pizza calabresa G") String description,
     @Schema(description = "Quantity", example = "1") int quantity,
     @Schema(description = "Unit price, scale 2", example = "59.90") BigDecimal unitPrice,

@@ -5,13 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.mapper.UserMapper;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.shared.exception.type.InvalidSortException;
-import br.com.foody.tracking.shared.web.PageResponse;
+import br.com.foody.tracking.shared.web.PageResponseDTO;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,7 +54,7 @@ class UserQueryServiceTest {
     when(userRepository.findAll(PAGEABLE)).thenReturn(new PageImpl<>(List.of(user), PAGEABLE, 21));
 
     // When
-    PageResponse<UserResponse> page = userQueryService.list(PAGEABLE);
+    PageResponseDTO<UserResponseDTO> page = userQueryService.list(PAGEABLE);
 
     // Then
     assertThat(page.content())
@@ -77,7 +77,7 @@ class UserQueryServiceTest {
     when(userRepository.findAll(PAGEABLE)).thenReturn(Page.empty(PAGEABLE));
 
     // When
-    PageResponse<UserResponse> page = userQueryService.list(PAGEABLE);
+    PageResponseDTO<UserResponseDTO> page = userQueryService.list(PAGEABLE);
 
     // Then
     assertThat(page.content()).isEmpty();

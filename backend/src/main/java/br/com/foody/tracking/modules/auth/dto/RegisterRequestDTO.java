@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 @Schema(description = "Data to register a new user account")
-public record RegisterRequest(
+public record RegisterRequestDTO(
     @Schema(description = "Full name of the user", example = "Ana Souza") @NotBlank @Size(max = 100)
         String name,
     @Schema(description = "E-mail used to log in (case-insensitive)", example = "ana@exemplo.com")
@@ -26,7 +26,7 @@ public record RegisterRequest(
 
   // Stripped at construction so @Email validates the clean value: Jackson builds the record
   // before Bean Validation runs, and a padded but otherwise valid e-mail must be accepted.
-  public RegisterRequest {
+  public RegisterRequestDTO {
     email = email == null ? null : email.strip();
   }
 }

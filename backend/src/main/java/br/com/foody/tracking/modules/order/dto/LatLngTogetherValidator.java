@@ -4,12 +4,12 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
 public final class LatLngTogetherValidator
-    implements ConstraintValidator<LatLngTogether, AddressRequest> {
+    implements ConstraintValidator<LatLngTogether, AddressRequestDTO> {
 
   // The violation is attached to the missing coordinate so the 400 names a field
   // (deliveryAddress.lat or deliveryAddress.lng) rather than the whole address object.
   @Override
-  public boolean isValid(AddressRequest address, ConstraintValidatorContext context) {
+  public boolean isValid(AddressRequestDTO address, ConstraintValidatorContext context) {
     if (address == null || (address.lat() == null) == (address.lng() == null)) {
       return true;
     }

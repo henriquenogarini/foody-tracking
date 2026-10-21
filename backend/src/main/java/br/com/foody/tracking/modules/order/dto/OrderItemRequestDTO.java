@@ -12,7 +12,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
 @Schema(description = "One line of the order; the subtotal is computed by the server")
-public record OrderItemRequest(
+public record OrderItemRequestDTO(
     @Schema(description = "What is being ordered", example = "Pizza calabresa G")
         @NotBlank
         @Size(max = 200)

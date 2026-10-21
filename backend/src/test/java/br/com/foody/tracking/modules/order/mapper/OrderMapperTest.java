@@ -7,13 +7,13 @@ import static org.mockito.Mockito.when;
 
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
-import br.com.foody.tracking.modules.order.dto.AddressRequest;
-import br.com.foody.tracking.modules.order.dto.CustomerRequest;
-import br.com.foody.tracking.modules.order.dto.OrderItemRequest;
-import br.com.foody.tracking.modules.order.dto.OrderItemResponse;
-import br.com.foody.tracking.modules.order.dto.OrderResponse;
-import br.com.foody.tracking.modules.order.dto.OrderSummaryResponse;
-import br.com.foody.tracking.modules.order.dto.StatusHistoryResponse;
+import br.com.foody.tracking.modules.order.dto.AddressRequestDTO;
+import br.com.foody.tracking.modules.order.dto.CustomerRequestDTO;
+import br.com.foody.tracking.modules.order.dto.OrderItemRequestDTO;
+import br.com.foody.tracking.modules.order.dto.OrderItemResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
+import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
 import br.com.foody.tracking.modules.order.entity.Customer;
 import br.com.foody.tracking.modules.order.entity.DeliveryAddress;
 import br.com.foody.tracking.modules.order.entity.Order;
@@ -67,7 +67,7 @@ class OrderMapperTest {
     Order order = newOrder();
 
     // When
-    OrderResponse response = mapper.toResponse(order);
+    OrderResponseDTO response = mapper.toResponse(order);
 
     // Then
     assertThat(response.id()).isEqualTo(order.getPublicId());
@@ -78,8 +78,8 @@ class OrderMapperTest {
     assertThat(response.customer().email()).isEqualTo("jose@exemplo.com");
     assertThat(response.items())
         .extracting(
-            OrderItemResponse::description,
-            OrderItemResponse::quantity,
+            OrderItemResponseDTO::description,
+            OrderItemResponseDTO::quantity,
             item -> item.unitPrice().toPlainString(),
             item -> item.subtotal().toPlainString())
         .containsExactly(
@@ -116,7 +116,7 @@ class OrderMapperTest {
     when(view.getUpdatedAt()).thenReturn(LATER);
 
     // When
-    OrderSummaryResponse summary = mapper.toSummary(view);
+    OrderSummaryResponseDTO summary = mapper.toSummary(view);
 
     // Then
     assertThat(summary.id()).isEqualTo(publicId);
@@ -144,14 +144,14 @@ class OrderMapperTest {
     order.changeStatus(OrderStatus.EM_PREPARO, actor, LATER);
 
     // When
-    List<StatusHistoryResponse> history = mapper.toHistory(order.getStatusHistory());
+    List<StatusHistoryResponseDTO> history = mapper.toHistory(order.getStatusHistory());
 
     // Then
     assertThat(history)
         .extracting(
-            StatusHistoryResponse::fromStatus,
-            StatusHistoryResponse::toStatus,
-            StatusHistoryResponse::changedBy)
+            StatusHistoryResponseDTO::fromStatus,
+            StatusHistoryResponseDTO::toStatus,
+            StatusHistoryResponseDTO::changedBy)
         .containsExactly(
             tuple(null, OrderStatus.RECEBIDO, owner.getPublicId()),
             tuple(OrderStatus.RECEBIDO, OrderStatus.EM_PREPARO, actor));
@@ -162,9 +162,9 @@ class OrderMapperTest {
   @Test
   void shouldBuildDomainValues_whenConvertingRequests() {
     // Given
-    CustomerRequest customerRequest = new CustomerRequest("José da Silva", null, null);
-    AddressRequest addressRequest =
-        new AddressRequest(
+    CustomerRequestDTO customerRequest = new CustomerRequestDTO("José da Silva", null, null);
+    AddressRequestDTO addressRequest =
+        new AddressRequestDTO(
             "Rua José Neves",
             "590",
             null,
@@ -174,7 +174,7 @@ class OrderMapperTest {
             "04650140",
             null,
             null);
-    OrderItemRequest itemRequest = new OrderItemRequest("Pizza", 3, new BigDecimal("10.5"));
+    OrderItemRequestDTO itemRequest = new OrderItemRequestDTO("Pizza", 3, new BigDecimal("10.5"));
 
     // When
     Customer customer = mapper.toCustomer(customerRequest);
@@ -203,9 +203,9 @@ class OrderMapperTest {
   @Test
   void shouldMapBlankOptionalFieldsToNull_whenRequestsCarryBlankStrings() {
     // Given
-    CustomerRequest customerRequest = new CustomerRequest("José da Silva", "", "  ");
-    AddressRequest addressRequest =
-        new AddressRequest(
+    CustomerRequestDTO customerRequest = new CustomerRequestDTO("José da Silva", "", "  ");
+    AddressRequestDTO addressRequest =
+        new AddressRequestDTO(
             "Rua José Neves",
             "590",
             " ",
@@ -229,10 +229,10 @@ class OrderMapperTest {
   @Test
   void shouldKeepNonBlankOptionalFieldsVerbatim_whenRequestsCarryValues() {
     // Given
-    CustomerRequest customerRequest =
-        new CustomerRequest("José da Silva", "+5511987521144", "jose@exemplo.com");
-    AddressRequest addressRequest =
-        new AddressRequest(
+    CustomerRequestDTO customerRequest =
+        new CustomerRequestDTO("José da Silva", "+5511987521144", "jose@exemplo.com");
+    AddressRequestDTO addressRequest =
+        new AddressRequestDTO(
             "Rua José Neves",
             "590",
             " sala 03 ",

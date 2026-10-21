@@ -14,9 +14,9 @@ import static org.mockito.Mockito.when;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
-import br.com.foody.tracking.modules.order.dto.OrderResponse;
-import br.com.foody.tracking.modules.order.dto.OrderSummaryResponse;
-import br.com.foody.tracking.modules.order.dto.StatusHistoryResponse;
+import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
+import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
 import br.com.foody.tracking.modules.order.entity.Customer;
 import br.com.foody.tracking.modules.order.entity.DeliveryAddress;
 import br.com.foody.tracking.modules.order.entity.Order;
@@ -27,7 +27,7 @@ import br.com.foody.tracking.modules.order.repository.OrderRepository;
 import br.com.foody.tracking.modules.order.repository.OrderSummaryView;
 import br.com.foody.tracking.shared.exception.type.InvalidSortException;
 import br.com.foody.tracking.shared.exception.type.OrderNotFoundException;
-import br.com.foody.tracking.shared.web.PageResponse;
+import br.com.foody.tracking.shared.web.PageResponseDTO;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -71,7 +71,7 @@ class OrderQueryServiceTest {
     when(orderRepository.findSummaries(STABLE_PAGEABLE)).thenReturn(summaries);
 
     // When
-    PageResponse<OrderSummaryResponse> page = service.list(adminActor, null, PAGEABLE);
+    PageResponseDTO<OrderSummaryResponseDTO> page = service.list(adminActor, null, PAGEABLE);
 
     // Then
     assertThat(page.totalElements()).isEqualTo(1);
@@ -103,7 +103,7 @@ class OrderQueryServiceTest {
         .thenReturn(summaries);
 
     // When
-    PageResponse<OrderSummaryResponse> page = service.list(userActor, null, PAGEABLE);
+    PageResponseDTO<OrderSummaryResponseDTO> page = service.list(userActor, null, PAGEABLE);
 
     // Then
     assertThat(page.content()).hasSize(1);
@@ -194,7 +194,7 @@ class OrderQueryServiceTest {
         .thenReturn(Optional.of(order));
 
     // When
-    OrderResponse response = service.get(order.getPublicId(), userActor);
+    OrderResponseDTO response = service.get(order.getPublicId(), userActor);
 
     // Then
     assertThat(response.id()).isEqualTo(order.getPublicId());
@@ -210,7 +210,7 @@ class OrderQueryServiceTest {
     when(orderRepository.findByPublicId(order.getPublicId())).thenReturn(Optional.of(order));
 
     // When
-    OrderResponse response = service.get(order.getPublicId(), adminActor);
+    OrderResponseDTO response = service.get(order.getPublicId(), adminActor);
 
     // Then
     assertThat(response.id()).isEqualTo(order.getPublicId());
@@ -251,11 +251,11 @@ class OrderQueryServiceTest {
         .thenReturn(Optional.of(order));
 
     // When
-    List<StatusHistoryResponse> history = service.history(order.getPublicId(), userActor);
+    List<StatusHistoryResponseDTO> history = service.history(order.getPublicId(), userActor);
 
     // Then
     assertThat(history)
-        .extracting(StatusHistoryResponse::fromStatus, StatusHistoryResponse::toStatus)
+        .extracting(StatusHistoryResponseDTO::fromStatus, StatusHistoryResponseDTO::toStatus)
         .containsExactly(
             tuple(null, OrderStatus.RECEBIDO), tuple(OrderStatus.RECEBIDO, OrderStatus.EM_PREPARO));
     assertThat(history.get(1).changedBy()).isEqualTo(owner.getPublicId());

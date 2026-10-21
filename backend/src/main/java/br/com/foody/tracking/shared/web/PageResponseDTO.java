@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 @Schema(description = "One page of results with the paging metadata")
-public record PageResponse<T>(
+public record PageResponseDTO<T>(
     @Schema(description = "Items of this page") List<T> content,
     @Schema(description = "Zero-based page index", example = "0") int page,
     @Schema(description = "Requested page size", example = "20") int size,
@@ -13,12 +13,12 @@ public record PageResponse<T>(
         long totalElements,
     @Schema(description = "Total number of pages", example = "3") int totalPages) {
 
-  public PageResponse {
+  public PageResponseDTO {
     content = List.copyOf(content);
   }
 
-  public static <T> PageResponse<T> from(Page<T> page) {
-    return new PageResponse<>(
+  public static <T> PageResponseDTO<T> from(Page<T> page) {
+    return new PageResponseDTO<>(
         page.getContent(),
         page.getNumber(),
         page.getSize(),

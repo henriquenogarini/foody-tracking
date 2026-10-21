@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 
 @Schema(description = "Delivery address; lat and lng are optional but must come together")
 @LatLngTogether
-public record AddressRequest(
+public record AddressRequestDTO(
     @Schema(description = "Street name", example = "Rua José Neves") @NotBlank @Size(max = 200)
         String street,
     @Schema(description = "Street number", example = "590") @NotBlank @Size(max = 20) String number,

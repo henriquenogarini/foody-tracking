@@ -2,7 +2,7 @@ package br.com.foody.tracking.modules.auth.mapper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import java.time.Instant;
@@ -25,7 +25,7 @@ class UserMapperTest {
     User user = new User("Ana Souza", "ana@exemplo.com", "hash", Role.ADMIN, NOW);
 
     // When
-    UserResponse response = mapper.toResponse(user);
+    UserResponseDTO response = mapper.toResponse(user);
 
     // Then
     assertThat(response.id()).isEqualTo(user.getPublicId());

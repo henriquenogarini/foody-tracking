@@ -2,16 +2,16 @@ package br.com.foody.tracking.modules.order.controller;
 
 import br.com.foody.tracking.config.OpenApiConfig;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
-import br.com.foody.tracking.modules.order.dto.CreateOrderRequest;
-import br.com.foody.tracking.modules.order.dto.OrderResponse;
-import br.com.foody.tracking.modules.order.dto.OrderSummaryResponse;
-import br.com.foody.tracking.modules.order.dto.StatusHistoryResponse;
-import br.com.foody.tracking.modules.order.dto.UpdateStatusRequest;
+import br.com.foody.tracking.modules.order.dto.CreateOrderRequestDTO;
+import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
+import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
+import br.com.foody.tracking.modules.order.dto.UpdateStatusRequestDTO;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.modules.order.service.OrderQueryService;
 import br.com.foody.tracking.modules.order.service.OrderService;
 import br.com.foody.tracking.shared.exception.model.ApiErrorResponse;
-import br.com.foody.tracking.shared.web.PageResponse;
+import br.com.foody.tracking.shared.web.PageResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -73,7 +73,7 @@ public final class OrderController {
         content =
             @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = OrderResponse.class))),
+                schema = @Schema(implementation = OrderResponseDTO.class))),
     @ApiResponse(
         responseCode = "400",
         description = "`VALIDATION_ERROR`: invalid or missing fields, or malformed body",
@@ -89,10 +89,10 @@ public final class OrderController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public ResponseEntity<OrderResponse> create(
-      @Valid @RequestBody CreateOrderRequest request,
+  public ResponseEntity<OrderResponseDTO> create(
+      @Valid @RequestBody CreateOrderRequestDTO request,
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-    OrderResponse response = orderService.create(request, AuthenticatedUser.from(jwt));
+    OrderResponseDTO response = orderService.create(request, AuthenticatedUser.from(jwt));
     URI location =
         ServletUriComponentsBuilder.fromCurrentRequestUri()
             .path("/{id}")
@@ -108,8 +108,8 @@ public final class OrderController {
           "Paged order summaries, newest first by default, optionally filtered by status. A"
               + " `USER` sees only their own orders; an `ADMIN` sees every order. Sortable by"
               + " `createdAt`, `updatedAt`, `code`, `status` and `total`.")
-  // The 200 has no explicit schema: springdoc infers the generic PageResponse<...> from the
-  // return type, which @Schema(implementation = PageResponse.class) would erase.
+  // The 200 has no explicit schema: springdoc infers the generic PageResponseDTO<...> from the
+  // return type, which @Schema(implementation = PageResponseDTO.class) would erase.
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Page of order summaries"),
     @ApiResponse(
@@ -127,7 +127,7 @@ public final class OrderController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public PageResponse<OrderSummaryResponse> list(
+  public PageResponseDTO<OrderSummaryResponseDTO> list(
       @Parameter(description = "Only orders in this status", example = "EM_PREPARO")
           @RequestParam(required = false)
           OrderStatus status,
@@ -151,7 +151,7 @@ public final class OrderController {
         content =
             @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = OrderResponse.class))),
+                schema = @Schema(implementation = OrderResponseDTO.class))),
     @ApiResponse(
         responseCode = "400",
         description = "`VALIDATION_ERROR`: `publicId` is not a valid UUID",
@@ -174,7 +174,7 @@ public final class OrderController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public OrderResponse get(
+  public OrderResponseDTO get(
       @Parameter(description = PUBLIC_ID_DESCRIPTION, example = PUBLIC_ID_EXAMPLE) @PathVariable
           UUID publicId,
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
@@ -197,7 +197,7 @@ public final class OrderController {
         content =
             @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
-                schema = @Schema(implementation = OrderResponse.class))),
+                schema = @Schema(implementation = OrderResponseDTO.class))),
     @ApiResponse(
         responseCode = "400",
         description =
@@ -231,10 +231,10 @@ public final class OrderController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public OrderResponse changeStatus(
+  public OrderResponseDTO changeStatus(
       @Parameter(description = PUBLIC_ID_DESCRIPTION, example = PUBLIC_ID_EXAMPLE) @PathVariable
           UUID publicId,
-      @Valid @RequestBody UpdateStatusRequest request,
+      @Valid @RequestBody UpdateStatusRequestDTO request,
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
     return orderService.changeStatus(publicId, request, AuthenticatedUser.from(jwt));
   }
@@ -254,7 +254,8 @@ public final class OrderController {
             @Content(
                 mediaType = MediaType.APPLICATION_JSON_VALUE,
                 array =
-                    @ArraySchema(schema = @Schema(implementation = StatusHistoryResponse.class)))),
+                    @ArraySchema(
+                        schema = @Schema(implementation = StatusHistoryResponseDTO.class)))),
     @ApiResponse(
         responseCode = "400",
         description = "`VALIDATION_ERROR`: `publicId` is not a valid UUID",
@@ -277,7 +278,7 @@ public final class OrderController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public List<StatusHistoryResponse> history(
+  public List<StatusHistoryResponseDTO> history(
       @Parameter(description = PUBLIC_ID_DESCRIPTION, example = PUBLIC_ID_EXAMPLE) @PathVariable
           UUID publicId,
       @Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {

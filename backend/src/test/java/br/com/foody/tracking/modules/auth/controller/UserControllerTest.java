@@ -15,10 +15,10 @@ import br.com.foody.tracking.config.ClockConfig;
 import br.com.foody.tracking.config.JacksonConfig;
 import br.com.foody.tracking.config.JwtConfig;
 import br.com.foody.tracking.config.SecurityConfig;
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.service.UserQueryService;
-import br.com.foody.tracking.shared.web.PageResponse;
+import br.com.foody.tracking.shared.web.PageResponseDTO;
 import br.com.foody.tracking.shared.web.SortWhitelist;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -52,14 +52,15 @@ class UserControllerTest {
   @Test
   void shouldReturnPageOfUsersWithDefaultPaging_whenCallerIsAdmin() throws Exception {
     // Given
-    UserResponse user =
-        new UserResponse(
+    UserResponseDTO user =
+        new UserResponseDTO(
             USER_ID,
             "Ana Souza",
             "ana@exemplo.com",
             Role.USER,
             OffsetDateTime.parse("2026-10-21T17:13:27Z"));
-    when(userQueryService.list(any())).thenReturn(new PageResponse<>(List.of(user), 0, 20, 1, 1));
+    when(userQueryService.list(any()))
+        .thenReturn(new PageResponseDTO<>(List.of(user), 0, 20, 1, 1));
 
     // When
     mockMvc
@@ -98,7 +99,7 @@ class UserControllerTest {
               Pageable pageable = invocation.getArgument(0);
               SortWhitelist.requireAllowed(
                   pageable.getSort(), Set.of("createdAt", "name", "email"));
-              return new PageResponse<UserResponse>(List.of(), 0, 20, 0, 0);
+              return new PageResponseDTO<UserResponseDTO>(List.of(), 0, 20, 0, 0);
             });
 
     // When / Then

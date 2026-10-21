@@ -6,7 +6,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Schema(description = "Public view of a user account")
-public record UserResponse(
+public record UserResponseDTO(
     @Schema(
             description = "Public identifier of the user",
             example = "3f6c1a2e-8d4b-4c7a-9e1f-2b5d7a9c0e11")

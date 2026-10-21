@@ -1,10 +1,10 @@
 package br.com.foody.tracking.modules.auth.controller;
 
 import br.com.foody.tracking.config.OpenApiConfig;
-import br.com.foody.tracking.modules.auth.dto.UserResponse;
+import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.service.UserQueryService;
 import br.com.foody.tracking.shared.exception.model.ApiErrorResponse;
-import br.com.foody.tracking.shared.web.PageResponse;
+import br.com.foody.tracking.shared.web.PageResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -41,8 +41,8 @@ public class UserController {
       summary = "List users",
       description =
           "Paged list of every account, newest first by default. Requires the `ADMIN` role.")
-  // The 200 has no explicit schema: springdoc infers the generic PageResponse<UserResponse> from
-  // the return type, which @Schema(implementation = PageResponse.class) would erase.
+  // The 200 has no explicit schema: springdoc infers PageResponseDTO<UserResponseDTO> from the
+  // return type, which @Schema(implementation = PageResponseDTO.class) would erase.
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Page of users"),
     @ApiResponse(
@@ -67,7 +67,7 @@ public class UserController {
                 mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
-  public PageResponse<UserResponse> list(
+  public PageResponseDTO<UserResponseDTO> list(
       @ParameterObject
           @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
           Pageable pageable) {

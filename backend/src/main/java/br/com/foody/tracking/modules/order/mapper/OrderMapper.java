@@ -1,14 +1,14 @@
 package br.com.foody.tracking.modules.order.mapper;
 
-import br.com.foody.tracking.modules.order.dto.AddressRequest;
-import br.com.foody.tracking.modules.order.dto.AddressResponse;
-import br.com.foody.tracking.modules.order.dto.CustomerRequest;
-import br.com.foody.tracking.modules.order.dto.CustomerResponse;
-import br.com.foody.tracking.modules.order.dto.OrderItemRequest;
-import br.com.foody.tracking.modules.order.dto.OrderItemResponse;
-import br.com.foody.tracking.modules.order.dto.OrderResponse;
-import br.com.foody.tracking.modules.order.dto.OrderSummaryResponse;
-import br.com.foody.tracking.modules.order.dto.StatusHistoryResponse;
+import br.com.foody.tracking.modules.order.dto.AddressRequestDTO;
+import br.com.foody.tracking.modules.order.dto.AddressResponseDTO;
+import br.com.foody.tracking.modules.order.dto.CustomerRequestDTO;
+import br.com.foody.tracking.modules.order.dto.CustomerResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderItemRequestDTO;
+import br.com.foody.tracking.modules.order.dto.OrderItemResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
+import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
 import br.com.foody.tracking.modules.order.entity.Customer;
 import br.com.foody.tracking.modules.order.entity.DeliveryAddress;
 import br.com.foody.tracking.modules.order.entity.Order;
@@ -26,30 +26,30 @@ import org.mapstruct.Named;
 public interface OrderMapper {
 
   @Mapping(target = "id", source = "publicId")
-  OrderResponse toResponse(Order order);
+  OrderResponseDTO toResponse(Order order);
 
-  CustomerResponse toCustomerResponse(Customer customer);
+  CustomerResponseDTO toCustomerResponse(Customer customer);
 
-  AddressResponse toAddressResponse(DeliveryAddress address);
+  AddressResponseDTO toAddressResponse(DeliveryAddress address);
 
-  OrderItemResponse toItemResponse(OrderItem item);
+  OrderItemResponseDTO toItemResponse(OrderItem item);
 
   @Mapping(target = "id", source = "publicId")
   @Mapping(target = "total", source = "total", qualifiedByName = "money")
-  OrderSummaryResponse toSummary(OrderSummaryView view);
+  OrderSummaryResponseDTO toSummary(OrderSummaryView view);
 
-  List<StatusHistoryResponse> toHistory(List<OrderStatusHistory> history);
+  List<StatusHistoryResponseDTO> toHistory(List<OrderStatusHistory> history);
 
-  StatusHistoryResponse toHistoryResponse(OrderStatusHistory entry);
+  StatusHistoryResponseDTO toHistoryResponse(OrderStatusHistory entry);
 
   @Mapping(target = "phone", source = "phone", qualifiedByName = "blankToNull")
   @Mapping(target = "email", source = "email", qualifiedByName = "blankToNull")
-  Customer toCustomer(CustomerRequest request);
+  Customer toCustomer(CustomerRequestDTO request);
 
   @Mapping(target = "complement", source = "complement", qualifiedByName = "blankToNull")
-  DeliveryAddress toAddress(AddressRequest request);
+  DeliveryAddress toAddress(AddressRequestDTO request);
 
-  OrderItem toItem(OrderItemRequest request);
+  OrderItem toItem(OrderItemRequestDTO request);
 
   // Optional text sent as "" or "  " means "absent"; non-blank values are kept verbatim.
   @Named("blankToNull")

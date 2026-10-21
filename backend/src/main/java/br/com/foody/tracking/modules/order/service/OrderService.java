@@ -3,9 +3,9 @@ package br.com.foody.tracking.modules.order.service;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
-import br.com.foody.tracking.modules.order.dto.CreateOrderRequest;
-import br.com.foody.tracking.modules.order.dto.OrderResponse;
-import br.com.foody.tracking.modules.order.dto.UpdateStatusRequest;
+import br.com.foody.tracking.modules.order.dto.CreateOrderRequestDTO;
+import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
+import br.com.foody.tracking.modules.order.dto.UpdateStatusRequestDTO;
 import br.com.foody.tracking.modules.order.entity.Order;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.modules.order.event.OrderStatusChangedEvent;
@@ -51,7 +51,7 @@ public class OrderService {
   }
 
   @Transactional
-  public OrderResponse create(CreateOrderRequest request, AuthenticatedUser actor) {
+  public OrderResponseDTO create(CreateOrderRequestDTO request, AuthenticatedUser actor) {
     // A valid token whose user no longer exists (database reset) is treated as an invalid token.
     User owner = userRepository.findByPublicId(actor.id()).orElseThrow(InvalidTokenException::new);
     // MAX(code)+1 is race-free only because the single-connection pool serializes writers and
@@ -72,8 +72,8 @@ public class OrderService {
   }
 
   @Transactional
-  public OrderResponse changeStatus(
-      UUID publicId, UpdateStatusRequest request, AuthenticatedUser actor) {
+  public OrderResponseDTO changeStatus(
+      UUID publicId, UpdateStatusRequestDTO request, AuthenticatedUser actor) {
     Order order = orderFinder.findScoped(publicId, actor);
     OrderStatus from = order.getStatus();
     OrderStatus target = request.status();

@@ -2,14 +2,14 @@ package br.com.foody.tracking.modules.order.service;
 
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
-import br.com.foody.tracking.modules.order.dto.OrderResponse;
-import br.com.foody.tracking.modules.order.dto.OrderSummaryResponse;
-import br.com.foody.tracking.modules.order.dto.StatusHistoryResponse;
+import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
+import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
+import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.modules.order.mapper.OrderMapper;
 import br.com.foody.tracking.modules.order.repository.OrderRepository;
 import br.com.foody.tracking.modules.order.repository.OrderSummaryView;
-import br.com.foody.tracking.shared.web.PageResponse;
+import br.com.foody.tracking.shared.web.PageResponseDTO;
 import br.com.foody.tracking.shared.web.SortWhitelist;
 import java.util.List;
 import java.util.Set;
@@ -45,7 +45,7 @@ public class OrderQueryService {
 
   // The role scope is the choice of query: ADMIN reads every order, USER only their own.
   @Transactional(readOnly = true)
-  public PageResponse<OrderSummaryResponse> list(
+  public PageResponseDTO<OrderSummaryResponseDTO> list(
       AuthenticatedUser actor, OrderStatus status, Pageable pageable) {
     SortWhitelist.requireAllowed(pageable.getSort(), SORTABLE_PROPERTIES);
     Pageable stable = withTieBreaker(pageable);
@@ -61,7 +61,7 @@ public class OrderQueryService {
               ? orderRepository.findSummariesByOwnerPublicId(actor.id(), stable)
               : orderRepository.findSummariesByOwnerPublicIdAndStatus(actor.id(), status, stable);
     }
-    return PageResponse.from(page.map(orderMapper::toSummary));
+    return PageResponseDTO.from(page.map(orderMapper::toSummary));
   }
 
   private static Pageable withTieBreaker(Pageable pageable) {
@@ -79,12 +79,12 @@ public class OrderQueryService {
   }
 
   @Transactional(readOnly = true)
-  public OrderResponse get(UUID publicId, AuthenticatedUser actor) {
+  public OrderResponseDTO get(UUID publicId, AuthenticatedUser actor) {
     return orderMapper.toResponse(orderFinder.findScoped(publicId, actor));
   }
 
   @Transactional(readOnly = true)
-  public List<StatusHistoryResponse> history(UUID publicId, AuthenticatedUser actor) {
+  public List<StatusHistoryResponseDTO> history(UUID publicId, AuthenticatedUser actor) {
     return orderMapper.toHistory(orderFinder.findScoped(publicId, actor).getStatusHistory());
   }
 }

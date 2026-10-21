@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
 @Schema(description = "Credentials to obtain an access token")
-public record LoginRequest(
+public record LoginRequestDTO(
     @Schema(description = "Registered e-mail", example = "ana@exemplo.com") @NotBlank @Email
         String email,
     @Schema(
@@ -15,8 +15,8 @@ public record LoginRequest(
         @NotBlank
         String password) {
 
-  // Same reason as RegisterRequest: strip before @Email sees the value.
-  public LoginRequest {
+  // Same reason as RegisterRequestDTO: strip before @Email sees the value.
+  public LoginRequestDTO {
     email = email == null ? null : email.strip();
   }
 }

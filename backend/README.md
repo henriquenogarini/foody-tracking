@@ -296,11 +296,13 @@ br.com.foody.tracking
     `-Dspring.profiles.active=prod` in the `ENTRYPOINT`, a system property that outranks
     `SPRING_PROFILES_ACTIVE` from any `--env-file`, so a copied dev `.env` can never boot a
     container with the public dev secrets.
-25. **One full-flow `@SpringBootTest`, everything else in slices.** `OrderFlowIntegrationTest`
+25. **One full-flow context, everything else in slices.** `OrderFlowIntegrationTest`
     walks register → login → create → transitions → 409 → cross-user 404 → admin scope → 403 on
-    `/users` against the real context; together with the context smoke test
-    (`TrackingApplicationTests`) these are the only full-context tests, the rest stay fast
-    unit, `@WebMvcTest` and `@DataJpaTest` tests.
+    `/users` against the real context. Other full-context classes are allowed only when they share
+    that context (same annotations and properties, so Spring reuses the cached context and nothing
+    boots again): `PasswordResetIntegrationTest` sits next to it. With the context smoke test
+    (`TrackingApplicationTests`) these are the only full-context tests; the rest stay fast unit,
+    `@WebMvcTest` and `@DataJpaTest` tests.
 26. **Multi-stage image, no database container.** The build stage caches dependencies on
     `pom.xml` and skips tests (the gate already ran before the commit); the runtime is a JRE
     image running as a non-root user with `TZ=America/Sao_Paulo` for log timestamps. SQLite is
@@ -323,8 +325,9 @@ br.com.foody.tracking
     recover a forgotten account. Accepted risks: whoever knows an e-mail can change its password
     (and register's 409 makes e-mails discoverable); tokens already issued stay valid until they
     expire (2 h); there is no rate limiting, so each call costs one BCrypt hash of CPU. Mitigations:
-    the hash is computed on every path before the lookup, so timing does not reveal accounts; the
-    update is one short query restricted to `USER` in the JPQL, so the `ADMIN` is never reset; the
+    BCrypt runs on every path before the lookup, so timing does not meaningfully reveal accounts
+    (an existing `USER` also commits a short write, a few ms against BCrypt's tens of ms, and
+    register's 409 already reveals e-mails by contract); the update is one short query restricted to `USER` in the JPQL, so the `ADMIN` is never reset; the
     route is public and ignores a stale bearer like login. `APP_SECURITY_PASSWORD_RESET_ENABLED=false`
     removes the controller (`@ConditionalOnProperty`), and the route then answers 404 `NOT_FOUND`.
 31. **History rows carry the actor's current name, resolved in one query.** `changedBy` stays the
@@ -340,7 +343,10 @@ br.com.foody.tracking
     SQLite's `lower()` folds only ASCII, so `JOSÉ` does not match a stored `josé` (the term is
     lowercased in Java, so `JOSÉ` still finds `José`); no ICU extension is loaded. One JPQL per
     scope with optional parameters (`:p is null or ...`) replaces the four status/no-status
-    queries, keeping the projection, the scoped count and two statements per page. `q` is capped
+    queries, keeping the projection, the scoped count and two statements per page. The trade-off:
+    `(:status is null or o.status = :status)` lets SQLite use only the `owner_id` prefix of the
+    `orders(owner_id, status)` index, acceptable at this scale; the alternative is one query per
+    filter combination. `q` is capped
     at 100 characters; the parameter constraint answers 400 `VALIDATION_ERROR` with
     `errors[{field: "q"}]` through the handler's override of `HandlerMethodValidationException`.
 33. **Demo orders seeded in `dev` only.** `DevOrderSeeder` (`@Profile("dev")`, an

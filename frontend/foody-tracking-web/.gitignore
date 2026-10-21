@@ -1,0 +1,54 @@
+# foody-tracking-web. Self-contained on purpose: the root .gitignore is only a safety net.
+
+# Dependencies
+node_modules/
+
+# Build output and reports
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+
+# Tool caches and temp files
+.eslintcache
+.prettiercache
+.cache/
+.vite/
+.vitest/
+vite.config.*.timestamp-*
+vitest.config.*.timestamp-*
+
+# Environment: only the example is versioned
+.env
+.env.*
+!.env.example
+*.local
+
+# Local design reference (Claude Design export, kept out of the repository)
+design/
+
+# Claude Code: per-developer instructions, agents and hooks
+CLAUDE.md
+.claude/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

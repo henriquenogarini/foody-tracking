@@ -49,7 +49,7 @@ e clique em **Authorize** no Swagger. O guia no topo do Swagger mostra o mesmo p
 | Mapeamento | MapStruct (DTOs em `record`) e Lombok (construtores, getters e loggers; só em tempo de compilação) |
 | Documentação | springdoc-openapi (Swagger UI) |
 | Testes | JUnit 5, Mockito, AssertJ, `@WebMvcTest`, `@DataJpaTest`, `@SpringBootTest` |
-| Qualidade | JaCoCo (≥ 80% de linhas), SpotBugs, Spotless (google-java-format) |
+| Qualidade | JaCoCo (≥ 80% de linhas), SpotBugs, Spotless (google-java-format AOSP, 4 espaços) |
 | Entrega | Dockerfile multi-stage + `compose.yaml` |
 
 ---
@@ -173,6 +173,9 @@ Classes com `@Transactional`/`@PreAuthorize` não são `final` (o Spring cria pr
 - **Troca de senha (demonstração):** sem confirmação por e-mail — quem sabe o e-mail troca a senha de um `USER`;
   o `ADMIN` nunca é alterado e tokens já emitidos valem até expirar. Desligue com
   `APP_SECURITY_PASSWORD_RESET_ENABLED=false`.
+- **Código:** Lombok só para construtores (`@RequiredArgsConstructor`), getters e `@Slf4j` — nunca `@Data`/`@Setter`/`@Builder`;
+  getters com regra (dinheiro reescalado, listas imutáveis) continuam escritos à mão. Formatação AOSP com 4 espaços,
+  garantida pelo Spotless e espelhada no `.editorconfig`.
 - **Docker:** a imagem força o perfil `prod` (`-Dspring.profiles.active=prod`), roda como usuário sem privilégios e
   mantém o Swagger ligado para a avaliação. O SQLite é embarcado, então não há container de banco.
 - **Produção:** TLS termina no proxy reverso (`forward-headers-strategy: framework` no `prod`); instância única por

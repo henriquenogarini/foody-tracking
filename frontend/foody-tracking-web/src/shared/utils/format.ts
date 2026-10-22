@@ -47,3 +47,13 @@ export function formatInitials(name: string): string {
   // Array.from splits by code point, so a name starting with an emoji keeps it whole.
   return picked.map((word) => Array.from(word)[0].toUpperCase()).join('')
 }
+
+/**
+ * Reads a price typed the Brazilian way: "59,90", "1.234,5", "R$ 12" or "59.90" → number; anything
+ * else → null. At most 2 decimals, as the API requires.
+ */
+export function parseDecimal(input: string): number | null {
+  let text = input.replace(/R\$/g, '').replace(/\s/g, '')
+  if (text.includes(',')) text = text.replace(/\./g, '').replace(',', '.')
+  return /^\d+(\.\d{1,2})?$/.test(text) ? Number(text) : null
+}

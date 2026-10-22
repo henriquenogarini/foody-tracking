@@ -4,6 +4,7 @@ import {
   formatInitials,
   formatRelative,
   formatTime,
+  parseDecimal,
 } from './format'
 
 // Intl separates "R$" from the amount with a no-break space.
@@ -66,5 +67,23 @@ describe('formatInitials', () => {
     ['', ''],
   ])('"%s" → "%s"', (name, expected) => {
     expect(formatInitials(name)).toBe(expected)
+  })
+})
+
+describe('parseDecimal', () => {
+  it.each([
+    ['59,90', 59.9],
+    ['59,9', 59.9],
+    ['59', 59],
+    ['59.90', 59.9],
+    ['1.234,50', 1234.5],
+    ['R$ 12,00', 12],
+    [' 0,01 ', 0.01],
+  ])('reads "%s" as %d', (input, expected) => {
+    expect(parseDecimal(input)).toBe(expected)
+  })
+
+  it.each(['', 'abc', '1,234', '12,345', '-5', '1,2,3'])('rejects "%s"', (input) => {
+    expect(parseDecimal(input)).toBeNull()
   })
 })

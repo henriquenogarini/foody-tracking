@@ -147,12 +147,17 @@ export const theme = createTheme({
           variants: [
             {
               props: { size: 'small' },
+              // Inputs and selects, not the multiline textarea (it sizes itself by rows). The right
+              // padding is left alone on selects, where it makes room for the arrow.
               style: {
-                '& .MuiOutlinedInput-input': {
-                  padding: '11px 12px',
+                '& .MuiOutlinedInput-input:not(textarea)': {
+                  paddingTop: 11,
+                  paddingBottom: 11,
+                  paddingLeft: 12,
                   lineHeight: '22px',
                   height: 22,
                 },
+                '& input.MuiOutlinedInput-input': { paddingRight: 12 },
               },
             },
           ],

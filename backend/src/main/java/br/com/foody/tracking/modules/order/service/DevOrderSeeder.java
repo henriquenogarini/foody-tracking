@@ -57,7 +57,7 @@ public class DevOrderSeeder implements ApplicationRunner {
   @Transactional
   public void run(ApplicationArguments args) {
     Optional<User> admin =
-        adminEmail == null || adminEmail.isBlank()
+        adminEmail.isBlank()
             ? Optional.empty()
             : userRepository
                 .findByEmail(EmailNormalizer.normalize(adminEmail))

@@ -25,10 +25,6 @@ spring:
       hibernate.dialect: org.hibernate.community.dialect.SQLiteDialect
       hibernate.jdbc.time_zone: UTC
 
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-
   web:
     locale: pt-BR
     locale-resolver: fixed
@@ -65,10 +61,6 @@ app:
     allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:4173}
   # Zone id, never a fixed offset: tzdata handles DST if it returns. Drives the Clock and the JSON dates.
   time-zone: ${APP_TIME_ZONE:America/Sao_Paulo}
-
-logging:
-  level:
-    br.com.foody.tracking: INFO
 
 springdoc:
   default-produces-media-type: application/json

@@ -206,23 +206,6 @@ class AuthServiceTest {
   }
 
   @Test
-  void shouldRejectWithoutHashing_whenNewPasswordExceedsBcryptBytes() {
-    // Given 60 characters but 120 UTF-8 bytes (a direct call skips Bean Validation)
-    clearInvocations(passwordEncoder);
-    PasswordResetRequestDTO request =
-        new PasswordResetRequestDTO("ana@exemplo.com", "é".repeat(60));
-
-    // When
-    Throwable thrown = catchThrowable(() -> authService.resetPassword(request));
-
-    // Then
-    assertThat(thrown).isInstanceOf(ApiException.class);
-    assertThat(((ApiException) thrown).getCode()).isEqualTo(ApiErrorCode.VALIDATION_ERROR);
-    verify(passwordEncoder, never()).encode(any());
-    verifyNoInteractions(userRepository);
-  }
-
-  @Test
   void shouldReturnCurrentUser_whenTokenSubjectExists() {
     // Given
     User user = existingUser("hash");

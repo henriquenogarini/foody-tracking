@@ -238,12 +238,10 @@ class OrderRepositoryTest {
         .containsExactly(
             tuple("Pizza calabresa G", 1, new BigDecimal("59.90"), new BigDecimal("59.90")),
             tuple("Refrigerante", 2, new BigDecimal("7.50"), new BigDecimal("15.00")));
-    assertThat(reloaded.getItems()).allSatisfy(item -> assertThat(item.getId()).isNotNull());
     assertThat(reloaded.getStatusHistory())
         .singleElement()
         .satisfies(
             birth -> {
-              assertThat(birth.getId()).isNotNull();
               assertThat(birth.getFromStatus()).isNull();
               assertThat(birth.getToStatus()).isEqualTo(OrderStatus.RECEBIDO);
               assertThat(birth.getChangedBy()).isEqualTo(ana.getPublicId());

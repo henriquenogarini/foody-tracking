@@ -53,7 +53,7 @@ public interface OrderMapper {
   // changedBy is not a foreign key: an id without a user maps to null.
   @Named("actorName")
   default String actorName(UUID changedBy, @Context Map<UUID, String> actorNames) {
-    return changedBy == null ? null : actorNames.get(changedBy);
+    return actorNames.get(changedBy);
   }
 
   @Mapping(target = "phone", source = "phone", qualifiedByName = "blankToNull")

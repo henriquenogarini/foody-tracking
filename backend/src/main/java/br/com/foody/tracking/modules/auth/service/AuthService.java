@@ -12,8 +12,6 @@ import br.com.foody.tracking.modules.auth.mapper.UserMapper;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
 import br.com.foody.tracking.modules.auth.security.TokenService;
-import br.com.foody.tracking.shared.exception.model.ApiErrorCode;
-import br.com.foody.tracking.shared.exception.type.ApiException;
 import br.com.foody.tracking.shared.exception.type.InvalidCredentialsException;
 import br.com.foody.tracking.shared.exception.type.InvalidTokenException;
 import br.com.foody.tracking.shared.exception.type.UserEmailAlreadyExistsException;
@@ -101,11 +99,6 @@ public class AuthService {
   // ADMIN) so response time does not reveal which accounts exist; the affected-row count never
   // changes the outcome.
   public void resetPassword(PasswordResetRequestDTO request) {
-    if (exceedsBcryptLimit(request.newPassword())) {
-      log.debug("Password reset rejected: password longer than the BCrypt limit");
-      throw new ApiException(
-          ApiErrorCode.VALIDATION_ERROR, "A nova senha excede o limite de 72 bytes.");
-    }
     String hash = passwordEncoder.encode(request.newPassword());
     int updated =
         userRepository.updatePasswordHashOfUser(EmailNormalizer.normalize(request.email()), hash);

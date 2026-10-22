@@ -232,7 +232,7 @@ class OrderServiceTest {
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
     when(orderRepository.saveAndFlush(order))
-        .thenThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getId()));
+        .thenThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getPublicId()));
 
     // When / Then
     assertThatThrownBy(

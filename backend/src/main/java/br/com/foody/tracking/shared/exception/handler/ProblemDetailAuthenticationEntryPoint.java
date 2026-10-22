@@ -20,8 +20,6 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 // exception message carries Nimbus parsing/validation text that must not reach the client.
 public final class ProblemDetailAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-  static final String DETAIL = InvalidTokenException.DETAIL;
-
   private static final Logger log =
       LoggerFactory.getLogger(ProblemDetailAuthenticationEntryPoint.class);
 
@@ -39,7 +37,8 @@ public final class ProblemDetailAuthenticationEntryPoint implements Authenticati
       throws IOException {
     log.debug(
         "Unauthenticated request rejected on {} {}", request.getMethod(), request.getRequestURI());
-    ProblemDetail problem = ProblemDetailFactory.create(ApiErrorCode.AUTH_TOKEN_INVALID, DETAIL);
+    ProblemDetail problem =
+        ProblemDetailFactory.create(ApiErrorCode.AUTH_TOKEN_INVALID, InvalidTokenException.DETAIL);
     problem.setInstance(URI.create(request.getRequestURI()));
     response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
     response.setStatus(problem.getStatus());

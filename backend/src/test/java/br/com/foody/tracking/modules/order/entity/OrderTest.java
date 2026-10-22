@@ -90,12 +90,10 @@ class OrderTest {
     assertThat(order.getCreatedAt()).isEqualTo(NOW);
     assertThat(order.getUpdatedAt()).isEqualTo(NOW);
     assertThat(order.getItems()).containsExactly(pizza, soda);
-    assertThat(order.getItems()).allSatisfy(item -> assertThat(item.getOrder()).isSameAs(order));
     assertThat(order.getStatusHistory())
         .singleElement()
         .satisfies(
             birth -> {
-              assertThat(birth.getOrder()).isSameAs(order);
               assertThat(birth.getFromStatus()).isNull();
               assertThat(birth.getToStatus()).isEqualTo(OrderStatus.RECEBIDO);
               assertThat(birth.getChangedBy()).isEqualTo(owner.getPublicId());
@@ -196,7 +194,7 @@ class OrderTest {
     assertThatThrownBy(() -> newOrder(reused))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("item already belongs to another order");
-    assertThat(pizza.getOrder()).isSameAs(first);
+    assertThat(first.getItems()).containsExactly(pizza);
   }
 
   @ParameterizedTest

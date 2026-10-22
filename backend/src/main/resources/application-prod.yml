@@ -9,14 +9,3 @@ server:
   # Swagger server URL use the public scheme and host. Only in prod, which always sits behind a
   # trusted proxy; elsewhere a client could spoof these headers.
   forward-headers-strategy: framework
-
-logging:
-  level:
-    br.com.foody.tracking: INFO
-
-# Swagger UI stays on in prod on purpose: it is the reviewer's entry point to the API.
-springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    enabled: true

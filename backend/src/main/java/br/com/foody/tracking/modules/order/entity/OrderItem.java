@@ -68,14 +68,6 @@ public class OrderItem {
     this.order = order;
   }
 
-  Order getOrder() {
-    return order;
-  }
-
-  public Long getId() {
-    return id;
-  }
-
   public String getDescription() {
     return description;
   }

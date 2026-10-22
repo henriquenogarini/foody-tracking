@@ -4,8 +4,6 @@ import br.com.foody.tracking.shared.exception.handler.ProblemDetailAccessDeniedH
 import br.com.foody.tracking.shared.exception.handler.ProblemDetailAuthenticationEntryPoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.DispatcherType;
-import java.util.Arrays;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -28,106 +26,114 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 @EnableMethodSecurity
 public final class SecurityConfig {
 
-  private static final List<String> PUBLIC_POST_PATHS =
-      List.of("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/password-reset");
+    private static final List<String> PUBLIC_POST_PATHS =
+            List.of("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/password-reset");
 
-  @Bean
-  public SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectMapper objectMapper)
-      throws Exception {
-    ProblemDetailAuthenticationEntryPoint entryPoint =
-        new ProblemDetailAuthenticationEntryPoint(objectMapper);
-    ProblemDetailAccessDeniedHandler accessDeniedHandler =
-        new ProblemDetailAccessDeniedHandler(objectMapper);
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectMapper objectMapper)
+            throws Exception {
+        ProblemDetailAuthenticationEntryPoint entryPoint =
+                new ProblemDetailAuthenticationEntryPoint(objectMapper);
+        ProblemDetailAccessDeniedHandler accessDeniedHandler =
+                new ProblemDetailAccessDeniedHandler(objectMapper);
 
-    http.csrf(AbstractHttpConfigurer::disable)
-        .cors(Customizer.withDefaults())
-        .httpBasic(AbstractHttpConfigurer::disable)
-        .formLogin(AbstractHttpConfigurer::disable)
-        .logout(AbstractHttpConfigurer::disable)
-        .sessionManagement(
-            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(
-            auth ->
-                auth.dispatcherTypeMatchers(DispatcherType.ERROR)
-                    .permitAll()
-                    .requestMatchers(HttpMethod.POST, PUBLIC_POST_PATHS.toArray(String[]::new))
-                    .permitAll()
-                    .requestMatchers(
-                        "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/actuator/health")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated())
-        // Registered twice on purpose: the resource server installs its own defaults otherwise,
-        // and those answer with an empty body instead of the contract's ProblemDetail.
-        .exceptionHandling(
-            exceptions ->
-                exceptions
-                    .authenticationEntryPoint(entryPoint)
-                    .accessDeniedHandler(accessDeniedHandler))
-        .oauth2ResourceServer(
-            resourceServer ->
-                resourceServer
-                    .bearerTokenResolver(publicRouteAwareBearerTokenResolver())
-                    .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
-                    .authenticationEntryPoint(entryPoint)
-                    .accessDeniedHandler(accessDeniedHandler));
-    return http.build();
-  }
-
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
-  }
-
-  @Bean
-  public CorsConfigurationSource corsConfigurationSource(
-      @Value("${app.cors.allowed-origins}") String allowedOrigins) {
-    List<String> origins =
-        Arrays.stream(allowedOrigins.split(","))
-            .map(String::trim)
-            .filter(origin -> !origin.isEmpty())
-            .toList();
-    if (origins.contains("*")) {
-      throw new IllegalStateException(
-          "app.cors.allowed-origins must list explicit origins; '*' is not allowed");
+        http.csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .sessionManagement(
+                        session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(
+                        auth ->
+                                auth.dispatcherTypeMatchers(DispatcherType.ERROR)
+                                        .permitAll()
+                                        .requestMatchers(
+                                                HttpMethod.POST,
+                                                PUBLIC_POST_PATHS.toArray(String[]::new))
+                                        .permitAll()
+                                        .requestMatchers(
+                                                "/swagger-ui/**",
+                                                "/swagger-ui.html",
+                                                "/v3/api-docs/**",
+                                                "/actuator/health")
+                                        .permitAll()
+                                        .anyRequest()
+                                        .authenticated())
+                // Registered twice: else the resource server installs defaults with an empty body.
+                .exceptionHandling(
+                        exceptions ->
+                                exceptions
+                                        .authenticationEntryPoint(entryPoint)
+                                        .accessDeniedHandler(accessDeniedHandler))
+                .oauth2ResourceServer(
+                        resourceServer ->
+                                resourceServer
+                                        .bearerTokenResolver(publicRouteAwareBearerTokenResolver())
+                                        .jwt(
+                                                jwt ->
+                                                        jwt.jwtAuthenticationConverter(
+                                                                jwtAuthenticationConverter()))
+                                        .authenticationEntryPoint(entryPoint)
+                                        .accessDeniedHandler(accessDeniedHandler));
+        return http.build();
     }
-    CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(origins);
-    configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "OPTIONS"));
-    configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-    configuration.setExposedHeaders(List.of("Location"));
-    configuration.setAllowCredentials(false);
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", configuration);
-    return source;
-  }
 
-  // The signed role claim is trusted as-is (stateless 2h token, no role-changing endpoint), so
-  // no per-request database lookup is needed to build the authorities.
-  private static JwtAuthenticationConverter jwtAuthenticationConverter() {
-    JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-    authorities.setAuthoritiesClaimName(JwtConfig.ROLE_CLAIM);
-    authorities.setAuthorityPrefix("ROLE_");
-    JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-    converter.setJwtGrantedAuthoritiesConverter(authorities);
-    converter.setPrincipalClaimName(JwtClaimNames.SUB);
-    return converter;
-  }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-  // A stale Authorization header left by the client must not turn a public POST into a 401.
-  private static BearerTokenResolver publicRouteAwareBearerTokenResolver() {
-    DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
-    return request -> {
-      String path = request.getRequestURI().substring(request.getContextPath().length());
-      if (HttpMethod.POST.matches(request.getMethod()) && PUBLIC_POST_PATHS.contains(path)) {
-        return null;
-      }
-      return delegate.resolve(request);
-    };
-  }
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource(
+            @Value("${app.cors.allowed-origins}") String allowedOrigins) {
+        List<String> origins =
+                Arrays.stream(allowedOrigins.split(","))
+                        .map(String::trim)
+                        .filter(origin -> !origin.isEmpty())
+                        .toList();
+        if (origins.contains("*")) {
+            throw new IllegalStateException(
+                    "app.cors.allowed-origins must list explicit origins; '*' is not allowed");
+        }
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(origins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PATCH", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setExposedHeaders(List.of("Location"));
+        configuration.setAllowCredentials(false);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
+    private static JwtAuthenticationConverter jwtAuthenticationConverter() {
+        JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
+        authorities.setAuthoritiesClaimName(JwtConfig.ROLE_CLAIM);
+        authorities.setAuthorityPrefix("ROLE_");
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(authorities);
+        converter.setPrincipalClaimName(JwtClaimNames.SUB);
+        return converter;
+    }
+
+    // A stale Authorization header left by the client must not turn a public POST into a 401.
+    private static BearerTokenResolver publicRouteAwareBearerTokenResolver() {
+        DefaultBearerTokenResolver delegate = new DefaultBearerTokenResolver();
+        return request -> {
+            String path = request.getRequestURI().substring(request.getContextPath().length());
+            if (HttpMethod.POST.matches(request.getMethod()) && PUBLIC_POST_PATHS.contains(path)) {
+                return null;
+            }
+            return delegate.resolve(request);
+        };
+    }
 }

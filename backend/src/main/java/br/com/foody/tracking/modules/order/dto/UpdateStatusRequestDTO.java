@@ -6,4 +6,5 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "Target status of the order; must be allowed by the state machine")
 public record UpdateStatusRequestDTO(
-    @Schema(description = "Target status", example = "EM_PREPARO") @NotNull OrderStatus status) {}
+        @Schema(description = "Target status", example = "EM_PREPARO") @NotNull
+                OrderStatus status) {}

@@ -1,29 +1,29 @@
 package br.com.foody.tracking.shared.validation;
 
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.PARAMETER;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
-import java.lang.annotation.Documented;
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-// @Size counts characters; this caps UTF-8 bytes, where an accented character takes two.
 @Documented
 @Constraint(validatedBy = MaxUtf8BytesValidator.class)
 @Target({FIELD, METHOD, PARAMETER, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface MaxUtf8Bytes {
 
-  int value();
+    int value();
 
-  String message() default "deve ter no máximo {value} bytes (caracteres acentuados contam mais)";
+    String message() default "deve ter no máximo {value} bytes (caracteres acentuados contam mais)";
 
-  Class<?>[] groups() default {};
+    Class<?>[] groups() default {};
 
-  Class<? extends Payload>[] payload() default {};
+    Class<? extends Payload>[] payload() default {};
 }

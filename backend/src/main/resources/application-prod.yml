@@ -1,7 +1,3 @@
-# Deployment profile (Docker image and compose.yaml). No secret defaults: boot fails without
-# APP_SECURITY_JWT_SECRET, and the admin exists only when its e-mail/password pair is set.
-
 server:
-  # TLS ends at the reverse proxy: honour X-Forwarded-* for Location and the Swagger server URL.
-  # Prod only, which always sits behind a trusted proxy; elsewhere clients could spoof them.
+  # Prod only, behind a trusted proxy; elsewhere clients could spoof X-Forwarded-*.
   forward-headers-strategy: framework

@@ -1,4 +1,3 @@
-# Test profile: shared in-memory SQLite; Flyway creates the schema on context start.
 spring:
   datasource:
     url: jdbc:sqlite:file:memdb?mode=memory&cache=shared&foreign_keys=true

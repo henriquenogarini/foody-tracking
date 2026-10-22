@@ -1,11 +1,8 @@
-# Local development profile (active by default).
 app:
   security:
     jwt:
-      # Dev-only key. Set APP_SECURITY_JWT_SECRET (env var or .env) to override it.
       secret: ${APP_SECURITY_JWT_SECRET:6TxraCkFf6oRqgAdVNPUN2zbIVvQziInuKzha8i288LD8pPNB9SpaLEY7FqRHSPf}
     admin:
-      # Dev-only bootstrap admin. Override with APP_SECURITY_ADMIN_EMAIL/PASSWORD; never use in deploys.
       email: ${APP_SECURITY_ADMIN_EMAIL:admin@foody.local}
       password: ${APP_SECURITY_ADMIN_PASSWORD:admin-dev-password}
 

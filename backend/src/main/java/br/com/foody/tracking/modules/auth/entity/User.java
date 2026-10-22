@@ -9,80 +9,53 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.OffsetDateTime;
-import java.util.Objects;
-import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Account that owns orders. Only {@code publicId} is exposed; the e-mail arrives normalized and the
- * creation instant is passed in, so the entity never reads the clock.
- */
+import java.time.OffsetDateTime;
+import java.util.Objects;
+import java.util.UUID;
+
 @Entity
 @Table(name = "users")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @JdbcTypeCode(SqlTypes.VARCHAR)
-  @Column(name = "public_id", nullable = false, unique = true, updatable = false)
-  private UUID publicId;
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(name = "public_id", nullable = false, unique = true, updatable = false)
+    private UUID publicId;
 
-  @Column(name = "name", nullable = false)
-  private String name;
+    @Column(name = "name", nullable = false)
+    private String name;
 
-  @Column(name = "email", nullable = false)
-  private String email;
+    @Column(name = "email", nullable = false)
+    private String email;
 
-  @Column(name = "password_hash", nullable = false)
-  private String passwordHash;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "role", nullable = false)
-  private Role role;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    private Role role;
 
-  @Column(name = "created_at", nullable = false, updatable = false)
-  private OffsetDateTime createdAt;
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
 
-  protected User() {}
-
-  public User(String name, String email, String passwordHash, Role role, OffsetDateTime createdAt) {
-    this.publicId = UUID.randomUUID();
-    this.name = Objects.requireNonNull(name, "name");
-    this.email = Objects.requireNonNull(email, "email");
-    this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
-    this.role = Objects.requireNonNull(role, "role");
-    this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
-  }
-
-  public Long getId() {
-    return id;
-  }
-
-  public UUID getPublicId() {
-    return publicId;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public String getPasswordHash() {
-    return passwordHash;
-  }
-
-  public Role getRole() {
-    return role;
-  }
-
-  public OffsetDateTime getCreatedAt() {
-    return createdAt;
-  }
+    public User(
+            String name, String email, String passwordHash, Role role, OffsetDateTime createdAt) {
+        this.publicId = UUID.randomUUID();
+        this.name = Objects.requireNonNull(name, "name");
+        this.email = Objects.requireNonNull(email, "email");
+        this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
+        this.role = Objects.requireNonNull(role, "role");
+        this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
+    }
 }

@@ -5,7 +5,7 @@ FROM eclipse-temurin:21-jdk AS build
 WORKDIR /build
 
 # Wrapper and POM first so the dependency layer is cached until pom.xml changes.
-COPY mvnw pom.xml ./
+COPY mvnw pom.xml lombok.config ./
 COPY .mvn/ .mvn/
 # The repository is edited on Windows: strip CRLF so the wrapper runs under Linux.
 RUN sed -i 's/\r$//' mvnw && chmod +x mvnw && ./mvnw -B -q dependency:go-offline

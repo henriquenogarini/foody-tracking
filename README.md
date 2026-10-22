@@ -31,9 +31,12 @@ docker compose up --build -d      # http://localhost:8080 — pronto quando o co
 ```bash
 cd frontend/foody-tracking-web
 cp .env.example .env              # VITE_API_URL=http://localhost:8080/api/v1
-npm ci
+npm ci                            # só na 1ª vez (ou se o package-lock.json mudar): instala as dependências
 npm run dev                       # http://localhost:5173
 ```
+
+`npm ci` instala exatamente as versões do `package-lock.json` na pasta `node_modules`, que não vai para o Git.
+Nas próximas vezes, basta `npm run dev`.
 
 **3. Navegador:** abra **http://localhost:5173** e entre com `admin@foody.local` / `admin-dev-password`
 (ou crie uma conta em **Criar conta**). O banco começa vazio; para testar com dados, veja

@@ -21,7 +21,7 @@ cp .env.example .env
 
 # 2. Frontend
 cd frontend/foody-tracking-web
-npm ci
+npm ci                          # só na 1ª vez (ou se o package-lock.json mudar)
 cp .env.example .env            # VITE_API_URL=http://localhost:8080/api/v1
 npm run dev                     # http://localhost:5173
 ```

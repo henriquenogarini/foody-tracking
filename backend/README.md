@@ -46,7 +46,7 @@ e clique em **Authorize** no Swagger. O guia no topo do Swagger mostra o mesmo p
 | Linguagem / framework | Java 21, Spring Boot 3.5 (Web, Validation, Data JPA, Security, OAuth2 Resource Server) |
 | Banco | SQLite (`sqlite-jdbc` + dialeto da Hibernate), migrações com Flyway |
 | Autenticação | JWT HS256 emitido e validado pelo Spring Security (Nimbus), senhas com BCrypt |
-| Mapeamento | MapStruct (DTOs em `record`) |
+| Mapeamento | MapStruct (DTOs em `record`) e Lombok (construtores, getters e loggers; só em tempo de compilação) |
 | Documentação | springdoc-openapi (Swagger UI) |
 | Testes | JUnit 5, Mockito, AssertJ, `@WebMvcTest`, `@DataJpaTest`, `@SpringBootTest` |
 | Qualidade | JaCoCo (≥ 80% de linhas), SpotBugs, Spotless (google-java-format) |

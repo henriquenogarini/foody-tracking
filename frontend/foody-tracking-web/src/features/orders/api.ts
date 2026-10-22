@@ -1,6 +1,13 @@
 import { api } from '@/shared/api/http'
 import type { PageResponse } from '@/shared/api/types'
-import type { CreateOrderInput, Order, OrderListParams, OrderStatus, OrderSummary } from './types'
+import type {
+  CreateOrderInput,
+  Order,
+  OrderListParams,
+  OrderStatus,
+  OrderSummary,
+  StatusHistoryEntry,
+} from './types'
 
 export async function listOrders({ status, q, page, size }: OrderListParams) {
   const { data } = await api.get<PageResponse<OrderSummary>>('/orders', {
@@ -23,5 +30,15 @@ export async function updateOrderStatus(id: string, status: OrderStatus): Promis
 
 export async function createOrder(input: CreateOrderInput): Promise<Order> {
   const { data } = await api.post<Order>('/orders', input)
+  return data
+}
+
+export async function getOrder(id: string): Promise<Order> {
+  const { data } = await api.get<Order>(`/orders/${id}`)
+  return data
+}
+
+export async function getOrderHistory(id: string): Promise<StatusHistoryEntry[]> {
+  const { data } = await api.get<StatusHistoryEntry[]>(`/orders/${id}/history`)
   return data
 }

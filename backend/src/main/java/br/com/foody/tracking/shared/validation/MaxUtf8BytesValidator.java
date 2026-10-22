@@ -14,7 +14,6 @@ public final class MaxUtf8BytesValidator
     this.maxBytes = constraint.value();
   }
 
-  // Null is valid by Bean Validation convention; @NotBlank owns presence.
   @Override
   public boolean isValid(CharSequence value, ConstraintValidatorContext context) {
     return value == null || value.toString().getBytes(StandardCharsets.UTF_8).length <= maxBytes;

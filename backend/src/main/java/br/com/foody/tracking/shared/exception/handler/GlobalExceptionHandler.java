@@ -87,9 +87,8 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
     return respondInvalidSort(ex, ex.getProperty(), request);
   }
 
-  // Security exceptions raised inside the MVC layer (e.g. @PreAuthorize) must reach Spring
-  // Security's ExceptionTranslationFilter, which answers 401/403 in the contract format; the
-  // catch-all below would otherwise turn them into 500.
+  // Security exceptions from the MVC layer (@PreAuthorize) must reach ExceptionTranslationFilter
+  // for the contract's 401/403; the catch-all below would turn them into 500.
   @ExceptionHandler({AccessDeniedException.class, AuthenticationException.class})
   public void rethrowSecurityException(RuntimeException ex) {
     throw ex;
@@ -119,9 +118,8 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
     return respond(ex, invalidFields(errors), headers, request);
   }
 
-  // Constraints on @RequestParam/@PathVariable (Spring 6.1 built-in method validation) answer
-  // like body validation: VALIDATION_ERROR with errors[] naming the parameter. A 500 (return
-  // value validation) is left to the framework.
+  // @RequestParam/@PathVariable violations answer like body validation; a 500 (return-value
+  // validation) is left to the framework.
   @Override
   protected ResponseEntity<Object> handleHandlerMethodValidationException(
       HandlerMethodValidationException ex,
@@ -179,10 +177,8 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
     return respond(ex, invalidFields(List.of(error)), headers, request);
   }
 
-  // Framework-built bodies (unknown route, 405, 406, 415, missing parameter...) get the contract's
-  // timestamp and a code from a small fixed set. Keyed by status because this hook never sees the
-  // exception; bodies built by ProblemDetailFactory already carry their code (ORDER_NOT_FOUND is
-  // also a 404) and are never overwritten.
+  // Framework-built bodies (unknown route, 405, 406, 415...) get the timestamp and a code keyed by
+  // status (this hook never sees the exception); codes set by ProblemDetailFactory are kept.
   @Override
   protected ResponseEntity<Object> createResponseEntity(
       Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {

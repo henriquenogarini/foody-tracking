@@ -33,8 +33,7 @@ import org.hibernate.type.SqlTypes;
 /**
  * Aggregate root of a delivery order: it owns its items and its status history, and every change
  * goes through {@link #create} or {@link #changeStatus}. The total is always the sum of the item
- * subtotals so a client can never dictate what is charged. The current instant is passed in by the
- * caller (from the injected {@code Clock}) so the domain stays deterministic and testable.
+ * subtotals so a client can never dictate what is charged.
  */
 @Entity
 @Table(name = "orders")

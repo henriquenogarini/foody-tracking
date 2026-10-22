@@ -173,12 +173,9 @@ class UserRepositoryTest {
     assertThat(reloaded.getCreatedAt()).isAtSameInstantAs(NOW);
   }
 
-  // The SQL shapes Hibernate 6 generates for findByEmail (full row) and existsByEmail (id + limit).
-  // The column has BINARY collation, so only a BINARY index can serve "email = ?"; the NOCASE
-  // unique index from V1 cannot, which made every login and register pre-check a table scan.
-  // These strings mirror the derived findByEmail / existsByEmail (plain equality): an IgnoreCase
-  // variant would emit "lower(email) = lower(?)" and scan again, so changing those repository
-  // methods means updating this test.
+  // The SQL Hibernate 6 generates for findByEmail (full row) and existsByEmail (id + limit). The
+  // column is BINARY-collated, so only a BINARY index serves "email = ?" (the NOCASE unique index
+  // cannot); an IgnoreCase query would emit lower(email) and scan, so keep these strings in sync.
   @ParameterizedTest
   @ValueSource(
       strings = {

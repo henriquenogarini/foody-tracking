@@ -10,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// Not final: @Transactional needs a CGLIB subclass proxy.
 @Service
 public class UserQueryService {
 

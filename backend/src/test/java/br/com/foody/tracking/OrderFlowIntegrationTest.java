@@ -30,9 +30,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-// Own in-memory database: this flow commits rows that must not leak into the classes sharing
-// `memdb`. E-mails stay unique per run and assertions relative (contains / does not contain), so
-// the class does not depend on what else ran in the JVM.
+// `flowdb` (shared with PasswordResetIntegrationTest) keeps committed rows out of `memdb`.
+// E-mails are unique per run and assertions relative, so rows from other classes do not matter.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -100,7 +99,7 @@ class OrderFlowIntegrationTest {
     String orderPath = "/api/v1/orders/" + orderId;
     created.andExpect(header().string(HttpHeaders.LOCATION, endsWith(orderPath)));
 
-    // And a later GET returns the same timestamps the POST did (the clock ticks in storage millis)
+    // And a later GET returns the same timestamps (the Clock is truncated to the stored millis)
     mockMvc
         .perform(get(orderPath).header(HttpHeaders.AUTHORIZATION, bearer(anaToken)))
         .andExpect(status().isOk())
@@ -227,7 +226,7 @@ class OrderFlowIntegrationTest {
             .getResponse()
             .getContentAsString();
     assertThat(body).contains("/api/v1/orders/{publicId}/status");
-    // And each tag is declared once, with the description from OpenApiConfig
+    // And each tag is declared exactly once
     List<String> tagNames = JsonPath.read(body, "$.tags[*].name");
     assertThat(tagNames).containsExactlyInAnyOrder("Auth", "Users", "Orders");
   }

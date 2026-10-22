@@ -26,7 +26,6 @@ public final class OpenApiConfig {
   public static final String TAG_ORDERS_DESCRIPTION =
       "Delivery orders, status changes and their history";
 
-  // Rendered by Swagger UI at the top of the page: it doubles as the usage guide of the API.
   private static final String DESCRIPTION =
       """
       REST API to track Foody Delivery orders.

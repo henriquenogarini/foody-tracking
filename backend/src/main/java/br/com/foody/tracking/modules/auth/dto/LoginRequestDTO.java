@@ -15,7 +15,7 @@ public record LoginRequestDTO(
         @NotBlank
         String password) {
 
-  // Same reason as RegisterRequestDTO: strip before @Email sees the value.
+  // Stripped here: Jackson builds the record before Bean Validation, so @Email sees it clean.
   public LoginRequestDTO {
     email = email == null ? null : email.strip();
   }

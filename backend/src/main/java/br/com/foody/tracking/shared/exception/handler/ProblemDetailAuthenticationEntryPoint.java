@@ -13,8 +13,8 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
-// Answers 401 in the contract's ProblemDetail format. The detail is fixed on purpose: the
-// exception message carries Nimbus parsing/validation text that must not reach the client.
+// 401 in the contract format. Fixed detail: the exception message carries Nimbus parsing text
+// that must not reach the client.
 public final class ProblemDetailAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
   private static final Logger log =

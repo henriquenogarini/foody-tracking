@@ -12,7 +12,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-// Answers 403 in the contract's ProblemDetail format; the exception message is never exposed.
+// 403 in the contract format; the exception message is never exposed.
 public final class ProblemDetailAccessDeniedHandler implements AccessDeniedHandler {
 
   private static final String DETAIL = "Acesso negado.";

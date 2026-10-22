@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 @Order(AdminBootstrap.RUNNER_ORDER)
 public final class AdminBootstrap implements ApplicationRunner {
 
-  /** Runners that need the admin (the dev order seeder) declare a higher order. */
   public static final int RUNNER_ORDER = 0;
 
   private static final Logger log = LoggerFactory.getLogger(AdminBootstrap.class);
@@ -50,7 +49,7 @@ public final class AdminBootstrap implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    // Blank counts as absent: the .env.example lines are `KEY=`.
+    // application.yml defaults both to empty, so blank means absent.
     boolean hasEmail = adminEmail != null && !adminEmail.isBlank();
     boolean hasPassword = adminPassword != null && !adminPassword.isBlank();
     if (!hasEmail && !hasPassword) {

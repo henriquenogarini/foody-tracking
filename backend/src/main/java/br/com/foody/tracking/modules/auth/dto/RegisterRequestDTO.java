@@ -25,8 +25,7 @@ public record RegisterRequestDTO(
         @MaxUtf8Bytes(PasswordPolicy.MAX_BYTES)
         String password) {
 
-  // Stripped at construction so @Email validates the clean value: Jackson builds the record
-  // before Bean Validation runs, and a padded but otherwise valid e-mail must be accepted.
+  // Stripped here: Jackson builds the record before Bean Validation, so @Email sees it clean.
   public RegisterRequestDTO {
     email = email == null ? null : email.strip();
   }

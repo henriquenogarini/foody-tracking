@@ -12,8 +12,7 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-// @Size counts characters, but some limits are in bytes: a 72-character accented string exceeds
-// 72 UTF-8 bytes.
+// @Size counts characters; this caps UTF-8 bytes, where an accented character takes two.
 @Documented
 @Constraint(validatedBy = MaxUtf8BytesValidator.class)
 @Target({FIELD, METHOD, PARAMETER, ANNOTATION_TYPE})

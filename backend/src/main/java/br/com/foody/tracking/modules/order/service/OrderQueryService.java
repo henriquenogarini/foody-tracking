@@ -29,15 +29,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// Not final: @Transactional needs a CGLIB subclass proxy.
 @Service
 public class OrderQueryService {
 
   private static final Set<String> SORTABLE_PROPERTIES =
       Set.of("createdAt", "updatedAt", "code", "status", "total");
 
-  // Unique, so equal sort values (same millisecond, status or total) still page deterministically
-  // under LIMIT/OFFSET instead of repeating or skipping rows between pages.
+  // Unique tie-breaker: equal sort values still page deterministically under LIMIT/OFFSET.
   private static final String TIE_BREAKER = "code";
 
   private static final Pattern CODE_QUERY = Pattern.compile("#?(\\d{1,18})");
@@ -58,8 +56,7 @@ public class OrderQueryService {
     this.userRepository = userRepository;
   }
 
-  // The role scope is the choice of query: ADMIN reads every order, USER only their own. The
-  // search term becomes either a code or a name pattern, never both; null disables a filter.
+  // The role scope is the choice of query; the search term is either a code or a name pattern.
   @Transactional(readOnly = true)
   public PageResponseDTO<OrderSummaryResponseDTO> list(
       AuthenticatedUser actor, OrderStatus status, String searchTerm, Pageable pageable) {
@@ -120,8 +117,7 @@ public class OrderQueryService {
     return orderMapper.toResponse(orderFinder.getVisibleTo(publicId, actor));
   }
 
-  // Fixed cost whatever the history length: the order, its history rows, and one query for the
-  // distinct actors' current names (no per-row user lookup).
+  // Fixed query count: the order, its history and one lookup of the distinct actors' names.
   @Transactional(readOnly = true)
   public List<StatusHistoryResponseDTO> history(UUID publicId, AuthenticatedUser actor) {
     List<OrderStatusHistory> history = orderFinder.getVisibleTo(publicId, actor).getStatusHistory();

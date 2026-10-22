@@ -26,7 +26,6 @@ public final class TokenService {
     this.expirationSeconds = jwtProperties.expirationSeconds();
   }
 
-  // Claims are the contract's minimum: never the internal id nor the password hash.
   public TokenResponseDTO issue(User user) {
     Instant issuedAt = clock.instant();
     JwtClaimsSet claims =

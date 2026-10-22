@@ -41,8 +41,7 @@ public interface OrderMapper {
   @Mapping(target = "total", source = "total", qualifiedByName = "money")
   OrderSummaryResponseDTO toSummaryResponse(OrderSummaryView view);
 
-  // actorNames (publicId -> current name) is resolved by the service in one query, so mapping
-  // never touches the database.
+  // actorNames is resolved by the service in one query; mapping never touches the database.
   List<StatusHistoryResponseDTO> toHistoryResponses(
       List<OrderStatusHistory> history, @Context Map<UUID, String> actorNames);
 
@@ -65,7 +64,6 @@ public interface OrderMapper {
 
   OrderItem toItem(OrderItemRequestDTO request);
 
-  // Optional text sent as "" or "  " means "absent"; non-blank values are kept verbatim.
   @Named("blankToNull")
   default String blankToNull(String value) {
     return value == null || value.isBlank() ? null : value;

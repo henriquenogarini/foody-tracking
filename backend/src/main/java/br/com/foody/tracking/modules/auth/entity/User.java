@@ -16,9 +16,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 /**
- * Authenticated account that owns orders. Only {@code publicId} is exposed by the API; the e-mail
- * arrives already normalized by the service layer and the creation instant is supplied by the
- * caller, so the entity never reads the clock.
+ * Account that owns orders. Only {@code publicId} is exposed; the e-mail arrives normalized and the
+ * creation instant is passed in, so the entity never reads the clock.
  */
 @Entity
 @Table(name = "users")

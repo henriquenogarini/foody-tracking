@@ -25,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// Not final: @Transactional needs a CGLIB subclass proxy.
 @Service
 public class AuthService {
 
@@ -93,10 +92,8 @@ public class AuthService {
     return tokenService.issue(user.get());
   }
 
-  // Demo feature, no e-mail confirmation. Not transactional, like login: BCrypt runs before the
-  // single short update. The hash is computed on every path (existing USER, unknown e-mail,
-  // ADMIN) so response time does not reveal which accounts exist; the affected-row count never
-  // changes the outcome.
+  // Demo feature, no e-mail confirmation, not transactional (like login). The hash is computed on
+  // every path so response time does not reveal which accounts exist.
   public void resetPassword(PasswordResetRequestDTO request) {
     String hash = passwordEncoder.encode(request.newPassword());
     int updated =

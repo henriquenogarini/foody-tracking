@@ -11,9 +11,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public final class JacksonConfig {
 
-  // The database keeps UTC instants; the JSON boundary is where they become Brasília time. Every
-  // OffsetDateTime leaves as ISO-8601 re-zoned to the application zone (values read back from the
-  // database carry Z), and incoming offsets are adjusted to that same zone.
+  // UTC lives in the database; JSON re-zones every OffsetDateTime, in and out, to the app zone.
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer applicationZoneIsoDates(ZoneId appZone) {
     return builder ->

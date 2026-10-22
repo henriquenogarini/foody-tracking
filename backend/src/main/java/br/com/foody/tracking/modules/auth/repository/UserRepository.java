@@ -15,11 +15,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   Optional<User> findByEmail(String email);
 
-  /** One statement for any number of ids: the order history resolves its actor names here. */
   List<UserNameView> findByPublicIdIn(Collection<UUID> publicIds);
 
-  // The ADMIN exclusion lives in the query (a literal, not a parameter), so no caller can widen
-  // the demo reset to the admin account. One short write: the BCrypt hash is computed before it.
+  // ADMIN is excluded by a literal in the query, so no caller can widen the demo reset to it.
   @Modifying
   @Transactional
   @Query(

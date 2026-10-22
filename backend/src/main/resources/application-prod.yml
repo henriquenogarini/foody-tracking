@@ -1,11 +1,7 @@
-# Deployment profile (the Docker image and compose.yaml activate it).
-# The default profile is dev, which ships a committed JWT secret and a dev admin pair; a container
-# must never fall back to it. This file adds no defaults for secrets: app.security.jwt.secret keeps
-# ${APP_SECURITY_JWT_SECRET} from application.yml with no fallback, so boot fails fast without it,
-# and the bootstrap admin exists only when APP_SECURITY_ADMIN_EMAIL/PASSWORD are set.
+# Deployment profile (Docker image and compose.yaml). No secret defaults: boot fails without
+# APP_SECURITY_JWT_SECRET, and the admin exists only when its e-mail/password pair is set.
 
 server:
-  # TLS terminates at the reverse proxy: honour X-Forwarded-* so the Location header and the
-  # Swagger server URL use the public scheme and host. Only in prod, which always sits behind a
-  # trusted proxy; elsewhere a client could spoof these headers.
+  # TLS ends at the reverse proxy: honour X-Forwarded-* for Location and the Swagger server URL.
+  # Prod only, which always sits behind a trusted proxy; elsewhere clients could spoof them.
   forward-headers-strategy: framework

@@ -23,7 +23,7 @@ public record PasswordResetRequestDTO(
         @MaxUtf8Bytes(PasswordPolicy.MAX_BYTES)
         String newPassword) {
 
-  // Stripped at construction so @Email validates the clean value (same reason as register).
+  // Stripped here: Jackson builds the record before Bean Validation, so @Email sees it clean.
   public PasswordResetRequestDTO {
     email = email == null ? null : email.strip();
   }

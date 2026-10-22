@@ -2,11 +2,7 @@ package br.com.foody.tracking.shared.exception.type;
 
 import br.com.foody.tracking.shared.exception.model.ApiErrorCode;
 
-/**
- * Raised by {@code Order.changeStatus} when {@code OrderStatus} forbids the requested move. Typed
- * on {@code Enum<?>} so {@code shared} never depends on a module; the message uses the constant
- * names exactly as before.
- */
+// Enum<?>: shared never depends on a module.
 public final class InvalidStatusTransitionException extends DomainException {
 
   public InvalidStatusTransitionException(Enum<?> from, Enum<?> to) {

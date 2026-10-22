@@ -8,8 +8,7 @@ import java.util.Base64;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-// Validated at bind time so a weak or malformed key stops the application at startup instead of
-// failing on the first login.
+// Validated at bind time so a weak or malformed key fails startup, not the first login.
 @Validated
 @ConfigurationProperties("app.security.jwt")
 public record JwtProperties(@NotBlank String secret, @Positive @Max(7200) long expirationSeconds) {

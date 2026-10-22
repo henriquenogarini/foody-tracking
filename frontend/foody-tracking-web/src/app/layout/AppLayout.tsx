@@ -1,7 +1,9 @@
 import AddIcon from '@mui/icons-material/Add'
 import ListIcon from '@mui/icons-material/FormatListBulleted'
+import PersonOutlineIcon from '@mui/icons-material/PersonOutlined'
 import {
   AppBar,
+  Avatar,
   BottomNavigation,
   BottomNavigationAction,
   Box,
@@ -10,8 +12,12 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material'
+import { useState } from 'react'
 import { Link, Outlet, useMatch } from 'react-router'
+import { AccountMenu } from '@/features/auth/components/AccountMenu'
+import { useAuth } from '@/features/auth/useAuth'
 import { BrandLogo } from '@/shared/components/BrandLogo'
+import { formatInitials } from '@/shared/utils/format'
 
 const NAV_ITEMS = [
   { to: '/orders', label: 'Pedidos', icon: <ListIcon /> },
@@ -24,6 +30,9 @@ export function AppLayout() {
   const current = useMatch('/orders/new') ? '/orders/new' : '/orders'
   // noSsr reads the media query on the first render, so the logo never jumps size.
   const isDesktop = useMediaQuery(useTheme().breakpoints.up('md'), { noSsr: true })
+  const { user } = useAuth()
+  const [accountAnchor, setAccountAnchor] = useState<HTMLElement | null>(null)
+  const userName = user?.name ?? ''
 
   return (
     <Box sx={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
@@ -79,6 +88,34 @@ export function AppLayout() {
               )
             })}
           </Box>
+          <Button
+            onClick={(event) => setAccountAnchor(event.currentTarget)}
+            aria-haspopup="menu"
+            aria-expanded={Boolean(accountAnchor)}
+            aria-label={`Conta de ${userName}`}
+            sx={{
+              display: { xs: 'none', md: 'inline-flex' },
+              ml: 'auto',
+              px: 1,
+              gap: 1.25,
+              fontWeight: 600,
+              color: 'ink.900',
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 36,
+                height: 36,
+                bgcolor: 'brand.100',
+                color: 'brand.800',
+                fontSize: 13,
+                fontWeight: 700,
+              }}
+            >
+              {formatInitials(userName)}
+            </Avatar>
+            {userName.split(' ')[0]}
+          </Button>
         </Toolbar>
       </AppBar>
 
@@ -125,7 +162,17 @@ export function AppLayout() {
             aria-current={item.to === current ? 'page' : undefined}
           />
         ))}
+        <BottomNavigationAction
+          value="account"
+          label="Conta"
+          icon={<PersonOutlineIcon />}
+          aria-haspopup="menu"
+          aria-expanded={Boolean(accountAnchor)}
+          onClick={(event) => setAccountAnchor(event.currentTarget)}
+        />
       </BottomNavigation>
+
+      <AccountMenu anchorEl={accountAnchor} onClose={() => setAccountAnchor(null)} />
     </Box>
   )
 }

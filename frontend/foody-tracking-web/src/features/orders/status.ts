@@ -35,6 +35,12 @@ export const ACTION_LABEL: Record<Exclude<OrderStatus, 'RECEBIDO'>, string> = {
   CANCELADO: 'Cancelar pedido',
 }
 
+/** The detail screen has room for the design's longer wording of the last step. */
+export const DETAIL_ACTION_LABEL: typeof ACTION_LABEL = {
+  ...ACTION_LABEL,
+  ENTREGUE: 'Marcar como entregue',
+}
+
 export function isTerminal(status: OrderStatus): boolean {
   return NEXT_TRANSITIONS[status].length === 0
 }

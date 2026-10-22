@@ -78,3 +78,13 @@ export interface CreateOrderInput {
   deliveryAddress: Omit<DeliveryAddress, 'complement' | 'lat' | 'lng'> & { complement?: string }
   notes?: string
 }
+
+/** One status change. The first entry is the creation (fromStatus null); oldest first. */
+export interface StatusHistoryEntry {
+  fromStatus: OrderStatus | null
+  toStatus: OrderStatus
+  changedAt: string
+  changedBy: string
+  /** Current name of who made the change; null if that user no longer exists. */
+  changedByName: string | null
+}

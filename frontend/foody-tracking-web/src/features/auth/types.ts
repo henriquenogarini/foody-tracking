@@ -1,5 +1,3 @@
-// Mirrors the API contract (CLAUDE.md §5); dates are ISO-8601 strings.
-
 export type UserRole = 'USER' | 'ADMIN'
 
 export interface User {

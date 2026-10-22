@@ -1,8 +1,6 @@
 import { Alert, Box, Button, CircularProgress } from '@mui/material'
 import { useAuth } from '@/features/auth/useAuth'
 
-// Shown by the route guards while the stored session is being validated, or when that check failed
-// for a reason other than an invalid token (API down, network).
 export function SessionGate() {
   const { status, retry, signOut } = useAuth()
 
@@ -16,7 +14,7 @@ export function SessionGate() {
               <Button color="inherit" size="small" onClick={retry}>
                 Tentar novamente
               </Button>
-              {/* Way out when the API stays down: otherwise a reload lands here again. */}
+              {/* Way out when the API stays down; a reload would land here again. */}
               <Button color="inherit" size="small" onClick={signOut}>
                 Sair
               </Button>

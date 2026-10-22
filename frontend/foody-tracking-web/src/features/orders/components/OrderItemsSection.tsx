@@ -17,11 +17,7 @@ import { SectionCard } from '@/shared/components/SectionCard'
 
 const DESKTOP_COLUMNS = 'minmax(0, 1fr) 112px 160px 44px'
 
-/**
- * "Itens" section with the order lines (react-hook-form useFieldArray): 1 to 50. Desktop is a table-like
- * grid under one column header; phones get one card per item with visible labels and "Remover".
- * The item count lives here, so typing in a line re-renders this section, not the whole page.
- */
+// The item count lives here, so typing in a line re-renders this section, not the whole page.
 export function OrderItemsSection() {
   const isDesktop = useMediaQuery(useTheme().breakpoints.up('md'), { noSsr: true })
   const {
@@ -33,7 +29,7 @@ export function OrderItemsSection() {
   const { fields, append, remove } = useFieldArray({ control, name: 'items' })
   const listError = errors.items?.message ?? errors.items?.root?.message
 
-  // The removed button disappears with its row; move focus to the line that takes its place.
+  // The removed button goes with its row: focus the line that takes its place.
   const removeItem = (index: number) => {
     remove(index)
     // Deferred until the remaining rows re-render under their shifted names.
@@ -71,7 +67,6 @@ export function OrderItemsSection() {
                 display: 'grid',
                 gridTemplateColumns: { xs: '1fr', md: DESKTOP_COLUMNS },
                 gap: 2,
-                // Each item is its own card on phones, as in the mobile design.
                 p: { xs: 2, md: 0 },
                 border: { xs: 1, md: 0 },
                 borderColor: 'divider',
@@ -85,7 +80,6 @@ export function OrderItemsSection() {
                 error={itemErrors?.description?.message}
                 {...register(`items.${index}.description`)}
               />
-              {/* Quantity and price share a row on phones; on desktop they are grid columns. */}
               <Box
                 sx={{
                   display: { xs: 'grid', md: 'contents' },

@@ -9,7 +9,6 @@ interface SelectFieldProps extends Omit<ComponentProps<'select'>, 'ref'> {
   ref?: Ref<HTMLSelectElement>
 }
 
-// Native select (the phone's own picker) with the same label and error layout as FormField.
 export function SelectField({ label, options, error, id, ref, ...select }: SelectFieldProps) {
   const generatedId = useId()
   const selectId = id ?? generatedId

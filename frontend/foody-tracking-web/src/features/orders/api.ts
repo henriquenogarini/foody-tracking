@@ -11,13 +11,12 @@ import type {
 
 export async function listOrders({ status, q, page, size }: OrderListParams) {
   const { data } = await api.get<PageResponse<OrderSummary>>('/orders', {
-    // Empty values are dropped so the API applies no filter.
     params: { status: status || undefined, q: q || undefined, page, size },
   })
   return data
 }
 
-/** Orders in one status, read from the page total (the API has no count endpoint). */
+/** Read from the page total: the API has no count endpoint. */
 export async function countOrders(status: OrderStatus): Promise<number> {
   const { totalElements } = await listOrders({ status, page: 0, size: 1 })
   return totalElements

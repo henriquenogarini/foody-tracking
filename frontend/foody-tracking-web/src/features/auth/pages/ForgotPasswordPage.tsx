@@ -16,8 +16,6 @@ import { toApiError } from '@/shared/api/problem'
 import { FormField } from '@/shared/components/FormField'
 import { applyFieldErrors } from '@/shared/utils/forms'
 
-// Demo reset without e-mail confirmation (backend README decision 30). The API always answers 204 so it
-// never reveals whether an account exists; the success message says the same.
 export default function ForgotPasswordPage() {
   const {
     register,
@@ -36,7 +34,7 @@ export default function ForgotPasswordPage() {
     onError: (error) => applyFieldErrors(toApiError(error), setError, ['email', 'newPassword']),
   })
   const apiError = mutation.error ? toApiError(mutation.error) : null
-  // 404 means the feature is switched off on the server (APP_SECURITY_PASSWORD_RESET_ENABLED=false).
+  // 404: the feature is off on the server (APP_SECURITY_PASSWORD_RESET_ENABLED=false).
   let errorMessage: string | null = null
   if (apiError?.status === 404) errorMessage = 'Recuperação de senha indisponível no momento.'
   else if (apiError && Object.keys(apiError.fieldErrors).length === 0)

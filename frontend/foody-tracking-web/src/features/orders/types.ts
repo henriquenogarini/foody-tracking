@@ -1,6 +1,3 @@
-// Mirrors the API contract (CLAUDE.md §5). Money is a JSON number, dates ISO-8601 with offset; optional
-// fields come back as null.
-
 export const ORDER_STATUSES = [
   'RECEBIDO',
   'EM_PREPARO',
@@ -64,14 +61,13 @@ export interface Order {
 
 export interface OrderListParams {
   status?: OrderStatus
-  /** Customer name contains, or the exact code ("1042" / "#1042"). */
+  /** Customer name contains, or exact code ("1042" / "#1042"). */
   q?: string
   /** 0-based. */
   page: number
   size: number
 }
 
-/** POST /orders body. Optional fields are omitted when empty; total and subtotals are computed by the API. */
 export interface CreateOrderInput {
   customer: { name: string; phone?: string; email?: string }
   items: { description: string; quantity: number; unitPrice: number }[]
@@ -79,12 +75,12 @@ export interface CreateOrderInput {
   notes?: string
 }
 
-/** One status change. The first entry is the creation (fromStatus null); oldest first. */
+/** Oldest first; the first entry is the creation (fromStatus null). */
 export interface StatusHistoryEntry {
   fromStatus: OrderStatus | null
   toStatus: OrderStatus
   changedAt: string
   changedBy: string
-  /** Current name of who made the change; null if that user no longer exists. */
+  /** Null if that user no longer exists. */
   changedByName: string | null
 }

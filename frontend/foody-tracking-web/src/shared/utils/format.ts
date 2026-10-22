@@ -1,5 +1,4 @@
-// pt-BR display formats from the design. The API sends ISO-8601 with a -03:00 offset; dates render in
-// the browser's time zone. Formatters are built once: Intl constructors are comparatively expensive.
+// Built once: Intl constructors are expensive. Dates render in the browser's time zone.
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 const date = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })
@@ -12,23 +11,20 @@ const UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ['minute', 60],
 ]
 
-/** 59.9 → "R$ 59,90" */
 export function formatCurrency(value: number): string {
   return currency.format(value)
 }
 
-/** → "21/10/2026 14:13" (Intl puts a comma between date and time; the design does not). */
+/** "21/10/2026 14:13", without the comma Intl puts between date and time. */
 export function formatDateTime(iso: string): string {
   const value = new Date(iso)
   return `${date.format(value)} ${time.format(value)}`
 }
 
-/** → "14:13" */
 export function formatTime(iso: string): string {
   return time.format(new Date(iso))
 }
 
-/** → "agora", "há 3 min", "há 2 h", "ontem", "há 5 dias" */
 export function formatRelative(iso: string, now: number = Date.now()): string {
   const seconds = (new Date(iso).getTime() - now) / 1000
   for (const [unit, size] of UNITS) {
@@ -40,7 +36,6 @@ export function formatRelative(iso: string, now: number = Date.now()): string {
   return 'agora'
 }
 
-/** "Henrique Nogarini" → "HN", "Admin" → "A" (avatar initials: first and last word). */
 export function formatInitials(name: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean)
   const picked = words.length > 1 ? [words[0], words[words.length - 1]] : words
@@ -48,10 +43,7 @@ export function formatInitials(name: string): string {
   return picked.map((word) => Array.from(word)[0].toUpperCase()).join('')
 }
 
-/**
- * Reads a price typed the Brazilian way: "59,90", "1.234,5", "R$ 12" or "59.90" → number; anything
- * else → null. At most 2 decimals, as the API requires.
- */
+/** "59,90", "1.234,5", "R$ 12" or "59.90" → number; anything else → null. At most 2 decimals. */
 export function parseDecimal(input: string): number | null {
   let text = input.replace(/R\$/g, '').replace(/\s/g, '')
   if (text.includes(',')) text = text.replace(/\./g, '').replace(',', '.')

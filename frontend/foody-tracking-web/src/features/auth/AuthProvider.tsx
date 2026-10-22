@@ -26,8 +26,7 @@ function reducer(state: SessionState, action: SessionAction): SessionState {
   }
 }
 
-// The stored token is handed to the HTTP client during the first render, before any child query runs
-// (child effects run before the parent's, so an effect here would be too late). It is idempotent.
+// Runs during the first render: child effects run before the parent's, so an effect would be too late.
 function restoreSession(): SessionState {
   const token = readStoredToken()
   setAuthToken(token)
@@ -51,7 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: Infinity,
   })
 
-  // Side effects live here, not in the reducer, which must stay pure.
   const endSession = useCallback(
     (reason: 'expired' | 'signedOut') => {
       storeToken(null)
@@ -72,8 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const acknowledgeSessionEnd = useCallback(() => dispatch({ type: 'acknowledged' }), [])
   const retry = useCallback(() => void refetch(), [refetch])
 
-  // A subscription, not data fetching: an authenticated call rejected with 401 ends the session, unless
-  // it carried an older token (a request from before the current sign-in that came back late).
+  // A late 401 carrying an older token (from before the current sign-in) is ignored.
   useEffect(
     () =>
       onUnauthorized((rejectedToken) => {
@@ -83,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const value = useMemo<AuthContextValue>(() => {
-    // Data first: a failed background refetch must not take a working session away.
+    // A failed background refetch must not end a working session.
     let status: AuthStatus = 'loading'
     if (session.token === null) status = 'anonymous'
     else if (me) status = 'authenticated'

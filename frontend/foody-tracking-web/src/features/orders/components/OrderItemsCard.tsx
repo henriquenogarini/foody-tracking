@@ -16,14 +16,12 @@ import { formatCurrency } from '@/shared/utils/format'
 
 interface OrderItemsCardProps {
   order: Pick<Order, 'items' | 'total'>
-  /** Desktop table (Item, Qtd., Unitário, Subtotal) or the compact phone list. */
   variant: 'table' | 'list'
 }
 
 const head = { typography: 'subtitle2', color: 'ink.700', bgcolor: 'surface.100', py: 1.5 }
 const money = { fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' } as const
 
-/** Items with the server-computed subtotals and total. */
 export function OrderItemsCard({ order, variant }: OrderItemsCardProps) {
   const totalLine = (
     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 2 }}>

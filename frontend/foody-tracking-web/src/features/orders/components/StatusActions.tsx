@@ -7,14 +7,12 @@ import { useStatusChange } from '@/features/orders/useStatusChange'
 
 interface StatusActionsProps {
   order: { id: string; code: number; status: OrderStatus }
-  /** `row`: compact button + menu (table); `block`: full-width button + menu (mobile card). */
   layout?: 'row' | 'block'
 }
 
 // Clicks inside a clickable row or card must not also open the order.
 const stop = (event: MouseEvent) => event.stopPropagation()
 
-/** List actions: next status as one click, "Cancelar pedido" in a menu. Nothing for finished orders. */
 export function StatusActions({ order, layout = 'row' }: StatusActionsProps) {
   const { next, cancellable, busy, applying, advance, askToCancel, confirmDialog } =
     useStatusChange(order)

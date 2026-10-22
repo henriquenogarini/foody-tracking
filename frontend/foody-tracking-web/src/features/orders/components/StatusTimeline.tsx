@@ -2,10 +2,8 @@ import { Box, Stack, Typography, useTheme } from '@mui/material'
 import type { StepState, TimelineStep } from '@/features/orders/timeline'
 import { formatDateTime } from '@/shared/utils/format'
 
-/** Vertical status history ("Linha do tempo"), oldest first. */
 export function StatusTimeline({ steps }: { steps: TimelineStep[] }) {
   const { palette } = useTheme()
-  // Design dots: green when done, orange with a halo for the current step, grey ahead, red if cancelled.
   const dot: Record<StepState, object> = {
     done: { bgcolor: 'success.main' },
     current: { bgcolor: 'brand.500', boxShadow: `0 0 0 4px ${palette.brand[100]}` },

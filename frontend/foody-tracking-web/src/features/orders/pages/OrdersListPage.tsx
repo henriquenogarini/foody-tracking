@@ -35,7 +35,6 @@ function parseStatus(value: string | null): OrderStatus | undefined {
   return ORDER_STATUSES.find((status) => status === value)
 }
 
-/** 1-based page from the URL; anything that is not a positive integer means the first page. */
 function parsePage(value: string | null): number {
   const page = Number(value)
   return Number.isInteger(page) && page > 1 ? page : 1
@@ -44,8 +43,7 @@ function parsePage(value: string | null): number {
 export default function OrdersListPage() {
   const isDesktop = useMediaQuery(useTheme().breakpoints.up('md'), { noSsr: true })
 
-  // Filters live in the URL (?status=EM_PREPARO&q=ana&page=2): shareable and reload-safe. Status and
-  // page changes are history entries (back undoes them); typing replaces the entry instead.
+  // Status and page changes are history entries (back undoes them); typing replaces the entry.
   const [searchParams, setSearchParams] = useSearchParams()
   const status = parseStatus(searchParams.get('status'))
   const q = searchParams.get('q') ?? ''
@@ -64,10 +62,8 @@ export default function OrdersListPage() {
       { replace },
     )
 
-  // The field updates on every key; the URL (and the request) only after a short pause.
   const [searchInput, setSearchInput] = useState(q)
-  // Follows the URL when it changes from outside the field (back button, a link to /orders).
-  // Storing the previous value and adjusting during render is React's pattern for this, not an effect.
+  // Follows URL changes from outside the field (back button); adjusting state during render, not in an effect.
   const [syncedQ, setSyncedQ] = useState(q)
   if (q !== syncedQ) {
     setSyncedQ(q)
@@ -87,7 +83,6 @@ export default function OrdersListPage() {
   const ordersQuery = useOrdersQuery({ status, q: q || undefined, page: page - 1, size: PAGE_SIZE })
   const { data: counts } = useStatusCountsQuery()
   const result = ordersQuery.data
-  // While a new filter loads, the previous rows stay (dimmed) instead of flashing skeletons.
   const stale = ordersQuery.isPlaceholderData
   const filtering = Boolean(status || q)
 
@@ -182,7 +177,6 @@ export default function OrdersListPage() {
                   : 'Página anterior'
             }
             sx={{
-              // 44px touch targets on phones (MUI's large size is 40px).
               '& .MuiPaginationItem-root': {
                 minWidth: { xs: 44, md: 32 },
                 height: { xs: 44, md: 32 },
@@ -297,7 +291,6 @@ export default function OrdersListPage() {
           sx={{
             position: 'fixed',
             right: 16,
-            // Above the 72px bottom tab bar.
             bottom: 72 + 16,
             height: 52,
             px: 2.5,

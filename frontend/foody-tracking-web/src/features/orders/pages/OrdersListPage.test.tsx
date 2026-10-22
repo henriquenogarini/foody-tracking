@@ -76,7 +76,6 @@ describe('OrdersListPage', () => {
     expect(row.getByText('R$ 89,80')).toBeInTheDocument()
     expect(row.getByText('Em preparo')).toBeInTheDocument()
     expect(row.getByRole('button', { name: 'Saiu para entrega' })).toBeInTheDocument()
-    // Finished orders offer no action.
     expect(within(await rowOf(1042)).queryByRole('button')).not.toBeInTheDocument()
     expect(screen.getByText('Mostrando 1–5 de 5 pedidos')).toBeInTheDocument()
   })
@@ -111,7 +110,6 @@ describe('OrdersListPage', () => {
     await user.type(screen.getByRole('searchbox', { name: 'Buscar pedidos' }), '#1043')
 
     await waitFor(() => expect(router.state.location.search).toBe('?q=%231043'))
-    // The previous page stays on screen until the filtered one arrives.
     await waitFor(() => expect(screen.queryByText('Carla Mendes')).not.toBeInTheDocument())
     expect(screen.getByText('Marcos Vinícius')).toBeInTheDocument()
   })

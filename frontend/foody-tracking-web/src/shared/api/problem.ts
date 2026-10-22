@@ -1,6 +1,5 @@
 import { isAxiosError } from 'axios'
 
-// Codes the API sends in ProblemDetail.code (backend ApiErrorCode), plus client-side failures.
 const API_CODES = [
   'VALIDATION_ERROR',
   'AUTH_INVALID_CREDENTIALS',
@@ -19,14 +18,11 @@ const API_CODES = [
 
 export type ApiErrorCode = (typeof API_CODES)[number] | 'NETWORK_ERROR' | 'TIMEOUT' | 'UNKNOWN'
 
-/** Normalized error every screen consumes, whatever failed underneath. */
 export interface ApiError {
-  /** HTTP status, or null when no response arrived. */
+  /** Null when no response arrived. */
   status: number | null
   code: ApiErrorCode
-  /** User-facing text in pt-BR: the API's `detail`, or a local fallback. */
   message: string
-  /** Validation messages keyed by react-hook-form path (`items.0.unitPrice`). */
   fieldErrors: Record<string, string>
 }
 
@@ -65,8 +61,7 @@ function isProblemDetail(data: unknown): data is ProblemDetail {
   )
 }
 
-// API paths use brackets (`items[0].unitPrice`); react-hook-form uses dots (`items.0.unitPrice`).
-// One field can carry several messages; they are joined so none is lost.
+// API paths use brackets (`items[0].unitPrice`), react-hook-form dots; several messages are joined.
 function toFieldErrors(errors: ProblemDetail['errors'] = []): Record<string, string> {
   const result: Record<string, string> = {}
   for (const { field, message } of errors) {

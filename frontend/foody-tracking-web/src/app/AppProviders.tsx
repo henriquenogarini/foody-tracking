@@ -8,7 +8,7 @@ import { createQueryClient } from './queryClient'
 import { routes } from './router'
 import { theme } from './theme'
 
-// Created once per page load, outside React, so re-renders never rebuild the cache or the router.
+// Module scope, so re-renders never rebuild the cache or the router.
 const queryClient = createQueryClient()
 const router = createBrowserRouter(routes)
 

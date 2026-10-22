@@ -5,9 +5,7 @@ interface EmptyStateProps {
   title: string
   description?: string
   icon?: ReactNode
-  /** Call to action, e.g. "Criar primeiro pedido". */
   action?: ReactNode
-  /** h1 when the empty state is the whole page (e.g. "Pedido não encontrado"). */
   headingLevel?: 'h1' | 'h2'
 }
 

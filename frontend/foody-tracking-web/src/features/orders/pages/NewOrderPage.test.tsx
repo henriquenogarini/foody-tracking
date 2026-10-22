@@ -77,7 +77,6 @@ describe('NewOrderPage', () => {
     expect(screen.getByText('2 itens')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Remover item 1' }))
-    // The remaining line and the total.
     expect(summary.getAllByText('R$ 29,90')).toHaveLength(2)
     expect(screen.queryByRole('button', { name: /Remover item/ })).not.toBeInTheDocument()
   })

@@ -226,8 +226,14 @@
         <version>${spotless.version}</version>
         <configuration>
           <java>
-            <googleJavaFormat/>
+            <googleJavaFormat>
+              <style>AOSP</style>
+              <reorderImports>false</reorderImports>
+            </googleJavaFormat>
             <removeUnusedImports/>
+            <importOrder>
+              <order>,javax|java,\#</order>
+            </importOrder>
           </java>
         </configuration>
         <executions>

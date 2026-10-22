@@ -10,14 +10,14 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 public final class OrderStatusChangedListener {
 
-  @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-  public void onStatusChanged(OrderStatusChangedEvent event) {
-    log.info(
-        "Order {} ({}) status changed {} -> {} by {}",
-        event.orderId(),
-        event.code(),
-        event.fromStatus(),
-        event.toStatus(),
-        event.changedBy());
-  }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void onStatusChanged(OrderStatusChangedEvent event) {
+        log.info(
+                "Order {} ({}) status changed {} -> {} by {}",
+                event.orderId(),
+                event.code(),
+                event.fromStatus(),
+                event.toStatus(),
+                event.changedBy());
+    }
 }

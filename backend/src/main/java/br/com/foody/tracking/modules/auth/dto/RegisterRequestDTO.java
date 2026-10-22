@@ -9,24 +9,28 @@ import jakarta.validation.constraints.Size;
 
 @Schema(description = "Data to register a new user account")
 public record RegisterRequestDTO(
-    @Schema(description = "Full name of the user", example = "Ana Souza") @NotBlank @Size(max = 100)
-        String name,
-    @Schema(description = "E-mail used to log in (case-insensitive)", example = "ana@exemplo.com")
-        @NotBlank
-        @Email
-        @Size(max = 254)
-        String email,
-    @Schema(
-            description = "Password, 8 to 72 characters (at most 72 UTF-8 bytes)",
-            example = "senha-forte-123",
-            accessMode = Schema.AccessMode.WRITE_ONLY)
-        @NotBlank
-        @Size(min = PasswordPolicy.MIN_LENGTH, max = PasswordPolicy.MAX_BYTES)
-        @MaxUtf8Bytes(PasswordPolicy.MAX_BYTES)
-        String password) {
+        @Schema(description = "Full name of the user", example = "Ana Souza")
+                @NotBlank
+                @Size(max = 100)
+                String name,
+        @Schema(
+                        description = "E-mail used to log in (case-insensitive)",
+                        example = "ana@exemplo.com")
+                @NotBlank
+                @Email
+                @Size(max = 254)
+                String email,
+        @Schema(
+                        description = "Password, 8 to 72 characters (at most 72 UTF-8 bytes)",
+                        example = "senha-forte-123",
+                        accessMode = Schema.AccessMode.WRITE_ONLY)
+                @NotBlank
+                @Size(min = PasswordPolicy.MIN_LENGTH, max = PasswordPolicy.MAX_BYTES)
+                @MaxUtf8Bytes(PasswordPolicy.MAX_BYTES)
+                String password) {
 
-  // Stripped here: Jackson builds the record before Bean Validation, so @Email sees it clean.
-  public RegisterRequestDTO {
-    email = email == null ? null : email.strip();
-  }
+    // Stripped here: Jackson builds the record before Bean Validation, so @Email sees it clean.
+    public RegisterRequestDTO {
+        email = email == null ? null : email.strip();
+    }
 }

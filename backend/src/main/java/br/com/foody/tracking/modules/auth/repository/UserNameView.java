@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public interface UserNameView {
 
-  UUID getPublicId();
+    UUID getPublicId();
 
-  String getName();
+    String getName();
 }

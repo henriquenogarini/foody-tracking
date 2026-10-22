@@ -6,27 +6,28 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.tags.Tag;
-import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 @Configuration(proxyBeanMethods = false)
 public final class OpenApiConfig {
 
-  public static final String BEARER_AUTH = "bearerAuth";
+    public static final String BEARER_AUTH = "bearerAuth";
 
-  // Reused by every @Tag: springdoc emits one tag per distinct (name, description) pair.
-  public static final String TAG_AUTH = "Auth";
-  public static final String TAG_AUTH_DESCRIPTION =
-      "Registration, login and the authenticated user";
-  public static final String TAG_USERS = "Users";
-  public static final String TAG_USERS_DESCRIPTION = "User accounts (ADMIN only)";
-  public static final String TAG_ORDERS = "Orders";
-  public static final String TAG_ORDERS_DESCRIPTION =
-      "Delivery orders, status changes and their history";
+    // Reused by every @Tag: springdoc emits one tag per distinct (name, description) pair.
+    public static final String TAG_AUTH = "Auth";
+    public static final String TAG_AUTH_DESCRIPTION =
+            "Registration, login and the authenticated user";
+    public static final String TAG_USERS = "Users";
+    public static final String TAG_USERS_DESCRIPTION = "User accounts (ADMIN only)";
+    public static final String TAG_ORDERS = "Orders";
+    public static final String TAG_ORDERS_DESCRIPTION =
+            "Delivery orders, status changes and their history";
 
-  private static final String DESCRIPTION =
-      """
+    private static final String DESCRIPTION =
+            """
       REST API to track Foody Delivery orders.
 
       ## Getting started
@@ -80,31 +81,33 @@ public final class OpenApiConfig {
       (e.g. `2026-10-20T14:00:00-03:00`). Money values have 2 decimal places.
       """;
 
-  @Bean
-  public OpenAPI foodyOpenApi() {
-    return new OpenAPI()
-        .info(
-            new Info()
-                .title("Foody Tracking API")
-                .version("v1")
-                .description(DESCRIPTION)
-                .contact(
-                    new Contact()
-                        .name("henriquenogarini")
-                        .url("https://github.com/henriquenogarini/foody-tracking")))
-        .components(
-            new Components()
-                .addSecuritySchemes(
-                    BEARER_AUTH,
-                    new SecurityScheme()
-                        .type(SecurityScheme.Type.HTTP)
-                        .scheme("bearer")
-                        .bearerFormat("JWT")
-                        .description("Access token returned by POST /api/v1/auth/login")))
-        .tags(
-            List.of(
-                new Tag().name(TAG_AUTH).description(TAG_AUTH_DESCRIPTION),
-                new Tag().name(TAG_USERS).description(TAG_USERS_DESCRIPTION),
-                new Tag().name(TAG_ORDERS).description(TAG_ORDERS_DESCRIPTION)));
-  }
+    @Bean
+    public OpenAPI foodyOpenApi() {
+        return new OpenAPI()
+                .info(
+                        new Info()
+                                .title("Foody Tracking API")
+                                .version("v1")
+                                .description(DESCRIPTION)
+                                .contact(
+                                        new Contact()
+                                                .name("henriquenogarini")
+                                                .url(
+                                                        "https://github.com/henriquenogarini/foody-tracking")))
+                .components(
+                        new Components()
+                                .addSecuritySchemes(
+                                        BEARER_AUTH,
+                                        new SecurityScheme()
+                                                .type(SecurityScheme.Type.HTTP)
+                                                .scheme("bearer")
+                                                .bearerFormat("JWT")
+                                                .description(
+                                                        "Access token returned by POST /api/v1/auth/login")))
+                .tags(
+                        List.of(
+                                new Tag().name(TAG_AUTH).description(TAG_AUTH_DESCRIPTION),
+                                new Tag().name(TAG_USERS).description(TAG_USERS_DESCRIPTION),
+                                new Tag().name(TAG_ORDERS).description(TAG_ORDERS_DESCRIPTION)));
+    }
 }

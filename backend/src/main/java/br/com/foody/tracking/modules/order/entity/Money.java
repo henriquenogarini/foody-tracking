@@ -5,9 +5,9 @@ import java.math.RoundingMode;
 
 public final class Money {
 
-  private Money() {}
+    private Money() {}
 
-  public static BigDecimal scaled(BigDecimal amount) {
-    return amount.setScale(2, RoundingMode.HALF_UP);
-  }
+    public static BigDecimal scaled(BigDecimal amount) {
+        return amount.setScale(2, RoundingMode.HALF_UP);
+    }
 }

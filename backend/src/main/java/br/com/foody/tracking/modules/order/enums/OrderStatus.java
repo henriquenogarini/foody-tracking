@@ -15,26 +15,26 @@ import java.util.Set;
  * </pre>
  */
 public enum OrderStatus {
-  RECEBIDO,
-  EM_PREPARO,
-  SAIU_PARA_ENTREGA,
-  ENTREGUE,
-  CANCELADO;
+    RECEBIDO,
+    EM_PREPARO,
+    SAIU_PARA_ENTREGA,
+    ENTREGUE,
+    CANCELADO;
 
-  public boolean canTransitionTo(OrderStatus target) {
-    return allowedTargets().contains(target);
-  }
+    public boolean canTransitionTo(OrderStatus target) {
+        return allowedTargets().contains(target);
+    }
 
-  public boolean isTerminal() {
-    return allowedTargets().isEmpty();
-  }
+    public boolean isTerminal() {
+        return allowedTargets().isEmpty();
+    }
 
-  private Set<OrderStatus> allowedTargets() {
-    return switch (this) {
-      case RECEBIDO -> EnumSet.of(EM_PREPARO, CANCELADO);
-      case EM_PREPARO -> EnumSet.of(SAIU_PARA_ENTREGA, CANCELADO);
-      case SAIU_PARA_ENTREGA -> EnumSet.of(ENTREGUE);
-      case ENTREGUE, CANCELADO -> EnumSet.noneOf(OrderStatus.class);
-    };
-  }
+    private Set<OrderStatus> allowedTargets() {
+        return switch (this) {
+            case RECEBIDO -> EnumSet.of(EM_PREPARO, CANCELADO);
+            case EM_PREPARO -> EnumSet.of(SAIU_PARA_ENTREGA, CANCELADO);
+            case SAIU_PARA_ENTREGA -> EnumSet.of(ENTREGUE);
+            case ENTREGUE, CANCELADO -> EnumSet.noneOf(OrderStatus.class);
+        };
+    }
 }

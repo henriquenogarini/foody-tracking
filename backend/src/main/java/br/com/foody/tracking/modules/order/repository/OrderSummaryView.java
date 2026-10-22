@@ -1,29 +1,30 @@
 package br.com.foody.tracking.modules.order.repository;
 
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
+
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public interface OrderSummaryView {
 
-  UUID getPublicId();
+    UUID getPublicId();
 
-  long getCode();
+    long getCode();
 
-  OrderStatus getStatus();
+    OrderStatus getStatus();
 
-  String getCustomerName();
+    String getCustomerName();
 
-  BigDecimal getTotal();
+    BigDecimal getTotal();
 
-  int getItemsCount();
+    int getItemsCount();
 
-  String getNeighborhood();
+    String getNeighborhood();
 
-  String getCity();
+    String getCity();
 
-  OffsetDateTime getCreatedAt();
+    OffsetDateTime getCreatedAt();
 
-  OffsetDateTime getUpdatedAt();
+    OffsetDateTime getUpdatedAt();
 }

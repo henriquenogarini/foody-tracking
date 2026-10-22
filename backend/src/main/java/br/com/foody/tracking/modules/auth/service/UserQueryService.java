@@ -5,24 +5,25 @@ import br.com.foody.tracking.modules.auth.mapper.UserMapper;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.shared.web.PageResponseDTO;
 import br.com.foody.tracking.shared.web.SortWhitelist;
-import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+
 @Service
 @RequiredArgsConstructor
 public class UserQueryService {
 
-  private static final Set<String> SORTABLE_PROPERTIES = Set.of("createdAt", "name", "email");
+    private static final Set<String> SORTABLE_PROPERTIES = Set.of("createdAt", "name", "email");
 
-  private final UserRepository userRepository;
-  private final UserMapper userMapper;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-  @Transactional(readOnly = true)
-  public PageResponseDTO<UserResponseDTO> list(Pageable pageable) {
-    SortWhitelist.requireAllowed(pageable.getSort(), SORTABLE_PROPERTIES);
-    return PageResponseDTO.from(userRepository.findAll(pageable).map(userMapper::toResponse));
-  }
+    @Transactional(readOnly = true)
+    public PageResponseDTO<UserResponseDTO> list(Pageable pageable) {
+        SortWhitelist.requireAllowed(pageable.getSort(), SORTABLE_PROPERTIES);
+        return PageResponseDTO.from(userRepository.findAll(pageable).map(userMapper::toResponse));
+    }
 }

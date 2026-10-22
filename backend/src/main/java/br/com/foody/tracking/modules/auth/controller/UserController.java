@@ -30,43 +30,43 @@ import org.springframework.web.bind.annotation.RestController;
 @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 public class UserController {
 
-  private final UserQueryService userQueryService;
+    private final UserQueryService userQueryService;
 
-  @GetMapping
-  @PreAuthorize("hasRole('ADMIN')")
-  @Operation(
-      summary = "List users",
-      description =
-          "Paged list of every account, newest first by default. Requires the `ADMIN` role.")
-  // No explicit schema: @Schema(implementation = PageResponseDTO.class) would erase the generic.
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Page of users"),
-    @ApiResponse(
-        responseCode = "400",
-        description = "`VALIDATION_ERROR`: sort property outside the allowed list",
-        content =
-            @Content(
-                mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                schema = @Schema(implementation = ApiErrorResponse.class))),
-    @ApiResponse(
-        responseCode = "401",
-        description = "`AUTH_TOKEN_INVALID`: missing, invalid or expired token",
-        content =
-            @Content(
-                mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                schema = @Schema(implementation = ApiErrorResponse.class))),
-    @ApiResponse(
-        responseCode = "403",
-        description = "`ACCESS_DENIED`: the caller is not an `ADMIN`",
-        content =
-            @Content(
-                mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
-                schema = @Schema(implementation = ApiErrorResponse.class)))
-  })
-  public PageResponseDTO<UserResponseDTO> list(
-      @ParameterObject
-          @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
-          Pageable pageable) {
-    return userQueryService.list(pageable);
-  }
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(
+            summary = "List users",
+            description =
+                    "Paged list of every account, newest first by default. Requires the `ADMIN` role.")
+    // No explicit schema: @Schema(implementation = PageResponseDTO.class) would erase the generic.
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Page of users"),
+        @ApiResponse(
+                responseCode = "400",
+                description = "`VALIDATION_ERROR`: sort property outside the allowed list",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                                schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(
+                responseCode = "401",
+                description = "`AUTH_TOKEN_INVALID`: missing, invalid or expired token",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                                schema = @Schema(implementation = ApiErrorResponse.class))),
+        @ApiResponse(
+                responseCode = "403",
+                description = "`ACCESS_DENIED`: the caller is not an `ADMIN`",
+                content =
+                        @Content(
+                                mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE,
+                                schema = @Schema(implementation = ApiErrorResponse.class)))
+    })
+    public PageResponseDTO<UserResponseDTO> list(
+            @ParameterObject
+                    @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+                    Pageable pageable) {
+        return userQueryService.list(pageable);
+    }
 }

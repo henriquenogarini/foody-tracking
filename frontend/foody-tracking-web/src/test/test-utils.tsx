@@ -11,7 +11,7 @@ import { theme } from '@/app/theme'
 import { AuthProvider } from '@/features/auth/AuthProvider'
 import { TOKEN_STORAGE_KEY } from '@/features/auth/session'
 import type { User } from '@/features/auth/types'
-import type { OrderSummary } from '@/features/orders/types'
+import type { Order, OrderStatus, OrderSummary, StatusHistoryEntry } from '@/features/orders/types'
 import type { PageResponse } from '@/shared/api/types'
 import { SnackbarProvider } from '@/shared/components/SnackbarProvider'
 import { apiUrl, server } from './server'
@@ -48,6 +48,56 @@ export function makeOrder(overrides: Partial<OrderSummary> = {}): OrderSummary {
   }
 }
 
+const PATH: OrderStatus[] = ['RECEBIDO', 'EM_PREPARO', 'SAIU_PARA_ENTREGA', 'ENTREGUE']
+
+/** The full order the API would return for a summary (one line, address from the summary). */
+export function toOrder(summary: OrderSummary): Order {
+  return {
+    id: summary.id,
+    code: summary.code,
+    status: summary.status,
+    customer: { name: summary.customerName, phone: '+5511987521144', email: null },
+    items: [
+      {
+        description: 'Pizza calabresa G',
+        quantity: summary.itemsCount,
+        unitPrice: summary.total / summary.itemsCount,
+        subtotal: summary.total,
+      },
+    ],
+    deliveryAddress: {
+      street: 'Rua José Neves',
+      number: '590',
+      complement: null,
+      neighborhood: summary.neighborhood,
+      city: summary.city,
+      state: 'SP',
+      postalCode: '04650-140',
+      lat: null,
+      lng: null,
+    },
+    notes: null,
+    total: summary.total,
+    createdAt: summary.createdAt,
+    updatedAt: summary.updatedAt,
+  }
+}
+
+/** History that leads to the summary's current status (creation first, as the API orders it). */
+export function toHistory(summary: OrderSummary): StatusHistoryEntry[] {
+  const steps =
+    summary.status === 'CANCELADO'
+      ? (['RECEBIDO', 'CANCELADO'] as OrderStatus[])
+      : PATH.slice(0, PATH.indexOf(summary.status) + 1)
+  return steps.map((toStatus, index) => ({
+    fromStatus: index === 0 ? null : steps[index - 1],
+    toStatus,
+    changedAt: summary.createdAt,
+    changedBy: testUser.id,
+    changedByName: testUser.name,
+  }))
+}
+
 /**
  * Fake GET /orders over `orders`, filtering by status and q (name contains / exact code, like the API)
  * and paginating. Returns the received query strings so tests can assert on what was asked.
@@ -75,6 +125,22 @@ export function mockOrdersApi(orders: OrderSummary[]) {
         totalPages: Math.ceil(matching.length / size),
       }
       return HttpResponse.json(body)
+    }),
+    // Detail and history of the same orders; anything else is a 404 like the API's.
+    http.get(apiUrl('/orders/:id'), ({ params }) => {
+      const order = orders.find((o) => o.id === params.id)
+      return order
+        ? HttpResponse.json(toOrder(order))
+        : HttpResponse.json(
+            { status: 404, code: 'ORDER_NOT_FOUND', detail: 'Pedido não encontrado.' },
+            { status: 404 },
+          )
+    }),
+    http.get(apiUrl('/orders/:id/history'), ({ params }) => {
+      const order = orders.find((o) => o.id === params.id)
+      return order
+        ? HttpResponse.json(toHistory(order))
+        : HttpResponse.json({ status: 404, code: 'ORDER_NOT_FOUND', detail: 'x' }, { status: 404 })
     }),
   )
   return requests

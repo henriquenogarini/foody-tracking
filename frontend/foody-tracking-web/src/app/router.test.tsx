@@ -1,5 +1,7 @@
 import { screen } from '@testing-library/react'
-import { renderRoute, testUser } from '@/test/test-utils'
+import { makeOrder, renderRoute, testUser } from '@/test/test-utils'
+
+const detailOrder = makeOrder({ code: 1045 })
 
 describe('routes', () => {
   it('redirects / to the orders list', async () => {
@@ -10,9 +12,9 @@ describe('routes', () => {
 
   it.each([
     ['/orders/new', 'Novo pedido'],
-    ['/orders/7b1e4c2a-5d3f-4a8b-9c6d-1e2f3a4b5c6d', 'Detalhe do pedido'],
+    [`/orders/${detailOrder.id}`, `Pedido #${detailOrder.code}`],
   ])('renders %s inside the app layout', async (path, heading) => {
-    renderRoute(path, { signedInAs: testUser })
+    renderRoute(path, { signedInAs: testUser, orders: [detailOrder] })
     expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument()
     expect(screen.getByRole('navigation', { name: 'Principal' })).toBeInTheDocument()
   })

@@ -30,6 +30,7 @@ public final class ProblemDetailAuthenticationEntryPoint implements Authenticati
                 "Unauthenticated request rejected on {} {}",
                 request.getMethod(),
                 request.getRequestURI());
+        // Fixed detail: the exception message carries token-parsing text.
         ProblemDetail problem =
                 ProblemDetailFactory.create(
                         ApiErrorCode.AUTH_TOKEN_INVALID, InvalidTokenException.DETAIL);

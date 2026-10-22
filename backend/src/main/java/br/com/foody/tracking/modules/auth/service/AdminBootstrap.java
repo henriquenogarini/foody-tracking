@@ -68,6 +68,7 @@ public final class AdminBootstrap implements ApplicationRunner {
         Optional<User> existing = userRepository.findByEmail(normalizedEmail);
         if (existing.isPresent()) {
             User user = existing.get();
+            // Never promote: anyone could have registered the admin e-mail through the API first.
             if (user.getRole() == Role.ADMIN) {
                 log.info("Bootstrap admin {} already exists", user.getPublicId());
             } else {

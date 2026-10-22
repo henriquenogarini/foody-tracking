@@ -67,6 +67,7 @@ public class OrderItem {
         this.order = order;
     }
 
+    // Re-scaled: SQLite drops trailing zeros (59.90 -> 59.9).
     public BigDecimal getUnitPrice() {
         return Money.scaled(unitPrice);
     }

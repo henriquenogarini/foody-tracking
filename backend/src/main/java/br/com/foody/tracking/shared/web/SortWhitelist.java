@@ -5,6 +5,7 @@ import org.springframework.data.domain.Sort;
 
 import java.util.Set;
 
+// Spring Data sorts by any entity path (even owner.passwordHash), leaking data through ordering.
 public final class SortWhitelist {
 
     private SortWhitelist() {}

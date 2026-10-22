@@ -16,6 +16,7 @@ final class OrderFinder {
 
     private final OrderRepository orderRepository;
 
+    // Another user's order is indistinguishable from a missing one: 404, never 403.
     Order getVisibleTo(UUID publicId, AuthenticatedUser actor) {
         return (actor.role() == Role.ADMIN
                         ? orderRepository.findByPublicId(publicId)

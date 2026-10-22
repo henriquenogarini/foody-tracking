@@ -160,6 +160,7 @@ public class Order {
         return Collections.unmodifiableList(items);
     }
 
+    // Re-scaled: SQLite drops trailing zeros (59.90 -> 59.9).
     public BigDecimal getTotal() {
         return Money.scaled(total);
     }

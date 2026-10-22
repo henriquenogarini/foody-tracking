@@ -33,12 +33,14 @@ public final class JwtConfig {
 
     @Bean
     public JwtDecoder jwtDecoder(JwtProperties properties, Clock clock) {
+        // Pinned on both sides: never trust the alg header of an incoming token.
         NimbusJwtDecoder decoder =
                 NimbusJwtDecoder.withSecretKey(secretKey(properties))
                         .macAlgorithm(MacAlgorithm.HS256)
                         .build();
         JwtTimestampValidator timestamps = new JwtTimestampValidator();
         timestamps.setClock(clock);
+        // JwtTimestampValidator alone accepts a token without exp, which would never expire.
         decoder.setJwtValidator(
                 new DelegatingOAuth2TokenValidator<>(
                         timestamps,

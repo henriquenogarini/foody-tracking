@@ -1,2 +1,3 @@
 server:
+  # Prod only, behind a trusted proxy; elsewhere clients could spoof X-Forwarded-*.
   forward-headers-strategy: framework

@@ -1,10 +1,9 @@
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import { Box, Button, IconButton, Menu, MenuItem } from '@mui/material'
 import { useState, type MouseEvent } from 'react'
-import { useUpdateStatus } from '@/features/orders/queries'
-import { ACTION_LABEL, canCancel, primaryTransition } from '@/features/orders/status'
+import { ACTION_LABEL } from '@/features/orders/status'
 import type { OrderStatus } from '@/features/orders/types'
-import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
+import { useStatusChange } from '@/features/orders/useStatusChange'
 
 interface StatusActionsProps {
   order: { id: string; code: number; status: OrderStatus }
@@ -15,18 +14,12 @@ interface StatusActionsProps {
 // Clicks inside a clickable row or card must not also open the order.
 const stop = (event: MouseEvent) => event.stopPropagation()
 
-/** Next valid status as one click, cancelling behind a confirmation. Nothing for finished orders. */
+/** List actions: next status as one click, "Cancelar pedido" in a menu. Nothing for finished orders. */
 export function StatusActions({ order, layout = 'row' }: StatusActionsProps) {
-  const updateStatus = useUpdateStatus()
+  const { next, cancellable, busy, applying, advance, askToCancel, confirmDialog } =
+    useStatusChange(order)
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null)
-  const [confirmingCancel, setConfirmingCancel] = useState(false)
-
-  const next = primaryTransition(order.status)
-  const cancellable = canCancel(order.status)
   if (!next && !cancellable) return null
-
-  const move = (status: OrderStatus) =>
-    updateStatus.mutate({ id: order.id, status }, { onSettled: () => setConfirmingCancel(false) })
 
   return (
     <Box
@@ -38,9 +31,9 @@ export function StatusActions({ order, layout = 'row' }: StatusActionsProps) {
           variant="outlined"
           size={layout === 'row' ? 'small' : 'medium'}
           fullWidth={layout === 'block'}
-          loading={updateStatus.isPending && updateStatus.variables?.status === next}
-          disabled={updateStatus.isPending}
-          onClick={() => move(next)}
+          loading={applying === next}
+          disabled={busy}
+          onClick={advance}
         >
           {ACTION_LABEL[next]}
         </Button>
@@ -50,7 +43,7 @@ export function StatusActions({ order, layout = 'row' }: StatusActionsProps) {
           aria-label={`Mais ações do pedido #${order.code}`}
           aria-haspopup="menu"
           onClick={(event) => setMenuAnchor(event.currentTarget)}
-          disabled={updateStatus.isPending}
+          disabled={busy}
           sx={{ width: 44, height: 44, color: 'ink.700' }}
         >
           <MoreVertIcon />
@@ -67,22 +60,13 @@ export function StatusActions({ order, layout = 'row' }: StatusActionsProps) {
           sx={{ color: 'error.main' }}
           onClick={() => {
             setMenuAnchor(null)
-            setConfirmingCancel(true)
+            askToCancel()
           }}
         >
           {ACTION_LABEL.CANCELADO}
         </MenuItem>
       </Menu>
-      <ConfirmDialog
-        open={confirmingCancel}
-        title={`Cancelar o pedido #${order.code}?`}
-        description="O pedido sai da operação e não pode voltar. O cliente precisa ser avisado."
-        confirmLabel="Cancelar pedido"
-        destructive
-        loading={updateStatus.isPending}
-        onConfirm={() => move('CANCELADO')}
-        onClose={() => setConfirmingCancel(false)}
-      />
+      {confirmDialog}
     </Box>
   )
 }

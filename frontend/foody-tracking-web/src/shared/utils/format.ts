@@ -39,3 +39,11 @@ export function formatRelative(iso: string, now: number = Date.now()): string {
   }
   return 'agora'
 }
+
+/** "Henrique Nogarini" → "HN", "Admin" → "A" (avatar initials: first and last word). */
+export function formatInitials(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  const picked = words.length > 1 ? [words[0], words[words.length - 1]] : words
+  // Array.from splits by code point, so a name starting with an emoji keeps it whole.
+  return picked.map((word) => Array.from(word)[0].toUpperCase()).join('')
+}

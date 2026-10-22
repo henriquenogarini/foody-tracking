@@ -5,7 +5,7 @@ import RegisterPage from '@/features/auth/pages/RegisterPage'
 import NewOrderPage from '@/features/orders/pages/NewOrderPage'
 import OrderDetailPage from '@/features/orders/pages/OrderDetailPage'
 import OrdersListPage from '@/features/orders/pages/OrdersListPage'
-import { AppLayout } from '@/shared/components/AppLayout'
+import { AppLayout } from '@/app/layout/AppLayout'
 import NotFoundPage from './NotFoundPage'
 
 // Exported as plain route objects so tests can mount them in a memory router.

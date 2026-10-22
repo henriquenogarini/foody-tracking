@@ -39,5 +39,10 @@ export default defineConfig({
     globals: true,
     css: false,
     clearMocks: true,
+    // Deterministic across machines: a fixed API origin for MSW and the app's time zone for date formatting.
+    env: { VITE_API_URL: 'http://api.test/api/v1', TZ: 'America/Sao_Paulo' },
+    // jsdom enforces CORS like a browser; serving the test page from the API origin keeps requests
+    // same-origin, so MSW handlers need no CORS headers (the real API's CORS is tested in the backend).
+    environmentOptions: { jsdom: { url: 'http://api.test/' } },
   },
 })

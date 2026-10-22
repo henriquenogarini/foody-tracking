@@ -1,5 +1,7 @@
 package br.com.foody.tracking.modules.order.service;
 
+import static br.com.foody.tracking.modules.order.OrderFixtures.NOW;
+import static br.com.foody.tracking.modules.order.OrderFixtures.newOrder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
@@ -20,10 +22,7 @@ import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
 import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
 import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
 import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
-import br.com.foody.tracking.modules.order.entity.Customer;
-import br.com.foody.tracking.modules.order.entity.DeliveryAddress;
 import br.com.foody.tracking.modules.order.entity.Order;
-import br.com.foody.tracking.modules.order.entity.OrderItem;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.modules.order.mapper.OrderMapper;
 import br.com.foody.tracking.modules.order.repository.OrderRepository;
@@ -32,9 +31,6 @@ import br.com.foody.tracking.shared.exception.type.InvalidSortException;
 import br.com.foody.tracking.shared.exception.type.OrderNotFoundException;
 import br.com.foody.tracking.shared.web.PageResponseDTO;
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -52,9 +48,6 @@ import org.springframework.data.domain.Sort;
 
 class OrderQueryServiceTest {
 
-  private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
-  private static final OffsetDateTime NOW =
-      OffsetDateTime.ofInstant(Instant.parse("2026-10-21T17:13:27Z"), APP_ZONE);
   private static final Pageable PAGEABLE =
       PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
   // What the repository receives: the client's sort plus the code tie-breaker.
@@ -205,7 +198,7 @@ class OrderQueryServiceTest {
   @Test
   void shouldReturnOrder_whenUserOwnsIt() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, NOW);
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), userActor.id()))
         .thenReturn(Optional.of(order));
 
@@ -222,7 +215,7 @@ class OrderQueryServiceTest {
   @Test
   void shouldUseUnscopedQuery_whenAdminGetsAnyOrder() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, NOW);
     when(orderRepository.findByPublicId(order.getPublicId())).thenReturn(Optional.of(order));
 
     // When
@@ -305,7 +298,7 @@ class OrderQueryServiceTest {
   @Test
   void shouldReturnHistoryInOrder_whenOrderHasTransitions() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, NOW);
     order.changeStatus(OrderStatus.EM_PREPARO, owner.getPublicId(), NOW.plusMinutes(5));
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), userActor.id()))
         .thenReturn(Optional.of(order));
@@ -325,7 +318,7 @@ class OrderQueryServiceTest {
   void shouldResolveActorNamesInOneQuery_whenHistoryHasRowsByTwoActors() {
     // Given three rows by two actors: Ana (creation, delivery) and an admin (preparation)
     UUID adminId = adminActor.id();
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, NOW);
     order.changeStatus(OrderStatus.EM_PREPARO, adminId, NOW.plusMinutes(5));
     order.changeStatus(OrderStatus.SAIU_PARA_ENTREGA, owner.getPublicId(), NOW.plusMinutes(10));
     when(orderRepository.findByPublicId(order.getPublicId())).thenReturn(Optional.of(order));
@@ -348,26 +341,6 @@ class OrderQueryServiceTest {
   }
 
   private record NameView(UUID getPublicId, String getName) implements UserNameView {}
-
-  private Order newOrder() {
-    return Order.create(
-        owner,
-        new Customer("José da Silva", null, null),
-        List.of(new OrderItem("Pizza calabresa G", 1, new BigDecimal("59.90"))),
-        new DeliveryAddress(
-            "Rua José Neves",
-            "590",
-            null,
-            "Vila São Paulo",
-            "São Paulo",
-            "SP",
-            "04650-140",
-            null,
-            null),
-        null,
-        1042L,
-        NOW);
-  }
 
   private static OrderSummaryView summaryView() {
     OrderSummaryView view = mock(OrderSummaryView.class);

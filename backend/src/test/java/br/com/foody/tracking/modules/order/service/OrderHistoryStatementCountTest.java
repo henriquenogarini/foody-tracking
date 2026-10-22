@@ -1,5 +1,7 @@
 package br.com.foody.tracking.modules.order.service;
 
+import static br.com.foody.tracking.modules.order.OrderFixtures.NOW;
+import static br.com.foody.tracking.modules.order.OrderFixtures.minimalAddress;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import br.com.foody.tracking.modules.auth.entity.User;
@@ -8,7 +10,6 @@ import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
 import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
 import br.com.foody.tracking.modules.order.entity.Customer;
-import br.com.foody.tracking.modules.order.entity.DeliveryAddress;
 import br.com.foody.tracking.modules.order.entity.Order;
 import br.com.foody.tracking.modules.order.entity.OrderItem;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
@@ -16,9 +17,6 @@ import br.com.foody.tracking.modules.order.mapper.OrderMapperImpl;
 import br.com.foody.tracking.modules.order.repository.OrderRepository;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import org.hibernate.SessionFactory;
@@ -39,10 +37,6 @@ import org.springframework.test.context.ActiveProfiles;
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 @Import({OrderQueryService.class, OrderFinder.class, OrderMapperImpl.class})
 class OrderHistoryStatementCountTest {
-
-  private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
-  private static final OffsetDateTime NOW =
-      OffsetDateTime.ofInstant(Instant.parse("2026-10-21T17:13:27Z"), APP_ZONE);
 
   @Autowired private OrderQueryService orderQueryService;
 
@@ -110,16 +104,7 @@ class OrderHistoryStatementCountTest {
             ana,
             new Customer("Cliente " + code, null, null),
             List.of(new OrderItem("Item", 1, new BigDecimal("10.00"))),
-            new DeliveryAddress(
-                "Rua José Neves",
-                "590",
-                null,
-                "Vila São Paulo",
-                "São Paulo",
-                "SP",
-                "04650-140",
-                null,
-                null),
+            minimalAddress(),
             null,
             code,
             NOW));

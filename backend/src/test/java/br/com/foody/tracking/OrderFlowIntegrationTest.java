@@ -40,6 +40,8 @@ import org.springframework.test.web.servlet.ResultActions;
         "spring.datasource.url=jdbc:sqlite:file:flowdb?mode=memory&cache=shared&foreign_keys=true")
 class OrderFlowIntegrationTest {
 
+  private static final String PASSWORD = "senha-forte-123";
+
   private static final String ORDER_PAYLOAD =
       """
       {
@@ -76,7 +78,7 @@ class OrderFlowIntegrationTest {
                 .andExpect(jsonPath("$.role").value("USER"))
                 .andExpect(jsonPath("$.email").value(anaEmail)),
             "$.id");
-    String anaToken = login(anaEmail, "senha-forte-123");
+    String anaToken = login(anaEmail, PASSWORD);
     mockMvc
         .perform(get("/api/v1/auth/me").header(HttpHeaders.AUTHORIZATION, bearer(anaToken)))
         .andExpect(status().isOk())
@@ -134,7 +136,7 @@ class OrderFlowIntegrationTest {
 
     // Given Bruno, another USER
     register("Bruno Lima", brunoEmail).andExpect(status().isCreated());
-    String brunoToken = login(brunoEmail, "senha-forte-123");
+    String brunoToken = login(brunoEmail, PASSWORD);
 
     // Then Ana's order does not exist for him (404, never 403) and is not in his list
     mockMvc
@@ -237,9 +239,9 @@ class OrderFlowIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
-                {"name": "%s", "email": "%s", "password": "senha-forte-123"}
+                {"name": "%s", "email": "%s", "password": "%s"}
                 """
-                    .formatted(name, email)));
+                    .formatted(name, email, PASSWORD)));
   }
 
   private String login(String email, String password) throws Exception {

@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint'
 import prettier from 'eslint-config-prettier/flat'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
-// Folder boundaries from CLAUDE.md §3: app → features → shared, features never import each other,
+// Folder boundaries: app → features → shared, features never import each other,
 // and cross-folder imports go through the @/ alias. Features are read from disk so new ones are covered.
 const features = readdirSync(new URL('./src/features', import.meta.url), { withFileTypes: true })
   .filter((entry) => entry.isDirectory())
@@ -16,7 +16,7 @@ const features = readdirSync(new URL('./src/features', import.meta.url), { withF
 const noParentImports = {
   regex: '^\\.\\./',
   message:
-    'Import across folders with the @/ alias; ./ is only for the same folder (CLAUDE.md §3).',
+    'Import across folders with the @/ alias; ./ is only for the same folder.',
 }
 
 function boundaries(forbidden, message) {
@@ -45,7 +45,7 @@ export default defineConfig([
     files: ['src/shared/**/*.{ts,tsx}'],
     rules: boundaries(
       ['^@/(app|features)/'],
-      'shared/ must not depend on app/ or features/ (CLAUDE.md §3).',
+      'shared/ must not depend on app/ or features/.',
     ),
   },
   ...features.map((feature) => ({
@@ -55,7 +55,7 @@ export default defineConfig([
         '^@/app/',
         ...features.filter((other) => other !== feature).map((other) => `^@/features/${other}/`),
       ],
-      `features/${feature} must not import app/ or another feature (CLAUDE.md §3).`,
+      `features/${feature} must not import app/ or another feature.`,
     ),
   })),
   // Must stay last: turns off every stylistic rule that would fight Prettier.

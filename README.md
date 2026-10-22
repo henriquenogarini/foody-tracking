@@ -10,6 +10,7 @@ lista com o status atual de cada pedido (atualizada a cada 10 s) e acompanhament
 | [`backend/`](backend)                                         | API REST, autenticação JWT, SQLite + Flyway, Docker | [README do backend](backend/README.md)                      |
 | [`frontend/foody-tracking-web/`](frontend/foody-tracking-web) | Aplicação React                                     | [README do frontend](frontend/foody-tracking-web/README.md) |
 | [`scripts/smoke-test.mjs`](scripts/smoke-test.mjs)            | Smoke test da API contra os requisitos do teste     | abaixo                                                      |
+| [`scripts/seed-demo.mjs`](scripts/seed-demo.mjs)              | Popula o banco com usuários e pedidos de exemplo    | abaixo                                                      |
 
 ---
 
@@ -35,11 +36,43 @@ npm run dev                       # http://localhost:5173
 ```
 
 **3. Navegador:** abra **http://localhost:5173** e entre com `admin@foody.local` / `admin-dev-password`
-(ou crie uma conta em **Criar conta**).
+(ou crie uma conta em **Criar conta**). O banco começa vazio; para testar com dados, veja
+[Banco populado](#banco-populado-opcional).
 
 > Use `localhost`, não `127.0.0.1`: o CORS da API libera `http://localhost:5173` (dev) e `http://localhost:4173`
 > (`npm run preview`). Swagger da API: http://localhost:8080/swagger-ui.html. Para parar: `docker compose down`
 > (`-v` também apaga o banco).
+
+---
+
+## Banco populado (opcional)
+
+O banco começa vazio, para você testar do zero. Se preferir já ver a lista cheia (filtros, contagens, paginação,
+linha do tempo), rode o script de exemplo **com a API no ar** (passo 1), a partir da raiz do repositório:
+
+```bash
+node scripts/seed-demo.mjs        # API padrão http://localhost:8080/api/v1; passe outra URL como 1º argumento
+```
+
+Depois recarregue o navegador. Ele cria **26 pedidos** com clientes, itens e endereços variados, em todos os status,
+passando pela própria API (mesmas validações e regras de transição, com histórico real):
+
+| Conta         | E-mail                | Senha                  | O que vê                                                      |
+| ------------- | --------------------- | ---------------------- | ------------------------------------------------------------- |
+| Usuário comum | `usuario@foody.local` | `usuario-dev-password` | Só os próprios **14 pedidos** (criados pelo script)           |
+| Admin         | `admin@foody.local`   | `admin-dev-password`   | Os seus **12 pedidos** e os do usuário comum: **26** no total |
+
+- **Distribuição**: 6 Recebido, 5 Em preparo, 4 Saiu para entrega, 8 Entregue e 3 Cancelado; as duas contas têm
+  pedidos em todos os status. Os avanços de status são feitos pelo admin (o restaurante) e os cancelamentos por quem
+  criou o pedido, então a linha do tempo mostra quem fez cada etapa.
+- **Usuários**: o admin vem do `backend/.env` (criado quando a API sobe; o script lê as credenciais de lá). O usuário
+  comum é criado pelo script; sem rodá-lo, essa conta não existe.
+- **Rodar de novo** não duplica nada: se o usuário comum já tem pedidos, o script avisa e para. Use
+  `node scripts/seed-demo.mjs --force` para criar mais um lote.
+- **Voltar ao banco vazio**: `cd backend && docker compose down -v && docker compose up -d`.
+- Os horários ficam próximos do momento em que o script roda: pela API não dá para criar um pedido no passado.
+
+Requer Node.js 22+ (o mesmo do frontend) e nenhuma dependência.
 
 ---
 
@@ -51,7 +84,7 @@ Os dois `.env.example` já funcionam juntos; só copie. Altere apenas se mudar p
 | ---------------------------------- | ---------------------------------------- | --------------------------------------------- | --------------------------------------- |
 | `backend/.env`                     | `SERVER_PORT`                            | `8080`                                        | Porta da API no host                    |
 | `backend/.env`                     | `APP_CORS_ALLOWED_ORIGINS`               | `http://localhost:5173,http://localhost:4173` | Se o frontend rodar em outro endereço   |
-| `backend/.env`                     | `APP_SECURITY_ADMIN_EMAIL` / `_PASSWORD` | `admin@foody.local` / `admin-dev-password`    | Usuário admin criado na subida          |
+| `backend/.env`                     | `APP_SECURITY_ADMIN_EMAIL` / `_PASSWORD` | `admin@foody.local` / `admin-dev-password`    | Admin criado na subida (o seed usa)     |
 | `backend/.env`                     | `APP_SECURITY_JWT_SECRET`                | chave de avaliação                            | Em qualquer ambiente real               |
 | `frontend/foody-tracking-web/.env` | `VITE_API_URL`                           | `http://localhost:8080/api/v1`                | Se a API estiver em outra porta ou host |
 

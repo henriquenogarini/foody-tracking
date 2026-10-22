@@ -130,6 +130,6 @@ public final class AuthController {
                 schema = @Schema(implementation = ApiErrorResponse.class)))
   })
   public UserResponseDTO me(@Parameter(hidden = true) @AuthenticationPrincipal Jwt jwt) {
-    return authService.me(AuthenticatedUser.from(jwt));
+    return authService.currentUser(AuthenticatedUser.from(jwt));
   }
 }

@@ -11,10 +11,10 @@ public record AuthenticatedUser(UUID id, Role role) {
   // Malformed claims are a client-side token problem (401), not a server failure (500).
   public static AuthenticatedUser from(Jwt jwt) {
     return new AuthenticatedUser(
-        subject(jwt.getSubject()), role(jwt.getClaimAsString(JwtConfig.ROLE_CLAIM)));
+        parseSubject(jwt.getSubject()), parseRole(jwt.getClaimAsString(JwtConfig.ROLE_CLAIM)));
   }
 
-  private static UUID subject(String subject) {
+  private static UUID parseSubject(String subject) {
     if (subject == null) {
       throw new InvalidTokenException();
     }
@@ -25,7 +25,7 @@ public record AuthenticatedUser(UUID id, Role role) {
     }
   }
 
-  private static Role role(String role) {
+  private static Role parseRole(String role) {
     if (role == null) {
       throw new InvalidTokenException();
     }

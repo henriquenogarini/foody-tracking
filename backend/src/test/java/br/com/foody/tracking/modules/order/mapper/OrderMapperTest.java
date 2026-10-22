@@ -118,7 +118,7 @@ class OrderMapperTest {
     when(view.getUpdatedAt()).thenReturn(LATER);
 
     // When
-    OrderSummaryResponseDTO summary = mapper.toSummary(view);
+    OrderSummaryResponseDTO summary = mapper.toSummaryResponse(view);
 
     // Then
     assertThat(summary.id()).isEqualTo(publicId);
@@ -148,7 +148,8 @@ class OrderMapperTest {
 
     // When
     List<StatusHistoryResponseDTO> history =
-        mapper.toHistory(order.getStatusHistory(), Map.of(owner.getPublicId(), "Ana Souza"));
+        mapper.toHistoryResponses(
+            order.getStatusHistory(), Map.of(owner.getPublicId(), "Ana Souza"));
 
     // Then
     assertThat(history)
@@ -272,8 +273,8 @@ class OrderMapperTest {
   void shouldReturnNull_whenSourcesAreNull() {
     // When / Then
     assertThat(mapper.toResponse(null)).isNull();
-    assertThat(mapper.toSummary(null)).isNull();
-    assertThat(mapper.toHistory(null, Map.of())).isNull();
+    assertThat(mapper.toSummaryResponse(null)).isNull();
+    assertThat(mapper.toHistoryResponses(null, Map.of())).isNull();
     assertThat(mapper.toCustomer(null)).isNull();
     assertThat(mapper.toAddress(null)).isNull();
     assertThat(mapper.toItem(null)).isNull();

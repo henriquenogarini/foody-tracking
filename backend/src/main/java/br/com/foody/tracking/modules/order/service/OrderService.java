@@ -74,7 +74,7 @@ public class OrderService {
   @Transactional
   public OrderResponseDTO changeStatus(
       UUID publicId, UpdateStatusRequestDTO request, AuthenticatedUser actor) {
-    Order order = orderFinder.findScoped(publicId, actor);
+    Order order = orderFinder.getVisibleTo(publicId, actor);
     OrderStatus from = order.getStatus();
     OrderStatus target = request.status();
     OffsetDateTime now = OffsetDateTime.now(clock);

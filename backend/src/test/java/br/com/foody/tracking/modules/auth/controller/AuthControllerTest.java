@@ -245,7 +245,7 @@ class AuthControllerTest {
   @Test
   void shouldReturnCurrentUser_whenTokenIsValid() throws Exception {
     // Given
-    when(authService.me(any())).thenReturn(userResponse());
+    when(authService.currentUser(any())).thenReturn(userResponse());
 
     // When
     mockMvc
@@ -258,7 +258,7 @@ class AuthControllerTest {
 
     // Then
     ArgumentCaptor<AuthenticatedUser> principal = ArgumentCaptor.forClass(AuthenticatedUser.class);
-    verify(authService).me(principal.capture());
+    verify(authService).currentUser(principal.capture());
     assertThat(principal.getValue()).isEqualTo(new AuthenticatedUser(USER_ID, Role.USER));
   }
 
@@ -277,7 +277,7 @@ class AuthControllerTest {
   @Test
   void shouldReturnUnauthorizedProblem_whenTokenUserNoLongerExists() throws Exception {
     // Given
-    when(authService.me(any())).thenThrow(new InvalidTokenException());
+    when(authService.currentUser(any())).thenThrow(new InvalidTokenException());
 
     // When / Then
     mockMvc

@@ -100,7 +100,8 @@ public class AuthService {
   public void resetPassword(PasswordResetRequestDTO request) {
     String hash = passwordEncoder.encode(request.newPassword());
     int updated =
-        userRepository.updatePasswordHashOfUser(EmailNormalizer.normalize(request.email()), hash);
+        userRepository.updatePasswordHashForUserRole(
+            EmailNormalizer.normalize(request.email()), hash);
     if (updated > 0) {
       log.info("Password reset applied");
     } else {
@@ -110,7 +111,7 @@ public class AuthService {
 
   // A valid token whose user no longer exists (database reset) is treated as an invalid token.
   @Transactional(readOnly = true)
-  public UserResponseDTO me(AuthenticatedUser principal) {
+  public UserResponseDTO currentUser(AuthenticatedUser principal) {
     return userRepository
         .findByPublicId(principal.id())
         .map(userMapper::toResponse)

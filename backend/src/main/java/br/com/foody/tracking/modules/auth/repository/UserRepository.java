@@ -26,7 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
       "update User u set u.passwordHash = :hash"
           + " where u.email = :email"
           + " and u.role = br.com.foody.tracking.modules.auth.enums.Role.USER")
-  int updatePasswordHashOfUser(@Param("email") String email, @Param("hash") String hash);
+  int updatePasswordHashForUserRole(@Param("email") String email, @Param("hash") String hash);
 
   boolean existsByEmail(String email);
 

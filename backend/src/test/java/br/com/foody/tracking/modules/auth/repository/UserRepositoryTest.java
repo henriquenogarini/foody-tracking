@@ -68,9 +68,9 @@ class UserRepositoryTest {
         new User("Admin", "admin@exemplo.com", "admin-old", Role.ADMIN, NOW));
 
     // When
-    int userRows = userRepository.updatePasswordHashOfUser("ana@exemplo.com", "new");
-    int adminRows = userRepository.updatePasswordHashOfUser("admin@exemplo.com", "new");
-    int unknownRows = userRepository.updatePasswordHashOfUser("bruno@exemplo.com", "new");
+    int userRows = userRepository.updatePasswordHashForUserRole("ana@exemplo.com", "new");
+    int adminRows = userRepository.updatePasswordHashForUserRole("admin@exemplo.com", "new");
+    int unknownRows = userRepository.updatePasswordHashForUserRole("bruno@exemplo.com", "new");
 
     // Then the bulk update bypasses the persistence context, so read the stored values
     assertThat(userRows).isEqualTo(1);

@@ -39,11 +39,11 @@ public interface OrderMapper {
 
   @Mapping(target = "id", source = "publicId")
   @Mapping(target = "total", source = "total", qualifiedByName = "money")
-  OrderSummaryResponseDTO toSummary(OrderSummaryView view);
+  OrderSummaryResponseDTO toSummaryResponse(OrderSummaryView view);
 
   // actorNames (publicId -> current name) is resolved by the service in one query, so mapping
   // never touches the database.
-  List<StatusHistoryResponseDTO> toHistory(
+  List<StatusHistoryResponseDTO> toHistoryResponses(
       List<OrderStatusHistory> history, @Context Map<UUID, String> actorNames);
 
   @Mapping(target = "changedByName", source = "changedBy", qualifiedByName = "actorName")

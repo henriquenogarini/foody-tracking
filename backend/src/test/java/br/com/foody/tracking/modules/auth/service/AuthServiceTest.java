@@ -192,7 +192,7 @@ class AuthServiceTest {
   void shouldHashOnceAndUpdateUserOnly_whenResettingPassword(String path, int affectedRows) {
     // Given
     clearInvocations(passwordEncoder);
-    when(userRepository.updatePasswordHashOfUser(eq("ana@exemplo.com"), anyString()))
+    when(userRepository.updatePasswordHashForUserRole(eq("ana@exemplo.com"), anyString()))
         .thenReturn(affectedRows);
 
     // When
@@ -201,7 +201,7 @@ class AuthServiceTest {
     // Then
     verify(passwordEncoder, times(1)).encode(any());
     ArgumentCaptor<String> hash = ArgumentCaptor.forClass(String.class);
-    verify(userRepository).updatePasswordHashOfUser(eq("ana@exemplo.com"), hash.capture());
+    verify(userRepository).updatePasswordHashForUserRole(eq("ana@exemplo.com"), hash.capture());
     assertThat(passwordEncoder.matches(NEW_PASSWORD, hash.getValue())).isTrue();
   }
 
@@ -212,7 +212,8 @@ class AuthServiceTest {
     when(userRepository.findByPublicId(user.getPublicId())).thenReturn(Optional.of(user));
 
     // When
-    UserResponseDTO response = authService.me(new AuthenticatedUser(user.getPublicId(), Role.USER));
+    UserResponseDTO response =
+        authService.currentUser(new AuthenticatedUser(user.getPublicId(), Role.USER));
 
     // Then
     assertThat(response.id()).isEqualTo(user.getPublicId());
@@ -227,7 +228,7 @@ class AuthServiceTest {
 
     // When
     Throwable thrown =
-        catchThrowable(() -> authService.me(new AuthenticatedUser(unknown, Role.USER)));
+        catchThrowable(() -> authService.currentUser(new AuthenticatedUser(unknown, Role.USER)));
 
     // Then
     assertThat(thrown).isInstanceOf(ApiException.class);

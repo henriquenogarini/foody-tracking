@@ -108,8 +108,7 @@ public final class OrderController {
               + " exactly; any other text matches customer names containing it, ignoring case"
               + " (ASCII letters only). A `USER` sees only their own orders; an `ADMIN` sees every"
               + " order. Sortable by `createdAt`, `updatedAt`, `code`, `status` and `total`.")
-  // The 200 has no explicit schema: springdoc infers the generic PageResponseDTO<...> from the
-  // return type, which @Schema(implementation = PageResponseDTO.class) would erase.
+  // No explicit schema: @Schema(implementation = PageResponseDTO.class) would erase the generic.
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Page of order summaries"),
     @ApiResponse(

@@ -24,8 +24,6 @@ public record OrderItemRequestDTO(
             example = "59.90")
         @NotNull
         @DecimalMin("0.01")
-        // Bounded so the largest order total stays exact in SQLite's REAL-backed NUMERIC;
-        // @Digits only guards the 2 decimals, so an over-limit price yields a single error.
         @DecimalMax("99999.99")
         @Digits(integer = 10, fraction = 2)
         BigDecimal unitPrice) {}

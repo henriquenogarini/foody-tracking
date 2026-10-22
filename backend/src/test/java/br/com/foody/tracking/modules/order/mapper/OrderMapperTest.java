@@ -149,7 +149,6 @@ class OrderMapperTest {
             StatusHistoryResponseDTO::changedByName)
         .containsExactly(
             tuple(null, OrderStatus.RECEBIDO, owner.getPublicId(), "Ana Souza"),
-            // An actor with no matching user (changedBy is not a foreign key) has no name.
             tuple(OrderStatus.RECEBIDO, OrderStatus.EM_PREPARO, actor, null));
     assertThat(history.get(0).changedAt()).isAtSameInstantAs(NOW);
     assertThat(history.get(1).changedAt()).isAtSameInstantAs(LATER);

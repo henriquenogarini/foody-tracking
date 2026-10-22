@@ -34,8 +34,7 @@ public class AuthService {
   private final UserMapper userMapper;
   private final Clock clock;
 
-  // Compared against when the e-mail is unknown, so both login failures cost one BCrypt check
-  // and response time does not reveal which accounts exist.
+  // Matched for unknown e-mails so every failed login costs one BCrypt check (timing).
   private final String dummyPasswordHash;
 
   public AuthService(
@@ -52,8 +51,6 @@ public class AuthService {
     this.dummyPasswordHash = passwordEncoder.encode("timing-equalizer-not-a-real-password");
   }
 
-  // Pre-check only: pool size 1 serializes writers, and the NOCASE unique index stays the last
-  // guard (SQLite surfaces it as a generic JpaSystemException, so it is not caught by type here).
   @Transactional
   public UserResponseDTO register(RegisterRequestDTO request) {
     String email = EmailNormalizer.normalize(request.email());
@@ -73,7 +70,7 @@ public class AuthService {
     return userMapper.toResponse(user);
   }
 
-  // Not transactional: the pool has one connection, and BCrypt plus JWT signing must not hold it.
+  // Not transactional (nor is the reset): BCrypt must not hold the single SQLite connection.
   public TokenResponseDTO login(LoginRequestDTO request) {
     if (PasswordPolicy.exceedsMaxBytes(request.password())) {
       log.debug("Login rejected: password longer than the BCrypt limit");
@@ -90,8 +87,6 @@ public class AuthService {
     return tokenService.issue(user.get());
   }
 
-  // Demo feature, no e-mail confirmation, not transactional (like login). The hash is computed on
-  // every path so response time does not reveal which accounts exist.
   public void resetPassword(PasswordResetRequestDTO request) {
     String hash = passwordEncoder.encode(request.newPassword());
     int updated =
@@ -104,7 +99,6 @@ public class AuthService {
     }
   }
 
-  // A valid token whose user no longer exists (database reset) is treated as an invalid token.
   @Transactional(readOnly = true)
   public UserResponseDTO currentUser(AuthenticatedUser principal) {
     return userRepository

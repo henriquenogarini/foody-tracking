@@ -4,8 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-// Documentation-only schema, never instantiated: errors are ProblemDetail instances, and springdoc
-// cannot see the contract extensions stored in ProblemDetail.properties (code, timestamp, errors).
 @Schema(
     name = "ApiErrorResponse",
     description = "Error body: RFC 9457 ProblemDetail plus the contract extensions")

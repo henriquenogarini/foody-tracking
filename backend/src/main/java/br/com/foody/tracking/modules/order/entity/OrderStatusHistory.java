@@ -21,11 +21,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Append-only audit row of one status change, including the birth in {@code RECEBIDO} (the only row
- * with a null {@code fromStatus}). Created exclusively by {@link Order}; {@code changedBy} is the
- * actor's public id, never an internal key.
- */
 @Entity
 @Table(name = "order_status_history")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

@@ -38,8 +38,7 @@ public class UserController {
       summary = "List users",
       description =
           "Paged list of every account, newest first by default. Requires the `ADMIN` role.")
-  // The 200 has no explicit schema: springdoc infers PageResponseDTO<UserResponseDTO> from the
-  // return type, which @Schema(implementation = PageResponseDTO.class) would erase.
+  // No explicit schema: @Schema(implementation = PageResponseDTO.class) would erase the generic.
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Page of users"),
     @ApiResponse(

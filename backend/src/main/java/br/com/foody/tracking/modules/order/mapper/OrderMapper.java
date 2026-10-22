@@ -41,7 +41,6 @@ public interface OrderMapper {
   @Mapping(target = "total", source = "total", qualifiedByName = "money")
   OrderSummaryResponseDTO toSummaryResponse(OrderSummaryView view);
 
-  // actorNames is resolved by the service in one query; mapping never touches the database.
   List<StatusHistoryResponseDTO> toHistoryResponses(
       List<OrderStatusHistory> history, @Context Map<UUID, String> actorNames);
 
@@ -49,7 +48,6 @@ public interface OrderMapper {
   StatusHistoryResponseDTO toHistoryResponse(
       OrderStatusHistory entry, @Context Map<UUID, String> actorNames);
 
-  // changedBy is not a foreign key: an id without a user maps to null.
   @Named("actorName")
   default String actorName(UUID changedBy, @Context Map<UUID, String> actorNames) {
     return actorNames.get(changedBy);
@@ -69,7 +67,6 @@ public interface OrderMapper {
     return value == null || value.isBlank() ? null : value;
   }
 
-  // The projection reads total straight from SQLite, which drops trailing zeros (59.9).
   @Named("money")
   default BigDecimal money(BigDecimal value) {
     return value == null ? null : Money.scaled(value);

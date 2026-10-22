@@ -10,10 +10,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-/**
- * Orders and their paged summaries. The role scope of the caller is expressed by choosing the
- * owner-scoped or the unscoped query, never by filtering in memory.
- */
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
   String SUMMARY_SELECT =
@@ -26,17 +22,11 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   String SUMMARY_COUNT = "select count(o) from Order o";
 
-  /**
-   * Optional filters shared by both scopes: a null parameter disables its condition, so one query
-   * per scope covers every combination of status and search. {@code namePattern} is an already
-   * lowercased, escaped LIKE pattern ({@code !} escapes {@code %}, {@code _} and itself).
-   */
   String SUMMARY_FILTERS =
       " (:status is null or o.status = :status)"
           + " and (:code is null or o.code = :code)"
           + " and (:namePattern is null or lower(o.customer.name) like :namePattern escape '!')";
 
-  /** Owner scope by the JWT {@code sub}, so the caller needs no extra user lookup. */
   Optional<Order> findByPublicIdAndOwnerPublicId(UUID publicId, UUID ownerPublicId);
 
   Optional<Order> findByPublicId(UUID publicId);
@@ -62,10 +52,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
       @Param("namePattern") String namePattern,
       Pageable pageable);
 
-  /**
-   * Next readable order code, starting at 1001. Safe only inside the write transaction: the
-   * single-connection pool serializes writers, and {@code uq_orders_code} is the last guard.
-   */
+  /** Safe only in a write transaction: the one-connection pool serializes writers. */
   @Query("select coalesce(max(o.code), 1000) + 1 from Order o")
   long nextCode();
 }

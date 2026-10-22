@@ -4,8 +4,6 @@ import br.com.foody.tracking.shared.exception.type.InvalidSortException;
 import java.util.Set;
 import org.springframework.data.domain.Sort;
 
-// Spring Data sorts by any entity path (even owner.passwordHash across a join), which leaks data
-// through ordering, so each endpoint lists the properties it allows.
 public final class SortWhitelist {
 
   private SortWhitelist() {}

@@ -15,8 +15,7 @@ public final class OpenApiConfig {
 
   public static final String BEARER_AUTH = "bearerAuth";
 
-  // Shared with the controllers' @Tag: springdoc emits one tag entry per distinct
-  // (name, description) pair, so a second wording of the same tag shows up twice.
+  // Reused by every @Tag: springdoc emits one tag per distinct (name, description) pair.
   public static final String TAG_AUTH = "Auth";
   public static final String TAG_AUTH_DESCRIPTION =
       "Registration, login and the authenticated user";

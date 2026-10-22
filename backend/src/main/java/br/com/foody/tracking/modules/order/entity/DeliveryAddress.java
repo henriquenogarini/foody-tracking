@@ -6,10 +6,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * Where the order is delivered. Coordinates are optional but come in pairs, the same invariant the
- * schema guards with {@code ck_orders_lat_lng}. Column names are set by {@link Order}.
- */
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

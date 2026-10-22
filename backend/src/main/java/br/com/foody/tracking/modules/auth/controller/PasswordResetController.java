@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-// Own controller so the flag removes the route: when disabled, 404 comes before any body parsing.
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")

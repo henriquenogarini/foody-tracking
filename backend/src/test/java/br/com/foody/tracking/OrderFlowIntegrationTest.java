@@ -95,7 +95,6 @@ class OrderFlowIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.status").value("RECEBIDO"))
             .andExpect(jsonPath("$.total").value(59.90))
-            // The JSON boundary re-zones every date to America/Sao_Paulo.
             .andExpect(jsonPath("$.createdAt").value(endsWith("-03:00")));
     String orderId = read(created, "$.id");
     String orderPath = "/api/v1/orders/" + orderId;
@@ -206,7 +205,6 @@ class OrderFlowIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.content[*].email").value(hasItems(anaEmail, brunoEmail)));
 
-    // Finally, no token means 401 in the contract format
     mockMvc
         .perform(get("/api/v1/orders"))
         .andExpect(status().isUnauthorized())

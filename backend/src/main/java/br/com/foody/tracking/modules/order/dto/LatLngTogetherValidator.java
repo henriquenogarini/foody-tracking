@@ -6,7 +6,6 @@ import jakarta.validation.ConstraintValidatorContext;
 public final class LatLngTogetherValidator
     implements ConstraintValidator<LatLngTogether, AddressRequestDTO> {
 
-  // Attached to the missing coordinate, so the 400 names deliveryAddress.lat or .lng.
   @Override
   public boolean isValid(AddressRequestDTO address, ConstraintValidatorContext context) {
     if (address == null || (address.lat() == null) == (address.lng() == null)) {

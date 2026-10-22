@@ -10,8 +10,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Component
 public final class OrderStatusChangedListener {
 
-  // Extension point for a webhook or a queue. AFTER_COMMIT means it only runs once the change is
-  // durable, so a rolled-back transition never notifies anyone.
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
   public void onStatusChanged(OrderStatusChangedEvent event) {
     log.info(

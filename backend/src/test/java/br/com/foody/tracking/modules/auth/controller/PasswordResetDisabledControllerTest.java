@@ -31,7 +31,6 @@ class PasswordResetDisabledControllerTest {
 
   @MockitoBean private AuthService authService;
 
-  // An invalid body must also answer 404: the route does not exist, so nothing is parsed.
   @ParameterizedTest
   @ValueSource(
       strings = {

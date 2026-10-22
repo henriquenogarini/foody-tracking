@@ -512,7 +512,6 @@ class OrderRepositoryTest {
     // Then
     assertThat(page.getContent()).extracting(OrderSummaryView::getItemsCount).containsExactly(4, 2);
     assertThat(page.getTotalElements()).isEqualTo(3);
-    // One select for the page plus one count, regardless of how many orders or items.
     assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
   }
 
@@ -539,9 +538,7 @@ class OrderRepositoryTest {
     assertThat(page.getContent())
         .extracting(OrderSummaryView::getCode)
         .containsExactly(1003L, 1002L);
-    // The count is scoped like the page: Ana's three orders, never Bruno's.
     assertThat(page.getTotalElements()).isEqualTo(3);
-    // The owner join is implicit in each statement: still one page select plus one count.
     assertThat(statistics.getPrepareStatementCount()).isEqualTo(2);
   }
 
@@ -607,7 +604,6 @@ class OrderRepositoryTest {
         .extracting(OrderSummaryView::getCode)
         .containsExactly(2001L, 2002L);
     assertThat(anaAll.getTotalElements()).isEqualTo(2);
-    // Another owner's order is invisible even when its exact code is searched.
     assertThat(brunoCode.getContent()).isEmpty();
     assertThat(brunoCode.getTotalElements()).isZero();
   }

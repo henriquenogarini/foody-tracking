@@ -5,10 +5,6 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-/**
- * Row of the paged order list: a projection keeps the list at one query plus the count. {@code
- * total} comes straight from SQLite, which drops trailing zeros; callers normalize the scale.
- */
 public interface OrderSummaryView {
 
   UUID getPublicId();

@@ -36,7 +36,6 @@ public class OrderService {
 
   @Transactional
   public OrderResponseDTO create(CreateOrderRequestDTO request, AuthenticatedUser actor) {
-    // A valid token whose user no longer exists (database reset) is treated as an invalid token.
     User owner = userRepository.findByPublicId(actor.id()).orElseThrow(InvalidTokenException::new);
     long code = orderRepository.nextCode();
     Order order =
@@ -66,10 +65,8 @@ public class OrderService {
       log.warn("Order {} transition rejected: {} -> {}", publicId, from, target);
       throw ex;
     }
-    // Flushing here makes a stale @Version fail inside this call, so the advice answers 409
-    // CONCURRENT_MODIFICATION instead of the commit failing after the controller returned.
+    // Flush now so a stale @Version answers 409 here, not on commit after the response.
     orderRepository.flush();
-    // The listener runs AFTER_COMMIT and writes the INFO line, so a rollback notifies no one.
     eventPublisher.publishEvent(
         new OrderStatusChangedEvent(
             order.getPublicId(), order.getCode(), from, target, actor.id(), now));

@@ -37,7 +37,6 @@ public class OrderQueryService {
   private static final Set<String> SORTABLE_PROPERTIES =
       Set.of("createdAt", "updatedAt", "code", "status", "total");
 
-  // Unique tie-breaker: equal sort values still page deterministically under LIMIT/OFFSET.
   private static final String TIE_BREAKER = "code";
 
   private static final Pattern CODE_QUERY = Pattern.compile("#?(\\d{1,18})");
@@ -47,7 +46,6 @@ public class OrderQueryService {
   private final OrderMapper orderMapper;
   private final UserRepository userRepository;
 
-  // The role scope is the choice of query; the search term is either a code or a name pattern.
   @Transactional(readOnly = true)
   public PageResponseDTO<OrderSummaryResponseDTO> list(
       AuthenticatedUser actor, OrderStatus status, String searchTerm, Pageable pageable) {
@@ -63,8 +61,6 @@ public class OrderQueryService {
     return PageResponseDTO.from(page.map(orderMapper::toSummaryResponse));
   }
 
-  // "#1042", "1042" or " #1042 ". At most 18 digits always fits a long; a longer number falls
-  // through to the name search, where it matches nothing, instead of failing to parse.
   private static Long codeOf(String searchTerm) {
     if (searchTerm == null) {
       return null;
@@ -73,8 +69,7 @@ public class OrderQueryService {
     return matcher.matches() ? Long.valueOf(matcher.group(1)) : null;
   }
 
-  // Lowercased here because SQLite's lower() folds only ASCII: lowering the term in Java at least
-  // matches accented names stored in lowercase. LIKE wildcards typed by the user are escaped.
+  // SQLite's lower() folds only ASCII, so the term is lowercased in Java.
   private static String namePatternOf(String searchTerm) {
     if (searchTerm == null || searchTerm.isBlank()) {
       return null;
@@ -108,7 +103,6 @@ public class OrderQueryService {
     return orderMapper.toResponse(orderFinder.getVisibleTo(publicId, actor));
   }
 
-  // Fixed query count: the order, its history and one lookup of the distinct actors' names.
   @Transactional(readOnly = true)
   public List<StatusHistoryResponseDTO> history(UUID publicId, AuthenticatedUser actor) {
     List<OrderStatusHistory> history = orderFinder.getVisibleTo(publicId, actor).getStatusHistory();

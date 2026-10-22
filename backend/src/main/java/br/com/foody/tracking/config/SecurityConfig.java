@@ -62,8 +62,7 @@ public final class SecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .authenticated())
-        // Registered twice on purpose: the resource server installs its own defaults otherwise,
-        // and those answer with an empty body instead of the contract's ProblemDetail.
+        // Registered twice: otherwise the resource server installs defaults with an empty body.
         .exceptionHandling(
             exceptions ->
                 exceptions
@@ -107,8 +106,6 @@ public final class SecurityConfig {
     return source;
   }
 
-  // The signed role claim is trusted as-is (stateless 2h token, no role-changing endpoint), so
-  // no per-request database lookup is needed to build the authorities.
   private static JwtAuthenticationConverter jwtAuthenticationConverter() {
     JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
     authorities.setAuthoritiesClaimName(JwtConfig.ROLE_CLAIM);

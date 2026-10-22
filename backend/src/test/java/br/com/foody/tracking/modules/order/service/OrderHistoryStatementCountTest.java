@@ -30,8 +30,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
-// The history endpoint must cost a fixed number of statements: the scoped order, its history rows
-// and one query for the actors' names, whatever the number of rows or actors.
 @DataJpaTest(properties = "spring.jpa.properties.hibernate.generate_statistics=true")
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = Replace.NONE)

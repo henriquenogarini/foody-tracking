@@ -12,7 +12,6 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-// 403 in the contract format; the exception message is never exposed.
 @Slf4j
 @RequiredArgsConstructor
 public final class ProblemDetailAccessDeniedHandler implements AccessDeniedHandler {
@@ -27,7 +26,6 @@ public final class ProblemDetailAccessDeniedHandler implements AccessDeniedHandl
       HttpServletResponse response,
       AccessDeniedException accessDeniedException)
       throws IOException {
-    // The principal name is the JWT subject (the user's publicId), never the e-mail.
     Principal principal = request.getUserPrincipal();
     log.warn(
         "Access denied on {} {} for {}",

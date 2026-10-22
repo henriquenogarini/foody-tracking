@@ -19,8 +19,6 @@ import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
-// HS256 is pinned on both sides: the decoder accepts no other algorithm and TokenService always
-// sends the HS256 header (Nimbus would otherwise default to RS256).
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(JwtProperties.class)
 public final class JwtConfig {
@@ -38,8 +36,6 @@ public final class JwtConfig {
         NimbusJwtDecoder.withSecretKey(secretKey(properties))
             .macAlgorithm(MacAlgorithm.HS256)
             .build();
-    // Expiry is checked against the same Clock that stamps iat/exp in TokenService. The timestamp
-    // validator alone accepts a token without exp, which would never expire.
     JwtTimestampValidator timestamps = new JwtTimestampValidator();
     timestamps.setClock(clock);
     decoder.setJwtValidator(

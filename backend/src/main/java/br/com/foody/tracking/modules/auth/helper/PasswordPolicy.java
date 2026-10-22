@@ -2,8 +2,6 @@ package br.com.foody.tracking.modules.auth.helper;
 
 import java.nio.charset.StandardCharsets;
 
-// BCrypt reads only 72 bytes and Spring's encoder throws above it, so the upper bound is in
-// UTF-8 bytes.
 public final class PasswordPolicy {
 
   public static final int MIN_LENGTH = 8;

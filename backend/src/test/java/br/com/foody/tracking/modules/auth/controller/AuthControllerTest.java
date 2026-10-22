@@ -45,7 +45,6 @@ import org.springframework.test.web.servlet.MockMvc;
 class AuthControllerTest {
 
   private static final UUID USER_ID = UUID.fromString("3f6c1a2e-8d4b-4c7a-9e1f-2b5d7a9c0e11");
-  // Stored in UTC; the JSON boundary must re-zone it to America/Sao_Paulo.
   private static final OffsetDateTime CREATED_AT = OffsetDateTime.parse("2026-10-21T17:13:27Z");
 
   @Autowired private MockMvc mockMvc;

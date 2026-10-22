@@ -129,7 +129,6 @@ class DevOrderSeederTest {
     return new DevOrderSeeder(adminEmail, userRepository, orderRepository, clock);
   }
 
-  // Born RECEBIDO, then only allowed transitions by the admin, strictly increasing and in the past.
   private static void assertLegalHistory(Order order) {
     List<OrderStatusHistory> history = order.getStatusHistory();
     assertThat(history.get(0).getFromStatus()).isNull();

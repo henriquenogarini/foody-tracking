@@ -9,7 +9,6 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 
-// The security handlers answer outside Spring MVC, so they serialize the ProblemDetail themselves.
 final class ProblemDetailWriter {
 
   private ProblemDetailWriter() {}

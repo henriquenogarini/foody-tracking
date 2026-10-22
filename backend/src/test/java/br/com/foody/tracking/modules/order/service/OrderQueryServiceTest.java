@@ -50,7 +50,6 @@ class OrderQueryServiceTest {
 
   private static final Pageable PAGEABLE =
       PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-  // What the repository receives: the client's sort plus the code tie-breaker.
   private static final Pageable STABLE_PAGEABLE =
       PageRequest.of(0, 20, Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("code")));
 

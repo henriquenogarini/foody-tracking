@@ -8,7 +8,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 public record AuthenticatedUser(UUID id, Role role) {
 
-  // Malformed claims are a client-side token problem (401), not a server failure (500).
   public static AuthenticatedUser from(Jwt jwt) {
     return new AuthenticatedUser(
         parseSubject(jwt.getSubject()), parseRole(jwt.getClaimAsString(JwtConfig.ROLE_CLAIM)));

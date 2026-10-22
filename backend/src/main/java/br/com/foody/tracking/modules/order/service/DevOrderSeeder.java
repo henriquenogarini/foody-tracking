@@ -25,8 +25,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-// Dev-profile demo data owned by the bootstrap admin, at least one order per status, built through
-// the domain so every history row is legal. Seeds only while the admin owns no order.
 @Slf4j
 @Component
 @Profile("dev")
@@ -82,7 +80,6 @@ public class DevOrderSeeder implements ApplicationRunner {
       for (Step step : demo.steps()) {
         order.changeStatus(step.target(), owner.getPublicId(), now.minus(step.ago()));
       }
-      // Flushed one by one: the next nextCode() must see this row.
       orderRepository.saveAndFlush(order);
     }
     log.info("Seeded {} demo orders", demoOrders.size());

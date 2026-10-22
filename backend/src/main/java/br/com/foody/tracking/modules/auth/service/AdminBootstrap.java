@@ -16,7 +16,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-// Provisions the single ADMIN at startup; the API never creates or promotes one.
 @Slf4j
 @Component
 @Order(AdminBootstrap.RUNNER_ORDER)
@@ -47,7 +46,6 @@ public final class AdminBootstrap implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    // application.yml defaults both to empty, so blank means absent.
     boolean hasEmail = adminEmail != null && !adminEmail.isBlank();
     boolean hasPassword = adminPassword != null && !adminPassword.isBlank();
     if (!hasEmail && !hasPassword) {
@@ -69,7 +67,6 @@ public final class AdminBootstrap implements ApplicationRunner {
     Optional<User> existing = userRepository.findByEmail(normalizedEmail);
     if (existing.isPresent()) {
       User user = existing.get();
-      // Never promote: anyone could have pre-registered the admin e-mail through the API.
       if (user.getRole() == Role.ADMIN) {
         log.info("Bootstrap admin {} already exists", user.getPublicId());
       } else {

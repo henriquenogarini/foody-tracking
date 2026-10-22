@@ -33,11 +33,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Aggregate root of a delivery order: it owns its items and its status history, and every change
- * goes through {@link #create} or {@link #changeStatus}. The total is always the sum of the item
- * subtotals so a client can never dictate what is charged.
- */
+/** Aggregate root: every change goes through {@link #create} or {@link #changeStatus}. */
 @Entity
 @Table(name = "orders")
 @Getter
@@ -109,10 +105,6 @@ public class Order {
   @Column(name = "version", nullable = false)
   private Long version;
 
-  /**
-   * Builds a new order born in {@code RECEBIDO}, with the total computed from the items and the
-   * birth recorded as the first history row attributed to the owner.
-   */
   public static Order create(
       User owner,
       Customer customer,
@@ -146,12 +138,6 @@ public class Order {
     return order;
   }
 
-  /**
-   * Moves the order to {@code target} if {@link OrderStatus#canTransitionTo} allows it, recording
-   * who did it and when; otherwise leaves the order untouched.
-   *
-   * @throws InvalidStatusTransitionException when the transition is not allowed
-   */
   public void changeStatus(OrderStatus target, UUID changedBy, OffsetDateTime now) {
     Objects.requireNonNull(target, "target");
     if (!status.canTransitionTo(target)) {

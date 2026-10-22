@@ -15,10 +15,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * One line of an order. The unit price is normalized to scale 2 and the subtotal is computed here,
- * never taken from the client. Getters re-apply scale 2 because SQLite drops trailing zeros.
- */
 @Entity
 @Table(name = "order_items")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

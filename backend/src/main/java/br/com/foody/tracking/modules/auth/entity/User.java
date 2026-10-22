@@ -18,10 +18,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
-/**
- * Account that owns orders. Only {@code publicId} is exposed; the e-mail arrives normalized and the
- * creation instant is passed in, so the entity never reads the clock.
- */
 @Entity
 @Table(name = "users")
 @Getter

@@ -10,14 +10,11 @@ public enum ApiErrorCode {
   ORDER_INVALID_TRANSITION(409),
   CONCURRENT_MODIFICATION(409),
   INTERNAL_ERROR(500),
-  // Framework-built errors (unknown route, wrong method, media-type negotiation): stamped by
-  // GlobalExceptionHandler's funnel, never thrown by application code.
   NOT_FOUND(404),
   METHOD_NOT_ALLOWED(405),
   NOT_ACCEPTABLE(406),
   UNSUPPORTED_MEDIA_TYPE(415);
 
-  // int, not HttpStatus: DomainException takes this enum into domain, which never sees Spring Web.
   private final int httpStatus;
 
   ApiErrorCode(int httpStatus) {

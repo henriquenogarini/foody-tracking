@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-// Single source of the application zone: the services' Clock and Jackson share this ZoneId.
 @Configuration(proxyBeanMethods = false)
 public final class ClockConfig {
 
@@ -16,8 +15,7 @@ public final class ClockConfig {
     return ZoneId.of(timeZone);
   }
 
-  // SQLite stores instants as epoch millis; truncating at the source keeps the value returned on
-  // write equal to the one read back later (no micro/nanosecond digits that vanish on reload).
+  // SQLite keeps epoch millis: truncating here makes written and reloaded instants equal.
   @Bean
   Clock clock(ZoneId appZone) {
     return Clock.tick(Clock.system(appZone), Duration.ofMillis(1));

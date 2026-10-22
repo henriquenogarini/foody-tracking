@@ -9,8 +9,6 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-// Cross-field rule mirrored by the domain and by ck_orders_lat_lng: checking it here turns a
-// half-filled pair into a 400 on the missing field instead of an exception deeper down.
 @Documented
 @Constraint(validatedBy = LatLngTogetherValidator.class)
 @Target(TYPE)

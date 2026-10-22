@@ -8,7 +8,6 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 
-// Static so the security entry point and @WebMvcTest slices can use it without wiring.
 public final class ProblemDetailFactory {
 
   static final String CODE = "code";

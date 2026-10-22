@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public final class JacksonConfig {
 
-  // UTC lives in the database; JSON re-zones every OffsetDateTime, in and out, to the app zone.
   @Bean
   public Jackson2ObjectMapperBuilderCustomizer applicationZoneIsoDates(ZoneId appZone) {
     return builder ->

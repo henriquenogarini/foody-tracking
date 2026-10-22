@@ -44,7 +44,6 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
   private static final Comparator<ValidationError> ERROR_ORDER =
       Comparator.comparing(ValidationError::field).thenComparing(ValidationError::message);
 
-  // 413 (multipart) and 503 (async timeout) are unreachable in this API and stay code-less.
   private static final Map<Integer, ApiErrorCode> FRAMEWORK_CODES =
       Map.of(
           400, ApiErrorCode.VALIDATION_ERROR,
@@ -85,8 +84,7 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
     return respondInvalidSort(ex, ex.getProperty(), request);
   }
 
-  // Security exceptions from the MVC layer (@PreAuthorize) must reach ExceptionTranslationFilter
-  // for the contract's 401/403; the catch-all below would turn them into 500.
+  // Let ExceptionTranslationFilter answer 401/403; the catch-all below would make them 500.
   @ExceptionHandler({AccessDeniedException.class, AuthenticationException.class})
   public void rethrowSecurityException(RuntimeException ex) {
     throw ex;
@@ -110,14 +108,11 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
     List<ValidationError> errors =
         ex.getBindingResult().getAllErrors().stream()
             .map(error -> toValidationError(error, error.getObjectName()))
-            // Violations arrive in hash order; sorting gives clients and tests a stable list.
             .sorted(ERROR_ORDER)
             .toList();
     return respond(ex, invalidFields(errors), headers, request);
   }
 
-  // @RequestParam/@PathVariable violations answer like body validation; a 500 (return-value
-  // validation) is left to the framework.
   @Override
   protected ResponseEntity<Object> handleHandlerMethodValidationException(
       HandlerMethodValidationException ex,
@@ -147,8 +142,6 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
       HttpHeaders headers,
       HttpStatusCode status,
       WebRequest request) {
-    // Spring wraps the Jackson exception as the direct cause; an empty path is a root-level
-    // failure with no field to name.
     if (ex.getCause() instanceof JsonMappingException mapping && !mapping.getPath().isEmpty()) {
       Class<?> targetType =
           mapping instanceof InvalidFormatException invalid ? invalid.getTargetType() : null;
@@ -175,8 +168,6 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
     return respond(ex, invalidFields(List.of(error)), headers, request);
   }
 
-  // Framework-built bodies (unknown route, 405, 406, 415...) get the timestamp and a code keyed by
-  // status (this hook never sees the exception); codes set by ProblemDetailFactory are kept.
   @Override
   protected ResponseEntity<Object> createResponseEntity(
       Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
@@ -192,8 +183,6 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
     return super.createResponseEntity(body, headers, statusCode, request);
   }
 
-  // Unknown and disallowed sort properties answer with the same body, so a client cannot tell
-  // which entity paths exist.
   private ResponseEntity<Object> respondInvalidSort(
       Exception ex, String property, WebRequest request) {
     ValidationError error =

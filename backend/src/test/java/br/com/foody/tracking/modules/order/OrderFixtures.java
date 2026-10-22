@@ -53,7 +53,6 @@ public final class OrderFixtures {
     return new OrderItem("Pizza calabresa G", 1, new BigDecimal("59.90"));
   }
 
-  // Required fields only: name-only customer, no complement, coordinates or notes, one pizza.
   public static Order newOrder(User owner, long code, OffsetDateTime at) {
     return Order.create(
         owner,

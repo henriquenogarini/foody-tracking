@@ -6,10 +6,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-/**
- * Who receives the order. Plain data, not a user account: only the name is required; phone and
- * e-mail formats are validated by the request DTO. Column names are set by {@link Order}.
- */
 @Embeddable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

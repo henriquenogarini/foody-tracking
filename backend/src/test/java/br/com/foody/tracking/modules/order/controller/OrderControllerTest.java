@@ -64,7 +64,6 @@ class OrderControllerTest {
   private static final UUID USER_ID = UUID.fromString("3f6c1a2e-8d4b-4c7a-9e1f-2b5d7a9c0e11");
   private static final UUID ADMIN_ID = UUID.fromString("0b6f2c1d-4e3a-4f5b-8c7d-9e0a1b2c3d4e");
   private static final UUID ORDER_ID = UUID.fromString("7b1e4c2a-5d3f-4a8b-9c6d-1e2f3a4b5c6d");
-  // Stored in UTC; the JSON boundary must re-zone it to America/Sao_Paulo.
   private static final OffsetDateTime CREATED_AT = OffsetDateTime.parse("2026-10-21T17:13:27Z");
 
   private static final String VALID_ORDER =
@@ -100,7 +99,6 @@ class OrderControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(VALID_ORDER))
         .andExpect(status().isCreated())
-        // The query string of the POST must never leak into the Location of the new order.
         .andExpect(header().string("Location", "http://localhost/api/v1/orders/" + ORDER_ID))
         .andExpect(jsonPath("$.id").value(ORDER_ID.toString()))
         .andExpect(jsonPath("$.code").value(1042))

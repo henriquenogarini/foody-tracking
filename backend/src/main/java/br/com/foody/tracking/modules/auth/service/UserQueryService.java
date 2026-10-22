@@ -20,7 +20,6 @@ public class UserQueryService {
   private final UserRepository userRepository;
   private final UserMapper userMapper;
 
-  // Admin-only at the endpoint, so the query is unscoped by design.
   @Transactional(readOnly = true)
   public PageResponseDTO<UserResponseDTO> list(Pageable pageable) {
     SortWhitelist.requireAllowed(pageable.getSort(), SORTABLE_PROPERTIES);

@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
 import { AuthProvider } from '@/features/auth/AuthProvider'
+import { SnackbarProvider } from '@/shared/components/SnackbarProvider'
 import { createQueryClient } from './queryClient'
 import { routes } from './router'
 import { theme } from './theme'
@@ -15,11 +16,13 @@ export function AppProviders() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
-      </QueryClientProvider>
+      <SnackbarProvider>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
+        </QueryClientProvider>
+      </SnackbarProvider>
     </ThemeProvider>
   )
 }

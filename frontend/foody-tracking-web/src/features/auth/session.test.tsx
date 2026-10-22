@@ -84,6 +84,9 @@ describe('session and route guards', () => {
   })
 
   it('ends the session when any authenticated call is rejected with 401', async () => {
+    const { router } = renderRoute('/orders/new', { signedInAs: testUser })
+    await screen.findByRole('heading', { level: 1, name: 'Novo pedido' })
+    // Registered after rendering so it wins over the default fake orders API.
     server.use(
       http.get(apiUrl('/orders'), () =>
         HttpResponse.json(
@@ -92,8 +95,6 @@ describe('session and route guards', () => {
         ),
       ),
     )
-    const { router } = renderRoute('/orders/new', { signedInAs: testUser })
-    await screen.findByRole('heading', { level: 1, name: 'Novo pedido' })
 
     await act(() => api.get('/orders').catch(() => undefined))
 

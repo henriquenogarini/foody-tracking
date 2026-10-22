@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toApiError } from '@/shared/api/problem'
 import { useSnackbar } from '@/shared/hooks/useSnackbar'
-import { countOrders, listOrders, updateOrderStatus } from './api'
+import { countOrders, createOrder, listOrders, updateOrderStatus } from './api'
 import { STATUS_LABEL } from './status'
 import { ORDER_STATUSES, type Order, type OrderListParams, type OrderStatus } from './types'
 
@@ -58,5 +58,13 @@ export function useUpdateStatus() {
       notify(toApiError(error).message, 'error')
     },
     onSettled: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
+  })
+}
+
+export function useCreateOrder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: createOrder,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: orderKeys.all }),
   })
 }

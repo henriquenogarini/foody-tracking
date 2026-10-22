@@ -70,3 +70,11 @@ export interface OrderListParams {
   page: number
   size: number
 }
+
+/** POST /orders body. Optional fields are omitted when empty; total and subtotals are computed by the API. */
+export interface CreateOrderInput {
+  customer: { name: string; phone?: string; email?: string }
+  items: { description: string; quantity: number; unitPrice: number }[]
+  deliveryAddress: Omit<DeliveryAddress, 'complement' | 'lat' | 'lng'> & { complement?: string }
+  notes?: string
+}

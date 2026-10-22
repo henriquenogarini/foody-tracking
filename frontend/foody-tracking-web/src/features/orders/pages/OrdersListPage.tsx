@@ -182,6 +182,11 @@ export default function OrdersListPage() {
                   : 'Página anterior'
             }
             sx={{
+              // 44px touch targets on phones (MUI's large size is 40px).
+              '& .MuiPaginationItem-root': {
+                minWidth: { xs: 44, md: 32 },
+                height: { xs: 44, md: 32 },
+              },
               '& .Mui-selected': { bgcolor: 'ink.900', color: 'surface.0' },
               '& .Mui-selected:hover': { bgcolor: 'ink.700' },
             }}

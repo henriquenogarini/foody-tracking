@@ -6,9 +6,7 @@ desktop.ini
 .idea/
 .vscode/
 
-# Claude Code tooling and local secrets, at any depth
-.claude/
-CLAUDE.md
+# Local secrets, at any depth
 .env
 .env.*
 !.env.example

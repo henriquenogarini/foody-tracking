@@ -27,6 +27,7 @@ const surface = {
 }
 
 const border = { main: '#e5ddd6', strong: '#8c7e73' }
+const danger = '#c62828'
 
 // Keyed by design name; features/orders maps each OrderStatus to one of these.
 const status = {
@@ -67,7 +68,7 @@ export const theme = createTheme({
   palette: {
     primary: { main: brand[500], light: brand[400], dark: brand[600], contrastText: ink[900] },
     success: { main: '#1f8a52' },
-    error: { main: '#c62828' },
+    error: { main: danger },
     text: { primary: ink[900], secondary: ink[500] },
     background: { default: surface[50], paper: surface[0] },
     divider: border.main,
@@ -135,6 +136,13 @@ export const theme = createTheme({
         root: {
           backgroundColor: surface[0],
           '& .MuiOutlinedInput-notchedOutline': { borderColor: border.main },
+          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: border.strong },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: brand[500],
+            borderWidth: 1,
+          },
+          '&.Mui-focused': { outline: `2px solid ${brand[500]}`, outlineOffset: 1 },
+          '&.Mui-error .MuiOutlinedInput-notchedOutline': { borderColor: danger },
           // Design inputs are 44px tall: 22px line + 11px padding on each side.
           variants: [
             {

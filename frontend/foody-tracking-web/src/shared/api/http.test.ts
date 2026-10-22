@@ -56,7 +56,7 @@ describe('api client', () => {
     it('reports a lost session when an authenticated call is rejected', async () => {
       setAuthToken('expired')
       await expect(api.get('/orders')).rejects.toMatchObject({ response: { status: 401 } })
-      expect(handler).toHaveBeenCalledOnce()
+      expect(handler).toHaveBeenCalledExactlyOnceWith('expired')
     })
 
     it('leaves wrong login credentials to the form', async () => {

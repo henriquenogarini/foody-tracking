@@ -1,4 +1,10 @@
-import { formatCurrency, formatDateTime, formatRelative, formatTime } from './format'
+import {
+  formatCurrency,
+  formatDateTime,
+  formatInitials,
+  formatRelative,
+  formatTime,
+} from './format'
 
 // Intl separates "R$" from the amount with a no-break space.
 const NBSP = ' '
@@ -48,5 +54,17 @@ describe('formatRelative', () => {
 
   it('handles timestamps slightly in the future (clock skew) as now', () => {
     expect(formatRelative(new Date(now + 5_000).toISOString(), now)).toBe('agora')
+  })
+})
+
+describe('formatInitials', () => {
+  it.each([
+    ['Henrique Nogarini', 'HN'],
+    ['Ana Beatriz Rocha', 'AR'],
+    ['admin', 'A'],
+    ['  josé   da silva ', 'JS'],
+    ['', ''],
+  ])('"%s" → "%s"', (name, expected) => {
+    expect(formatInitials(name)).toBe(expected)
   })
 })

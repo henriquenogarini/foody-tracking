@@ -5,9 +5,11 @@ interface BrandLogoProps {
   variant?: 'default' | 'inverse'
   /** Height of the mark in px; the wordmark scales with it. */
   height?: number
+  /** Wordmark under the mark, centered (mobile auth screens). */
+  stacked?: boolean
 }
 
-export function BrandLogo({ variant = 'default', height = 32 }: BrandLogoProps) {
+export function BrandLogo({ variant = 'default', height = 32, stacked = false }: BrandLogoProps) {
   const { palette, typography } = useTheme()
   const inverse = variant === 'inverse'
   const tile = inverse ? palette.surface[0] : palette.brand[500]
@@ -19,8 +21,9 @@ export function BrandLogo({ variant = 'default', height = 32 }: BrandLogoProps) 
       aria-label="Foody Tracking"
       sx={{
         display: 'inline-flex',
+        flexDirection: stacked ? 'column' : 'row',
         alignItems: 'center',
-        gap: `${height * 0.28}px`,
+        gap: `${height * (stacked ? 0.24 : 0.28)}px`,
         color: inverse ? palette.surface[0] : palette.ink[900],
       }}
     >
@@ -45,7 +48,7 @@ export function BrandLogo({ variant = 'default', height = 32 }: BrandLogoProps) 
         aria-hidden="true"
         sx={{
           fontFamily: typography.h1.fontFamily,
-          fontSize: height * 0.625,
+          fontSize: height * (stacked ? 0.42 : 0.625),
           lineHeight: 1,
           letterSpacing: '-0.015em',
           whiteSpace: 'nowrap',

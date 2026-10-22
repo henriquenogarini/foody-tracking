@@ -12,7 +12,7 @@ function responseError(status: number, data: unknown) {
   })
 }
 
-// Shape sent by the API (ProblemDetailFactory); its timestamp is UTC.
+// Shape sent by the API (ProblemDetailFactory), timestamp in the API zone.
 function problem(status: number, code: string | undefined, detail: string, extra = {}) {
   return {
     type: 'about:blank',
@@ -21,7 +21,7 @@ function problem(status: number, code: string | undefined, detail: string, extra
     detail,
     instance: '/api/v1/orders',
     ...(code ? { code } : {}),
-    timestamp: '2026-10-21T17:13:27.123456Z',
+    timestamp: '2026-10-21T14:13:27.123456-03:00',
     ...extra,
   }
 }

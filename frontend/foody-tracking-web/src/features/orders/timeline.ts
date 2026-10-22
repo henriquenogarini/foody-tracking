@@ -8,11 +8,9 @@ export interface TimelineStep {
   label: string
   description: string
   state: StepState
-  /** When it happened; absent for steps still to come. */
   at?: string
 }
 
-/** The path an order takes when nothing goes wrong. */
 const HAPPY_PATH: readonly OrderStatus[] = [
   'RECEBIDO',
   'EM_PREPARO',
@@ -37,14 +35,8 @@ function describe(entry: StatusHistoryEntry): string {
   }
 }
 
-/**
- * Design timeline: what already happened (from the API history, oldest first), the current step
- * highlighted, and the steps still ahead greyed out. A cancelled order ends at the cancellation.
- *
- * Order and history are separate requests, and right after a change the order is newer (it is updated
- * from the response at once). When the history has not caught up, the order's status is appended as
- * the current step, without a time, so the timeline never contradicts the status shown above it.
- */
+// Right after a change the order is newer than its history; its status is then appended as the
+// current step, so the timeline never contradicts the status shown above it.
 export function buildTimeline(status: OrderStatus, history: StatusHistoryEntry[]): TimelineStep[] {
   const latest = history.at(-1)?.toStatus
   const pendingEntry: StatusHistoryEntry[] =

@@ -3,12 +3,10 @@ import type { ReactNode } from 'react'
 
 interface SectionCardProps {
   title: string
-  /** Right side of the header, e.g. "2 itens". */
   aside?: ReactNode
   children: ReactNode
 }
 
-/** Design card with a section title ("Cliente", "Itens", "Endereço de entrega"). */
 export function SectionCard({ title, aside, children }: SectionCardProps) {
   return (
     <Card component="section" sx={{ p: { xs: 2, md: 3 } }}>

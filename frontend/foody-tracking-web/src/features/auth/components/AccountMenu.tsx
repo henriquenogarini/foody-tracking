@@ -7,7 +7,6 @@ interface AccountMenuProps {
   onClose: () => void
 }
 
-/** Signed-in user's name and e-mail, plus sign out. Opened from the top-bar avatar or the "Conta" tab. */
 export function AccountMenu({ anchorEl, onClose }: AccountMenuProps) {
   const { user, signOut } = useAuth()
 

@@ -1,7 +1,6 @@
 import { createTheme } from '@mui/material/styles'
 
-// Design tokens from the Claude Design export (CLAUDE.md §6). Components read them through the
-// theme (`sx={{ color: 'brand.700' }}`), never as hex literals.
+// Components read these through the theme (`sx={{ color: 'brand.700' }}`), never as hex literals.
 const brand = {
   50: '#fff4ec',
   100: '#ffe3d1',
@@ -29,7 +28,6 @@ const surface = {
 const border = { main: '#e5ddd6', strong: '#8c7e73' }
 const danger = '#c62828'
 
-// Keyed by design name; features/orders maps each OrderStatus to one of these.
 const status = {
   received: { bg: '#e6edfb', fg: '#2654b8' },
   preparing: { bg: '#fff0d4', fg: '#8a4b00' },
@@ -143,12 +141,11 @@ export const theme = createTheme({
           },
           '&.Mui-focused': { outline: `2px solid ${brand[500]}`, outlineOffset: 1 },
           '&.Mui-error .MuiOutlinedInput-notchedOutline': { borderColor: danger },
-          // Design inputs are 44px tall: 22px line + 11px padding on each side.
+          // 44px inputs: 22px line + 11px padding on each side.
           variants: [
             {
               props: { size: 'small' },
-              // Inputs and selects, not the multiline textarea (it sizes itself by rows). The right
-              // padding is left alone on selects, where it makes room for the arrow.
+              // Not the textarea (sized by rows); selects keep their right padding for the arrow.
               style: {
                 '& .MuiOutlinedInput-input:not(textarea)': {
                   paddingTop: 11,
@@ -171,7 +168,7 @@ export const theme = createTheme({
     MuiBottomNavigationAction: {
       styleOverrides: {
         root: {
-          // The design spreads the tabs evenly; MUI caps each one at 168px by default.
+          // MUI caps each tab at 168px by default.
           maxWidth: 'none',
           color: ink[500],
           gap: 4,

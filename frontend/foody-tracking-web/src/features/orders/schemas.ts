@@ -4,8 +4,7 @@ import { parseDecimal } from '@/shared/utils/format'
 import { phoneToE164 } from '@/shared/utils/masks'
 import type { CreateOrderInput } from './types'
 
-// Mirrors the API's CreateOrderRequestDTO (CLAUDE.md §5). Inputs are strings as typed (masked phone and
-// CEP, "59,90" prices); the output is the request body.
+// Inputs are strings as typed (masked phone and CEP, "59,90"); the output is the request body.
 
 const required = (label: string, max: number) =>
   z.string().trim().min(1, `Informe ${label}.`).max(max, `Use no máximo ${max} caracteres.`)
@@ -17,7 +16,6 @@ const optional = (max: number) =>
     .max(max, `Use no máximo ${max} caracteres.`)
     .transform((value) => value || undefined)
 
-/** The API accepts 1 to 50 lines per order. */
 export const MAX_ITEMS = 50
 
 const item = z.object({
@@ -89,13 +87,12 @@ export const createOrderSchema = z
     }),
     notes: optional(500),
   })
-  // Empty optionals become undefined, and JSON serialization drops undefined keys, so the parsed output
-  // is the request body as is. The annotation makes the compiler check that against the contract.
+  // Empty optionals become undefined, which JSON drops; the annotation checks the body against the contract.
   .transform((values): CreateOrderInput => values)
 
 export type OrderFormValues = z.input<typeof createOrderSchema>
 
-// Inputs the form renders, so API errors for anything else (e.g. lat/lng) become a general message.
+// API errors for any other path (e.g. lat/lng) become a general message.
 const RENDERED_PATHS = new Set([
   'customer.name',
   'customer.phone',

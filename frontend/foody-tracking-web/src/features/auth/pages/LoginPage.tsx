@@ -27,7 +27,7 @@ export default function LoginPage() {
     defaultValues: { email: '', password: '' },
   })
 
-  // On success the guest route sees the session and redirects; this page never navigates itself.
+  // GuestRoute redirects on success; this page never navigates itself.
   const mutation = useMutation({
     mutationFn: login,
     onSuccess: ({ accessToken }) => signIn(accessToken),
@@ -80,7 +80,6 @@ export default function LoginPage() {
               component={RouterLink}
               to="/forgot-password"
               variant="body2"
-              // Standalone link: give it a 44px touch target without changing how it looks.
               sx={{ display: 'inline-flex', alignItems: 'center', minHeight: 44 }}
             >
               Esqueci a senha

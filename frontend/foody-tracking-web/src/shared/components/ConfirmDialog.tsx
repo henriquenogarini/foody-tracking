@@ -14,7 +14,6 @@ interface ConfirmDialogProps {
   description: string
   confirmLabel: string
   cancelLabel?: string
-  /** Danger styling for destructive actions (cancel an order). */
   destructive?: boolean
   loading?: boolean
   onConfirm: () => void

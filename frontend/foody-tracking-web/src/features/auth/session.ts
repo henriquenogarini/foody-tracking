@@ -1,5 +1,4 @@
-// Token persistence (CLAUDE.md §4.2): sessionStorage, so the session survives a reload but ends with the
-// tab. Storage can throw (private mode, blocked site data); the app then just keeps the token in memory.
+// sessionStorage survives a reload but not the tab. If storage throws (private mode), the token stays in memory.
 
 export const TOKEN_STORAGE_KEY = 'foody.token'
 
@@ -16,6 +15,6 @@ export function storeToken(token: string | null): void {
     if (token) sessionStorage.setItem(TOKEN_STORAGE_KEY, token)
     else sessionStorage.removeItem(TOKEN_STORAGE_KEY)
   } catch {
-    // Memory-only session: nothing else to do.
+    // Memory-only session.
   }
 }

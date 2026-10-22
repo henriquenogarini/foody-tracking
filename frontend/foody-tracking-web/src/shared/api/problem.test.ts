@@ -12,7 +12,6 @@ function responseError(status: number, data: unknown) {
   })
 }
 
-// Shape sent by the API (ProblemDetailFactory), timestamp in the API zone.
 function problem(status: number, code: string | undefined, detail: string, extra = {}) {
   return {
     type: 'about:blank',

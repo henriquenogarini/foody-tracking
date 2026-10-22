@@ -31,7 +31,6 @@ import { SectionCard } from '@/shared/components/SectionCard'
 import { formatDateTime, formatRelative, formatTime } from '@/shared/utils/format'
 import { maskPhone } from '@/shared/utils/masks'
 
-/** "Criado às 13:41" today, "Criado em 20/10/2026 19:23" otherwise. */
 function createdLabel(createdAt: string): string {
   const today = new Date(createdAt).toDateString() === new Date().toDateString()
   return today ? `Criado às ${formatTime(createdAt)}` : `Criado em ${formatDateTime(createdAt)}`
@@ -72,7 +71,7 @@ export default function OrderDetailPage() {
   if (!order) {
     if (orderQuery.isError) {
       const error = toApiError(orderQuery.error)
-      // 404 (missing or someone else's order) and 400 (not an id at all) both mean "no such order".
+      // 404 (missing or someone else's) and 400 (not an id) both mean "no such order".
       if (error.status === 404 || error.status === 400) {
         return (
           <Card>
@@ -126,7 +125,6 @@ interface OrderDetailProps {
 
 // Split from the page so the status-change hook only runs once the order exists.
 function OrderDetail({ order, history: historyQuery, isDesktop }: OrderDetailProps) {
-  // One status change for the whole screen: header, timeline card and phone bar share its busy state.
   const { next, cancellable, busy, applying, advance, askToCancel, confirmDialog } =
     useStatusChange(order)
   const finished = !next && !cancellable
@@ -284,7 +282,6 @@ function OrderDetail({ order, history: historyQuery, isDesktop }: OrderDetailPro
           sx={{
             position: 'fixed',
             insetInline: 0,
-            // Above the 72px bottom tab bar.
             bottom: 72,
             zIndex: 'appBar',
             px: 2,

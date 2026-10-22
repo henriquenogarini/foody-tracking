@@ -2,8 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { setAuthToken } from '@/shared/api/authToken'
 import { server } from './server'
 
-// jsdom has no matchMedia. This one answers min/max-width queries against window.innerWidth, so tests
-// pick the desktop (default 1024px) or mobile layout with setViewportWidth() from test-utils.
+// jsdom has no matchMedia: answer width queries from window.innerWidth (see setViewportWidth).
 window.matchMedia = (query: string) => {
   const min = /min-width:\s*([\d.]+)px/.exec(query)
   const max = /max-width:\s*([\d.]+)px/.exec(query)
@@ -21,7 +20,6 @@ window.matchMedia = (query: string) => {
   }
 }
 
-// Any request without a handler fails the test: no test may silently hit a real network.
 beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
 afterEach(() => {
   server.resetHandlers()

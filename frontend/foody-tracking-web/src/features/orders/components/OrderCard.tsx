@@ -6,7 +6,6 @@ import { itemsLabel, placeLabel, updatedLabel } from '@/features/orders/display'
 import type { OrderSummary } from '@/features/orders/types'
 import { formatCurrency } from '@/shared/utils/format'
 
-/** Mobile list item from the design: code and status, customer, items and total, next action. */
 export function OrderCard({ order }: { order: OrderSummary }) {
   const navigate = useNavigate()
 

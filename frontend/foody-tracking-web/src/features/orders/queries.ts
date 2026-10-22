@@ -14,7 +14,7 @@ import { ORDER_STATUSES, type Order, type OrderListParams, type OrderStatus } fr
 
 export type StatusCounts = Record<OrderStatus, number> & { total: number }
 
-/** "Tracking" without WebSockets: lists and counts refresh while the tab is visible. */
+/** Polling instead of WebSockets, while the tab is visible. */
 export const POLL_INTERVAL_MS = 10_000
 
 // One root key, so a status change invalidates every list, count and detail at once.
@@ -32,12 +32,10 @@ export function useOrdersQuery(params: OrderListParams) {
     queryFn: () => listOrders(params),
     refetchInterval: POLL_INTERVAL_MS,
     refetchIntervalInBackground: false,
-    // Keeps the current page on screen while the next filter/page loads (no flash of skeletons).
     placeholderData: keepPreviousData,
   })
 }
 
-/** Orders per status plus their sum (the "Todos" filter). */
 export function useStatusCountsQuery() {
   return useQuery({
     queryKey: orderKeys.counts(),

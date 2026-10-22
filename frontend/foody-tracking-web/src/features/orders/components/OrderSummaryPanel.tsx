@@ -8,11 +8,10 @@ import { formatCurrency, parseDecimal } from '@/shared/utils/format'
 interface OrderSummaryPanelProps {
   formId: string
   submitting: boolean
-  /** `side`: desktop card next to the form; `bar`: sticky bottom bar on phones. */
   variant: 'side' | 'bar'
 }
 
-// Display only: the API computes the real total. Lines that are not filled in yet count as zero.
+// Display only: the API computes the real total.
 function useLiveSummary() {
   const items = useWatch<OrderFormValues, 'items'>({ name: 'items' })
   const lines = items.map((item, index) => {
@@ -50,7 +49,6 @@ export function OrderSummaryPanel({ formId, submitting, variant }: OrderSummaryP
         sx={{
           position: 'fixed',
           insetInline: 0,
-          // Above the 72px bottom tab bar.
           bottom: 72,
           zIndex: 'appBar',
           display: 'flex',

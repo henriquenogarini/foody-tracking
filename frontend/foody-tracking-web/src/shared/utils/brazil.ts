@@ -1,4 +1,3 @@
-/** Brazilian state codes (UF), the values the API accepts in deliveryAddress.state. */
 export const BRAZIL_STATES = [
   'AC',
   'AL',

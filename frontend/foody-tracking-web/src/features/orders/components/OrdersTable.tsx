@@ -18,7 +18,6 @@ import { formatCurrency } from '@/shared/utils/format'
 
 interface OrdersTableProps {
   orders: OrderSummary[] | undefined
-  /** Rows of skeleton while the first page loads. */
   skeletonRows?: number
 }
 
@@ -34,7 +33,7 @@ const COLUMNS = [
 
 const cell = { px: 2, py: 1.75, borderColor: 'divider' }
 
-/** Desktop list. The whole row opens the order; the code is the keyboard-accessible link. */
+// The whole row opens the order; the code is the keyboard-accessible link.
 export function OrdersTable({ orders, skeletonRows = 5 }: OrdersTableProps) {
   const navigate = useNavigate()
 

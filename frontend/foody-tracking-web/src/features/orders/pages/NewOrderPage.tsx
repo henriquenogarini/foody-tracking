@@ -48,13 +48,12 @@ export default function NewOrderPage() {
         notify(`Pedido #${order.code} criado`)
         navigate(`/orders/${order.id}`)
       },
-      // The API validates too; its field errors land on the matching inputs (paths mirror the form).
       onError: (error) => applyFieldErrors(toApiError(error), setError, isOrderFormPath),
     }),
   )
 
   const apiError = createOrder.error ? toApiError(createOrder.error) : null
-  // Errors shown next to an input need no banner; anything else (other paths, 5xx, network) does.
+  // Errors shown next to an input need no banner.
   const showApiError = apiError && !Object.keys(apiError.fieldErrors).some(isOrderFormPath)
 
   return (

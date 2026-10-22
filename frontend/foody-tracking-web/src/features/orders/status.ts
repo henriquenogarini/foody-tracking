@@ -1,7 +1,6 @@
 import type { OrderStatus } from './types'
 
-// The status machine mirrors the API (order/enums/OrderStatus.java). The UI only offers these moves;
-// the API stays the authority and answers 409 for anything else.
+// Mirrors the API's status machine, which answers 409 for any other move.
 export const NEXT_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
   RECEBIDO: ['EM_PREPARO', 'CANCELADO'],
   EM_PREPARO: ['SAIU_PARA_ENTREGA', 'CANCELADO'],
@@ -18,7 +17,6 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
   CANCELADO: 'Cancelado',
 }
 
-/** Design status colors (theme palette.status). */
 export const STATUS_TONE = {
   RECEBIDO: 'received',
   EM_PREPARO: 'preparing',
@@ -27,7 +25,6 @@ export const STATUS_TONE = {
   CANCELADO: 'cancelled',
 } as const satisfies Record<OrderStatus, string>
 
-/** Button text for moving an order *to* a status, as in the design. */
 export const ACTION_LABEL: Record<Exclude<OrderStatus, 'RECEBIDO'>, string> = {
   EM_PREPARO: 'Iniciar preparo',
   SAIU_PARA_ENTREGA: 'Saiu para entrega',
@@ -35,7 +32,6 @@ export const ACTION_LABEL: Record<Exclude<OrderStatus, 'RECEBIDO'>, string> = {
   CANCELADO: 'Cancelar pedido',
 }
 
-/** The detail screen has room for the design's longer wording of the last step. */
 export const DETAIL_ACTION_LABEL: typeof ACTION_LABEL = {
   ...ACTION_LABEL,
   ENTREGUE: 'Marcar como entregue',
@@ -45,7 +41,6 @@ export function isTerminal(status: OrderStatus): boolean {
   return NEXT_TRANSITIONS[status].length === 0
 }
 
-/** The forward move shown as the main button; cancelling lives in the secondary menu. */
 export function primaryTransition(status: OrderStatus): Exclude<OrderStatus, 'RECEBIDO'> | null {
   const next = NEXT_TRANSITIONS[status].find((target) => target !== 'CANCELADO')
   return next && next !== 'RECEBIDO' ? next : null

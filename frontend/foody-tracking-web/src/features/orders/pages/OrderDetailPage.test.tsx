@@ -73,8 +73,7 @@ describe('OrderDetailPage', () => {
   it('shows the new status at once, before any refresh', async () => {
     const order = preparing()
     const { user } = await openDetail(order)
-    // The PATCH answers with the new status, but reads keep returning the old one (a slow refresh):
-    // only the response itself can move the screen forward.
+    // Reads keep returning the old status: only the PATCH response can move the screen forward.
     const stale = toOrder(order)
     server.use(
       http.patch(apiUrl('/orders/:id/status'), () =>

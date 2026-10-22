@@ -3,8 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
-// RouterProvider from 'react-router' (not 'react-router/dom'): under Vitest the two entry points can
-// resolve to different CJS/ESM builds with separate contexts. The /dom variant only adds flushSync.
+// Not 'react-router/dom': under Vitest it can resolve to a separate CJS/ESM build with its own context.
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { routes } from '@/app/router'
 import { theme } from '@/app/theme'
@@ -24,13 +23,11 @@ export const testUser: User = {
   createdAt: '2026-10-21T13:00:00-03:00',
 }
 
-/** Answers GET /auth/me with `user`, as the API does for a valid token. */
 export function mockMe(user: User = testUser) {
   server.use(http.get(apiUrl('/auth/me'), () => HttpResponse.json(user)))
 }
 
 let nextCode = 1001
-/** An order summary as the API lists it; override what the test cares about. */
 export function makeOrder(overrides: Partial<OrderSummary> = {}): OrderSummary {
   const code = overrides.code ?? nextCode++
   return {
@@ -50,7 +47,6 @@ export function makeOrder(overrides: Partial<OrderSummary> = {}): OrderSummary {
 
 const PATH: OrderStatus[] = ['RECEBIDO', 'EM_PREPARO', 'SAIU_PARA_ENTREGA', 'ENTREGUE']
 
-/** The full order the API would return for a summary (one line, address from the summary). */
 export function toOrder(summary: OrderSummary): Order {
   return {
     id: summary.id,
@@ -83,7 +79,6 @@ export function toOrder(summary: OrderSummary): Order {
   }
 }
 
-/** History that leads to the summary's current status (creation first, as the API orders it). */
 export function toHistory(summary: OrderSummary): StatusHistoryEntry[] {
   const steps =
     summary.status === 'CANCELADO'
@@ -98,10 +93,7 @@ export function toHistory(summary: OrderSummary): StatusHistoryEntry[] {
   }))
 }
 
-/**
- * Fake GET /orders over `orders`, filtering by status and q (name contains / exact code, like the API)
- * and paginating. Returns the received query strings so tests can assert on what was asked.
- */
+/** Fake GET /orders; returns the received query strings for assertions. */
 export function mockOrdersApi(orders: OrderSummary[]) {
   const requests: URLSearchParams[] = []
   server.use(
@@ -126,7 +118,6 @@ export function mockOrdersApi(orders: OrderSummary[]) {
       }
       return HttpResponse.json(body)
     }),
-    // Detail and history of the same orders; anything else is a 404 like the API's.
     http.get(apiUrl('/orders/:id'), ({ params }) => {
       const order = orders.find((o) => o.id === params.id)
       return order
@@ -146,19 +137,17 @@ export function mockOrdersApi(orders: OrderSummary[]) {
   return requests
 }
 
-/** Desktop is the default (1024px); call before rendering to get the phone layout, e.g. 375. */
+/** Call before rendering; the default is 1024px (desktop). */
 export function setViewportWidth(width: number) {
   window.innerWidth = width
 }
 
 interface RenderRouteOptions {
-  /** Starts with a stored session for this user, over a fake orders API (empty unless `orders`). */
   signedInAs?: User
-  /** `null` skips the fake orders API, for tests that register their own GET /orders. */
+  /** `null` skips the fake orders API, for tests that register their own. */
   orders?: OrderSummary[] | null
 }
 
-/** Renders the real route tree at `path` with fresh providers, as the app does at startup. */
 export function renderRoute(path: string, { signedInAs, orders = [] }: RenderRouteOptions = {}) {
   if (signedInAs) {
     sessionStorage.setItem(TOKEN_STORAGE_KEY, 'stored-token')

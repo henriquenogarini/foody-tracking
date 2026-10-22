@@ -7,7 +7,6 @@ import { FormField } from '@/shared/components/FormField'
 
 type PasswordFieldProps = Omit<ComponentProps<typeof FormField>, 'type' | 'icon' | 'endAdornment'>
 
-/** Password input with the design's lock icon and a show/hide toggle. */
 export function PasswordField(props: PasswordFieldProps) {
   const [visible, setVisible] = useState(false)
 
@@ -23,7 +22,6 @@ export function PasswordField(props: PasswordFieldProps) {
             aria-label={visible ? 'Ocultar senha' : 'Mostrar senha'}
             aria-pressed={visible}
             onClick={() => setVisible((current) => !current)}
-            // 44px touch target, like the design's input adornment.
             sx={{ color: 'ink.500', width: 44, height: 44 }}
           >
             {visible ? (

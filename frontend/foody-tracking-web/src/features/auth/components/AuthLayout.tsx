@@ -6,11 +6,9 @@ interface AuthLayoutProps {
   title: string
   subtitle: string
   children: ReactNode
-  /** Link line under the form ("Ainda não tem conta? Criar conta"). */
   footer: ReactNode
 }
 
-// Route illustration from the design's orange panel (decorative).
 const illustration = (
   <Box
     component="svg"
@@ -71,7 +69,6 @@ const illustration = (
   </Box>
 )
 
-// Desktop: orange brand panel + form column. Mobile: thin orange strip, centered stacked logo and title.
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   const { palette } = useTheme()
 
@@ -81,8 +78,7 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
         minHeight: '100dvh',
         display: 'flex',
         bgcolor: 'background.default',
-        // Thin brand strip on mobile, where the orange panel is hidden. The color goes inside the
-        // shorthand: the responsive value is emitted in a media query that would reset a separate color.
+        // Color inside the shorthand: the responsive media query would reset a separate color.
         borderTop: { xs: `8px solid ${palette.primary.main}`, md: 'none' },
       }}
     >
@@ -154,7 +150,6 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
               color: 'ink.700',
               textAlign: 'center',
               fontWeight: 500,
-              // Mobile design pins the link line to the bottom of the screen.
               mt: { xs: 'auto', md: 0 },
               '& a': { display: 'inline-flex', alignItems: 'center', minHeight: 44 },
             }}

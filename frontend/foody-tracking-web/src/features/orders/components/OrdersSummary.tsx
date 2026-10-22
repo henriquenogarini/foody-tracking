@@ -5,8 +5,7 @@ interface OrdersSummaryProps {
   counts: StatusCounts | undefined
 }
 
-// All-time totals from the per-status counts (owner decision, CLAUDE.md §1.2: the API has no
-// date-filtered statistics, so the design's "hoje"/average-time cards become overall figures).
+// All-time totals: the API has no date-filtered statistics (owner decision).
 export function OrdersSummary({ counts }: OrdersSummaryProps) {
   const cancelledShare = counts?.total ? Math.round((counts.CANCELADO / counts.total) * 100) : 0
   const cards = [
@@ -30,7 +29,6 @@ export function OrdersSummary({ counts }: OrdersSummaryProps) {
       component="section"
       aria-label="Resumo dos pedidos"
       sx={{
-        // Mobile design has no summary cards: the filter chips carry the counts there.
         display: { xs: 'none', md: 'grid' },
         gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
         gap: 2,

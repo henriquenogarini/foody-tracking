@@ -1,11 +1,8 @@
 import { Box, useTheme } from '@mui/material'
 
 interface BrandLogoProps {
-  /** `inverse` is the white version used on the orange auth panel. */
   variant?: 'default' | 'inverse'
-  /** Height of the mark in px; the wordmark scales with it. */
   height?: number
-  /** Wordmark under the mark, centered (mobile auth screens). */
   stacked?: boolean
 }
 

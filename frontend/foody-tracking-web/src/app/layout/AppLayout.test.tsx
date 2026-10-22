@@ -9,7 +9,6 @@ function bottomNav() {
   return within(screen.getByRole('navigation', { name: 'Navegação inferior' }))
 }
 
-// The layout renders once GET /auth/me has confirmed the stored session.
 const layoutReady = () => screen.findByRole('navigation', { name: 'Principal' })
 
 describe('AppLayout', () => {

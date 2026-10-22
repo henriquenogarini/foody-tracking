@@ -9,7 +9,6 @@ interface StatusFilterProps {
   onChange: (status: OrderStatus | undefined) => void
 }
 
-/** Design filter pills: "Todos" plus one per status, each with its count; the active one is dark. */
 export function StatusFilter({ value, counts, onChange }: StatusFilterProps) {
   const options: { status: OrderStatus | undefined; label: string; count?: number }[] = [
     { status: undefined, label: 'Todos', count: counts?.total },
@@ -27,7 +26,6 @@ export function StatusFilter({ value, counts, onChange }: StatusFilterProps) {
       sx={{
         display: 'flex',
         gap: 1,
-        // One scrollable row on phones, wrapping on wider screens.
         flexWrap: { xs: 'nowrap', md: 'wrap' },
         overflowX: { xs: 'auto', md: 'visible' },
         mx: { xs: -2, md: 0 },
@@ -51,7 +49,6 @@ export function StatusFilter({ value, counts, onChange }: StatusFilterProps) {
             onClick={() => onChange(option.status)}
             sx={{
               flex: 'none',
-              // 36px as designed on desktop; 44px touch target on phones and tablets.
               height: { xs: 44, md: 36 },
               px: 1.75,
               gap: 1,

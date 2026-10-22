@@ -5,23 +5,17 @@ import type { OrderStatus } from '@/features/orders/types'
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog'
 
 interface StatusChange {
-  /** The forward move offered as the main action, if any. */
   next: ReturnType<typeof primaryTransition>
   cancellable: boolean
-  /** True while any change for this order is in flight: every button of the order disables. */
   busy: boolean
-  /** The status being applied, to show a spinner on the right button. */
   applying: OrderStatus | undefined
   advance: () => void
   askToCancel: () => void
-  /** Render once per order; it asks before cancelling. */
+  /** Render once per order. */
   confirmDialog: ReactElement
 }
 
-/**
- * One order's status actions: a single mutation and a single cancel confirmation, however many buttons
- * the screen draws for it (list row, detail header, timeline card, phone bar).
- */
+/** One mutation and one cancel confirmation per order, however many buttons the screen draws for it. */
 export function useStatusChange(order: {
   id: string
   code: number

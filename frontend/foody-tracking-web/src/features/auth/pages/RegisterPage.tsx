@@ -14,8 +14,7 @@ import { toApiError } from '@/shared/api/problem'
 import { FormField } from '@/shared/components/FormField'
 import { applyFieldErrors } from '@/shared/utils/forms'
 
-// The account exists but the automatic sign-in failed (network, timeout). Submitting again would only
-// answer "e-mail já cadastrado", so the page points to the login instead.
+// Account created but the automatic sign-in failed: resubmitting would only say "e-mail já cadastrado".
 class SignInAfterSignUpError extends Error {}
 
 export default function RegisterPage() {
@@ -31,7 +30,6 @@ export default function RegisterPage() {
     defaultValues: { name: '', email: '', password: '', confirmPassword: '' },
   })
 
-  // The API answers sign-up with the user but no token, so the account is logged in right away.
   const mutation = useMutation({
     mutationFn: async ({ name, email, password }: RegisterData) => {
       await createAccount({ name, email, password })

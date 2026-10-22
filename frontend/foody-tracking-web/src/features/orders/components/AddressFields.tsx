@@ -6,7 +6,6 @@ import { SelectField } from '@/shared/components/SelectField'
 import { BRAZIL_STATES } from '@/shared/utils/brazil'
 import { maskCep } from '@/shared/utils/masks'
 
-/** Delivery address in the design's grid: CEP | Rua, Número | Complemento, Bairro | Cidade | UF. */
 export function AddressFields() {
   const {
     control,

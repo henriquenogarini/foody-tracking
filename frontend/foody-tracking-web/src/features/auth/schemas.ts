@@ -1,7 +1,6 @@
 import { z } from 'zod'
 
-// Mirrors the API's rules (CLAUDE.md §5): e-mail ≤ 254, name ≤ 100, password 8–72 characters and at
-// most 72 UTF-8 bytes (the BCrypt limit). The API stays the authority; this only saves a round trip.
+// Same limits as the API; 72 UTF-8 bytes is the BCrypt password limit.
 const PASSWORD_MAX_BYTES = 72
 
 const email = z
@@ -53,7 +52,6 @@ export const forgotPasswordSchema = z
     error: PASSWORD_MISMATCH,
   })
 
-// Form state uses the input types; submit handlers receive the parsed output (trimmed e-mail and name).
 export type LoginValues = z.input<typeof loginSchema>
 export type RegisterValues = z.input<typeof registerSchema>
 export type RegisterData = z.output<typeof registerSchema>

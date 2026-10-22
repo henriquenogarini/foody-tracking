@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -29,15 +30,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 @Tag(name = OpenApiConfig.TAG_AUTH, description = OpenApiConfig.TAG_AUTH_DESCRIPTION)
 public final class AuthController {
 
   private final AuthService authService;
-
-  public AuthController(AuthService authService) {
-    this.authService = authService;
-  }
 
   @PostMapping("/register")
   @ResponseStatus(HttpStatus.CREATED)

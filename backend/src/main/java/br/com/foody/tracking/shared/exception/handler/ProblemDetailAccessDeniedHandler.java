@@ -6,24 +6,20 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.Principal;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
 // 403 in the contract format; the exception message is never exposed.
+@Slf4j
+@RequiredArgsConstructor
 public final class ProblemDetailAccessDeniedHandler implements AccessDeniedHandler {
 
   private static final String DETAIL = "Acesso negado.";
 
-  private static final Logger log = LoggerFactory.getLogger(ProblemDetailAccessDeniedHandler.class);
-
   private final ObjectMapper objectMapper;
-
-  public ProblemDetailAccessDeniedHandler(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
-  }
 
   @Override
   public void handle(

@@ -11,6 +11,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.util.Objects;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * One line of an order. The unit price is normalized to scale 2 and the subtotal is computed here,
@@ -18,6 +21,7 @@ import java.util.Objects;
  */
 @Entity
 @Table(name = "order_items")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class OrderItem {
 
   private static final BigDecimal MIN_UNIT_PRICE = new BigDecimal("0.01");
@@ -30,9 +34,11 @@ public class OrderItem {
   @JoinColumn(name = "order_id", nullable = false, updatable = false)
   private Order order;
 
+  @Getter
   @Column(name = "description", nullable = false)
   private String description;
 
+  @Getter
   @Column(name = "quantity", nullable = false)
   private int quantity;
 
@@ -41,8 +47,6 @@ public class OrderItem {
 
   @Column(name = "subtotal", nullable = false, precision = 12, scale = 2)
   private BigDecimal subtotal;
-
-  protected OrderItem() {}
 
   public OrderItem(String description, int quantity, BigDecimal unitPrice) {
     Objects.requireNonNull(unitPrice, "unitPrice");
@@ -64,14 +68,6 @@ public class OrderItem {
       throw new IllegalStateException("item already belongs to another order");
     }
     this.order = order;
-  }
-
-  public String getDescription() {
-    return description;
-  }
-
-  public int getQuantity() {
-    return quantity;
   }
 
   public BigDecimal getUnitPrice() {

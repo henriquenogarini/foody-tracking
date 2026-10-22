@@ -26,6 +26,7 @@ import jakarta.validation.constraints.Size;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -45,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/orders")
 @Tag(name = OpenApiConfig.TAG_ORDERS, description = OpenApiConfig.TAG_ORDERS_DESCRIPTION)
 @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
@@ -55,11 +57,6 @@ public final class OrderController {
 
   private final OrderService orderService;
   private final OrderQueryService orderQueryService;
-
-  public OrderController(OrderService orderService, OrderQueryService orderQueryService) {
-    this.orderService = orderService;
-    this.orderQueryService = orderQueryService;
-  }
 
   @PostMapping
   @Operation(

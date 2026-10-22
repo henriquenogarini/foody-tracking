@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,16 +24,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
 @Tag(name = OpenApiConfig.TAG_USERS, description = OpenApiConfig.TAG_USERS_DESCRIPTION)
 @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 public class UserController {
 
   private final UserQueryService userQueryService;
-
-  public UserController(UserQueryService userQueryService) {
-    this.userQueryService = userQueryService;
-  }
 
   @GetMapping
   @PreAuthorize("hasRole('ADMIN')")

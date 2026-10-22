@@ -1,16 +1,14 @@
 package br.com.foody.tracking.modules.order.listener;
 
 import br.com.foody.tracking.modules.order.event.OrderStatusChangedEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+@Slf4j
 @Component
 public final class OrderStatusChangedListener {
-
-  private static final Logger log = LoggerFactory.getLogger(OrderStatusChangedListener.class);
 
   // Extension point for a webhook or a queue. AFTER_COMMIT means it only runs once the change is
   // durable, so a rolled-back transition never notifies anyone.

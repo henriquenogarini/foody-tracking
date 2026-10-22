@@ -27,6 +27,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -37,6 +40,8 @@ import org.hibernate.type.SqlTypes;
  */
 @Entity
 @Table(name = "orders")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order {
 
   @Id
@@ -104,8 +109,6 @@ public class Order {
   @Column(name = "version", nullable = false)
   private Long version;
 
-  protected Order() {}
-
   /**
    * Builds a new order born in {@code RECEBIDO}, with the total computed from the items and the
    * birth recorded as the first history row attributed to the owner.
@@ -165,40 +168,8 @@ public class Order {
     updatedAt = now;
   }
 
-  public Long getId() {
-    return id;
-  }
-
-  public UUID getPublicId() {
-    return publicId;
-  }
-
-  public long getCode() {
-    return code;
-  }
-
-  public User getOwner() {
-    return owner;
-  }
-
-  public Customer getCustomer() {
-    return customer;
-  }
-
   public List<OrderItem> getItems() {
     return Collections.unmodifiableList(items);
-  }
-
-  public DeliveryAddress getDeliveryAddress() {
-    return deliveryAddress;
-  }
-
-  public String getNotes() {
-    return notes;
-  }
-
-  public OrderStatus getStatus() {
-    return status;
   }
 
   public BigDecimal getTotal() {
@@ -207,17 +178,5 @@ public class Order {
 
   public List<OrderStatusHistory> getStatusHistory() {
     return Collections.unmodifiableList(statusHistory);
-  }
-
-  public OffsetDateTime getCreatedAt() {
-    return createdAt;
-  }
-
-  public OffsetDateTime getUpdatedAt() {
-    return updatedAt;
-  }
-
-  public Long getVersion() {
-    return version;
   }
 }

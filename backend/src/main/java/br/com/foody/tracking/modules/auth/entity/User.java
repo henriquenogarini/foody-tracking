@@ -12,6 +12,9 @@ import jakarta.persistence.Table;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -21,6 +24,8 @@ import org.hibernate.type.SqlTypes;
  */
 @Entity
 @Table(name = "users")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User {
 
   @Id
@@ -47,8 +52,6 @@ public class User {
   @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
 
-  protected User() {}
-
   public User(String name, String email, String passwordHash, Role role, OffsetDateTime createdAt) {
     this.publicId = UUID.randomUUID();
     this.name = Objects.requireNonNull(name, "name");
@@ -56,33 +59,5 @@ public class User {
     this.passwordHash = Objects.requireNonNull(passwordHash, "passwordHash");
     this.role = Objects.requireNonNull(role, "role");
     this.createdAt = Objects.requireNonNull(createdAt, "createdAt");
-  }
-
-  public Long getId() {
-    return id;
-  }
-
-  public UUID getPublicId() {
-    return publicId;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public String getEmail() {
-    return email;
-  }
-
-  public String getPasswordHash() {
-    return passwordHash;
-  }
-
-  public Role getRole() {
-    return role;
-  }
-
-  public OffsetDateTime getCreatedAt() {
-    return createdAt;
   }
 }

@@ -17,8 +17,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -28,12 +27,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 // Dev-profile demo data owned by the bootstrap admin, at least one order per status, built through
 // the domain so every history row is legal. Seeds only while the admin owns no order.
+@Slf4j
 @Component
 @Profile("dev")
 @org.springframework.core.annotation.Order(AdminBootstrap.RUNNER_ORDER + 1)
 public class DevOrderSeeder implements ApplicationRunner {
-
-  private static final Logger log = LoggerFactory.getLogger(DevOrderSeeder.class);
 
   private final String adminEmail;
   private final UserRepository userRepository;

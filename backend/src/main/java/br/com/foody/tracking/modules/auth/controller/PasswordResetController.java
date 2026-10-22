@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 // Own controller so the flag removes the route: when disabled, 404 comes before any body parsing.
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
 @Tag(name = OpenApiConfig.TAG_AUTH, description = OpenApiConfig.TAG_AUTH_DESCRIPTION)
 @ConditionalOnProperty(
@@ -32,10 +34,6 @@ import org.springframework.web.bind.annotation.RestController;
 public final class PasswordResetController {
 
   private final AuthService authService;
-
-  public PasswordResetController(AuthService authService) {
-    this.authService = authService;
-  }
 
   @PostMapping("/password-reset")
   @ResponseStatus(HttpStatus.NO_CONTENT)

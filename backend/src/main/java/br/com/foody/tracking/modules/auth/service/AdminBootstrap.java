@@ -8,8 +8,7 @@ import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Optional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -18,13 +17,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 // Provisions the single ADMIN at startup; the API never creates or promotes one.
+@Slf4j
 @Component
 @Order(AdminBootstrap.RUNNER_ORDER)
 public final class AdminBootstrap implements ApplicationRunner {
 
   public static final int RUNNER_ORDER = 0;
-
-  private static final Logger log = LoggerFactory.getLogger(AdminBootstrap.class);
 
   private static final String ADMIN_NAME = "Admin";
 

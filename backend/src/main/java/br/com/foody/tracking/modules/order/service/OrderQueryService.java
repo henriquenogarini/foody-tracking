@@ -22,6 +22,7 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class OrderQueryService {
 
   private static final Set<String> SORTABLE_PROPERTIES =
@@ -44,17 +46,6 @@ public class OrderQueryService {
   private final OrderFinder orderFinder;
   private final OrderMapper orderMapper;
   private final UserRepository userRepository;
-
-  OrderQueryService(
-      OrderRepository orderRepository,
-      OrderFinder orderFinder,
-      OrderMapper orderMapper,
-      UserRepository userRepository) {
-    this.orderRepository = orderRepository;
-    this.orderFinder = orderFinder;
-    this.orderMapper = orderMapper;
-    this.userRepository = userRepository;
-  }
 
   // The role scope is the choice of query; the search term is either a code or a name pattern.
   @Transactional(readOnly = true)

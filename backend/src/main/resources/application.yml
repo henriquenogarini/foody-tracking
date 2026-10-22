@@ -25,10 +25,7 @@ spring:
       hibernate.dialect: org.hibernate.community.dialect.SQLiteDialect
       hibernate.jdbc.time_zone: UTC
 
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-
+  # Bean Validation messages in Portuguese regardless of Accept-Language.
   web:
     locale: pt-BR
     locale-resolver: fixed
@@ -49,26 +46,22 @@ management:
         include: health
 
 app:
+  # A zone id, never a fixed offset, so tzdata handles DST. Drives the Clock and the JSON dates.
+  time-zone: ${APP_TIME_ZONE:America/Sao_Paulo}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:4173}
   security:
     jwt:
       # HS256 key, Base64-encoded, at least 32 bytes. Required outside the dev profile.
       secret: ${APP_SECURITY_JWT_SECRET}
       expiration-seconds: 7200
     admin:
-      # Optional single bootstrap ADMIN, created once at startup. Set both or neither; blank = absent.
+      # Optional bootstrap ADMIN, created once at startup. Set both or neither; blank = absent.
       email: ${APP_SECURITY_ADMIN_EMAIL:}
       password: ${APP_SECURITY_ADMIN_PASSWORD:}
     password-reset:
-      # Demo reset without e-mail confirmation (README decision 30). false removes the route (404).
+      # Demo reset without e-mail confirmation; false removes the route (404).
       enabled: ${APP_SECURITY_PASSWORD_RESET_ENABLED:true}
-  cors:
-    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:4173}
-  # Zone id, never a fixed offset: tzdata handles DST if it returns. Drives the Clock and the JSON dates.
-  time-zone: ${APP_TIME_ZONE:America/Sao_Paulo}
-
-logging:
-  level:
-    br.com.foody.tracking: INFO
 
 springdoc:
   default-produces-media-type: application/json

@@ -20,8 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-// Own controller so the flag removes the route entirely: when disabled, the request never reaches
-// body parsing or validation and the framework answers 404 NOT_FOUND.
+// Own controller so the flag removes the route: when disabled, 404 comes before any body parsing.
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(name = OpenApiConfig.TAG_AUTH, description = OpenApiConfig.TAG_AUTH_DESCRIPTION)

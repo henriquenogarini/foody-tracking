@@ -3,9 +3,8 @@ package br.com.foody.tracking.modules.auth.service;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.helper.EmailNormalizer;
+import br.com.foody.tracking.modules.auth.helper.PasswordPolicy;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
-import br.com.foody.tracking.shared.validation.MaxUtf8Bytes;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -23,28 +22,26 @@ import org.springframework.stereotype.Component;
 @Order(AdminBootstrap.RUNNER_ORDER)
 public final class AdminBootstrap implements ApplicationRunner {
 
-  /** Runners that need the admin (the dev order seeder) declare a higher order. */
   public static final int RUNNER_ORDER = 0;
 
   private static final Logger log = LoggerFactory.getLogger(AdminBootstrap.class);
 
   private static final String ADMIN_NAME = "Admin";
-  private static final int MIN_PASSWORD_LENGTH = 8;
 
-  private final String email;
-  private final String password;
+  private final String adminEmail;
+  private final String adminPassword;
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final Clock clock;
 
   public AdminBootstrap(
-      @Value("${app.security.admin.email:}") String email,
-      @Value("${app.security.admin.password:}") String password,
+      @Value("${app.security.admin.email:}") String adminEmail,
+      @Value("${app.security.admin.password:}") String adminPassword,
       UserRepository userRepository,
       PasswordEncoder passwordEncoder,
       Clock clock) {
-    this.email = email;
-    this.password = password;
+    this.adminEmail = adminEmail;
+    this.adminPassword = adminPassword;
     this.userRepository = userRepository;
     this.passwordEncoder = passwordEncoder;
     this.clock = clock;
@@ -52,9 +49,9 @@ public final class AdminBootstrap implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
-    // Blank counts as absent: the .env.example lines are `KEY=`.
-    boolean hasEmail = email != null && !email.isBlank();
-    boolean hasPassword = password != null && !password.isBlank();
+    // application.yml defaults both to empty, so blank means absent.
+    boolean hasEmail = adminEmail != null && !adminEmail.isBlank();
+    boolean hasPassword = adminPassword != null && !adminPassword.isBlank();
     if (!hasEmail && !hasPassword) {
       log.warn(
           "No bootstrap admin configured (APP_SECURITY_ADMIN_EMAIL/PASSWORD absent); skipping");
@@ -64,13 +61,13 @@ public final class AdminBootstrap implements ApplicationRunner {
       throw new IllegalStateException(
           "APP_SECURITY_ADMIN_EMAIL and APP_SECURITY_ADMIN_PASSWORD must be set together");
     }
-    if (password.length() < MIN_PASSWORD_LENGTH
-        || password.getBytes(StandardCharsets.UTF_8).length > MaxUtf8Bytes.BCRYPT_MAX_BYTES) {
+    if (adminPassword.length() < PasswordPolicy.MIN_LENGTH
+        || PasswordPolicy.exceedsMaxBytes(adminPassword)) {
       throw new IllegalStateException(
           "APP_SECURITY_ADMIN_PASSWORD must have at least 8 characters and at most 72 bytes");
     }
 
-    String normalizedEmail = EmailNormalizer.normalize(email);
+    String normalizedEmail = EmailNormalizer.normalize(adminEmail);
     Optional<User> existing = userRepository.findByEmail(normalizedEmail);
     if (existing.isPresent()) {
       User user = existing.get();
@@ -88,7 +85,7 @@ public final class AdminBootstrap implements ApplicationRunner {
             new User(
                 ADMIN_NAME,
                 normalizedEmail,
-                passwordEncoder.encode(password),
+                passwordEncoder.encode(adminPassword),
                 Role.ADMIN,
                 OffsetDateTime.now(clock)));
     log.info("Bootstrap admin {} created", admin.getPublicId());

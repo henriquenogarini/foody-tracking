@@ -47,7 +47,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @RestController
 @RequestMapping("/api/v1/orders")
 @Tag(name = OpenApiConfig.TAG_ORDERS, description = OpenApiConfig.TAG_ORDERS_DESCRIPTION)
-@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 public final class OrderController {
 
   private static final String PUBLIC_ID_DESCRIPTION = "Public identifier of the order";

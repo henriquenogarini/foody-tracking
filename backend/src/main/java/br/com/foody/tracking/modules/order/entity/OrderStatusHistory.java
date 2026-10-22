@@ -65,14 +65,6 @@ public class OrderStatusHistory {
     this.changedAt = Objects.requireNonNull(changedAt, "changedAt");
   }
 
-  Order getOrder() {
-    return order;
-  }
-
-  public Long getId() {
-    return id;
-  }
-
   public OrderStatus getFromStatus() {
     return fromStatus;
   }

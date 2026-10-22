@@ -6,10 +6,8 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 /**
- * Read-only row of the paged order list. A projection instead of the entity keeps the list at one
- * query (plus the count): {@code itemsCount} is computed by the database, so no item is loaded.
- * {@code total} comes straight from SQLite, which drops trailing zeros; callers normalize the
- * scale.
+ * Row of the paged order list: a projection keeps the list at one query plus the count. {@code
+ * total} comes straight from SQLite, which drops trailing zeros; callers normalize the scale.
  */
 public interface OrderSummaryView {
 

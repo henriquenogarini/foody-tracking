@@ -22,7 +22,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// Not final: @Transactional needs a CGLIB subclass proxy.
 @Service
 public class OrderService {
 
@@ -54,8 +53,6 @@ public class OrderService {
   public OrderResponseDTO create(CreateOrderRequestDTO request, AuthenticatedUser actor) {
     // A valid token whose user no longer exists (database reset) is treated as an invalid token.
     User owner = userRepository.findByPublicId(actor.id()).orElseThrow(InvalidTokenException::new);
-    // MAX(code)+1 is race-free only because the single-connection pool serializes writers and
-    // this read shares the insert's transaction; uq_orders_code remains the last guard.
     long code = orderRepository.nextCode();
     Order order =
         Order.create(
@@ -74,7 +71,7 @@ public class OrderService {
   @Transactional
   public OrderResponseDTO changeStatus(
       UUID publicId, UpdateStatusRequestDTO request, AuthenticatedUser actor) {
-    Order order = orderFinder.findScoped(publicId, actor);
+    Order order = orderFinder.getVisibleTo(publicId, actor);
     OrderStatus from = order.getStatus();
     OrderStatus target = request.status();
     OffsetDateTime now = OffsetDateTime.now(clock);
@@ -86,12 +83,11 @@ public class OrderService {
     }
     // Flushing here makes a stale @Version fail inside this call, so the advice answers 409
     // CONCURRENT_MODIFICATION instead of the commit failing after the controller returned.
-    Order saved = orderRepository.saveAndFlush(order);
-    // The listener runs AFTER_COMMIT, so a rolled-back change never notifies anyone; it also
-    // writes the INFO line for the status change.
+    orderRepository.flush();
+    // The listener runs AFTER_COMMIT and writes the INFO line, so a rollback notifies no one.
     eventPublisher.publishEvent(
         new OrderStatusChangedEvent(
-            saved.getPublicId(), saved.getCode(), from, target, actor.id(), now));
-    return orderMapper.toResponse(saved);
+            order.getPublicId(), order.getCode(), from, target, actor.id(), now));
+    return orderMapper.toResponse(order);
   }
 }

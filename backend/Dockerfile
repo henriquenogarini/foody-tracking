@@ -28,7 +28,7 @@ RUN mkdir -p /app/data && chown foody /app/data
 
 COPY --from=build /build/app.jar /app/app.jar
 
-# TZ drives log timestamps (CLAUDE.md §5.5).
+# TZ drives log timestamps; keep it equal to APP_TIME_ZONE.
 ENV TZ=America/Sao_Paulo
 
 USER foody

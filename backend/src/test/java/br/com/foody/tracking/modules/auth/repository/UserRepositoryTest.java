@@ -68,9 +68,9 @@ class UserRepositoryTest {
         new User("Admin", "admin@exemplo.com", "admin-old", Role.ADMIN, NOW));
 
     // When
-    int userRows = userRepository.updatePasswordHashOfUser("ana@exemplo.com", "new");
-    int adminRows = userRepository.updatePasswordHashOfUser("admin@exemplo.com", "new");
-    int unknownRows = userRepository.updatePasswordHashOfUser("bruno@exemplo.com", "new");
+    int userRows = userRepository.updatePasswordHashForUserRole("ana@exemplo.com", "new");
+    int adminRows = userRepository.updatePasswordHashForUserRole("admin@exemplo.com", "new");
+    int unknownRows = userRepository.updatePasswordHashForUserRole("bruno@exemplo.com", "new");
 
     // Then the bulk update bypasses the persistence context, so read the stored values
     assertThat(userRows).isEqualTo(1);
@@ -173,12 +173,9 @@ class UserRepositoryTest {
     assertThat(reloaded.getCreatedAt()).isAtSameInstantAs(NOW);
   }
 
-  // The SQL shapes Hibernate 6 generates for findByEmail (full row) and existsByEmail (id + limit).
-  // The column has BINARY collation, so only a BINARY index can serve "email = ?"; the NOCASE
-  // unique index from V1 cannot, which made every login and register pre-check a table scan.
-  // These strings mirror the derived findByEmail / existsByEmail (plain equality): an IgnoreCase
-  // variant would emit "lower(email) = lower(?)" and scan again, so changing those repository
-  // methods means updating this test.
+  // The SQL Hibernate 6 generates for findByEmail (full row) and existsByEmail (id + limit). The
+  // column is BINARY-collated, so only a BINARY index serves "email = ?" (the NOCASE unique index
+  // cannot); an IgnoreCase query would emit lower(email) and scan, so keep these strings in sync.
   @ParameterizedTest
   @ValueSource(
       strings = {

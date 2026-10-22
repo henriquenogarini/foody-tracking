@@ -88,7 +88,8 @@ class PasswordResetIntegrationTest {
   @Test
   void shouldAnswerNoContentAndKeepHash_whenEmailBelongsToAdmin() throws Exception {
     // Given
-    String hashBefore = userRepository.findByEmail(adminEmail).map(User::getPasswordHash).get();
+    String hashBefore =
+        userRepository.findByEmail(adminEmail).map(User::getPasswordHash).orElseThrow();
 
     // When
     reset(adminEmail).andExpect(status().isNoContent()).andExpect(content().string(""));

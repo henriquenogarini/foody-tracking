@@ -6,8 +6,6 @@ import br.com.foody.tracking.shared.exception.type.ApiException;
 import br.com.foody.tracking.shared.exception.type.InvalidSortException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -17,6 +15,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.context.MessageSourceResolvable;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.http.HttpHeaders;
@@ -43,8 +42,6 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
 
   private static final String INVALID_FIELDS_DETAIL = "Um ou mais campos são inválidos.";
   private static final String INVALID_VALUE = "valor inválido";
-  private static final String TIMESTAMP = "timestamp";
-  private static final String CODE = "code";
 
   private static final Comparator<ValidationError> ERROR_ORDER =
       Comparator.comparing(ValidationError::field).thenComparing(ValidationError::message);
@@ -90,9 +87,8 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
     return respondInvalidSort(ex, ex.getProperty(), request);
   }
 
-  // Security exceptions raised inside the MVC layer (e.g. @PreAuthorize) must reach Spring
-  // Security's ExceptionTranslationFilter, which answers 401/403 in the contract format; the
-  // catch-all below would otherwise turn them into 500.
+  // Security exceptions from the MVC layer (@PreAuthorize) must reach ExceptionTranslationFilter
+  // for the contract's 401/403; the catch-all below would turn them into 500.
   @ExceptionHandler({AccessDeniedException.class, AuthenticationException.class})
   public void rethrowSecurityException(RuntimeException ex) {
     throw ex;
@@ -115,26 +111,15 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
       WebRequest request) {
     List<ValidationError> errors =
         ex.getBindingResult().getAllErrors().stream()
-            .map(
-                error ->
-                    new ValidationError(
-                        error instanceof FieldError fieldError
-                            ? fieldError.getField()
-                            : error.getObjectName(),
-                        Objects.requireNonNullElse(error.getDefaultMessage(), INVALID_VALUE)))
+            .map(error -> toValidationError(error, error.getObjectName()))
             // Violations arrive in hash order; sorting gives clients and tests a stable list.
             .sorted(ERROR_ORDER)
             .toList();
-    return respond(
-        ex,
-        ProblemDetailFactory.create(ApiErrorCode.VALIDATION_ERROR, INVALID_FIELDS_DETAIL, errors),
-        headers,
-        request);
+    return respond(ex, invalidFields(errors), headers, request);
   }
 
-  // Constraints on @RequestParam/@PathVariable (Spring 6.1 built-in method validation) answer
-  // like body validation: VALIDATION_ERROR with errors[] naming the parameter. A 500 (return
-  // value validation) is left to the framework.
+  // @RequestParam/@PathVariable violations answer like body validation; a 500 (return-value
+  // validation) is left to the framework.
   @Override
   protected ResponseEntity<Object> handleHandlerMethodValidationException(
       HandlerMethodValidationException ex,
@@ -151,19 +136,11 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
                     result.getResolvableErrors().stream()
                         .map(
                             error ->
-                                new ValidationError(
-                                    error instanceof FieldError fieldError
-                                        ? fieldError.getField()
-                                        : result.getMethodParameter().getParameterName(),
-                                    Objects.requireNonNullElse(
-                                        error.getDefaultMessage(), INVALID_VALUE))))
+                                toValidationError(
+                                    error, result.getMethodParameter().getParameterName())))
             .sorted(ERROR_ORDER)
             .toList();
-    return respond(
-        ex,
-        ProblemDetailFactory.create(ApiErrorCode.VALIDATION_ERROR, INVALID_FIELDS_DETAIL, errors),
-        headers,
-        request);
+    return respond(ex, invalidFields(errors), headers, request);
   }
 
   @Override
@@ -179,12 +156,7 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
           mapping instanceof InvalidFormatException invalid ? invalid.getTargetType() : null;
       ValidationError error =
           new ValidationError(fieldPath(mapping), invalidValueMessage(targetType));
-      return respond(
-          ex,
-          ProblemDetailFactory.create(
-              ApiErrorCode.VALIDATION_ERROR, INVALID_FIELDS_DETAIL, List.of(error)),
-          headers,
-          request);
+      return respond(ex, invalidFields(List.of(error)), headers, request);
     }
     return respond(
         ex,
@@ -202,28 +174,21 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
             ? mismatch.getName()
             : ex.getPropertyName();
     ValidationError error = new ValidationError(field, invalidValueMessage(ex.getRequiredType()));
-    return respond(
-        ex,
-        ProblemDetailFactory.create(
-            ApiErrorCode.VALIDATION_ERROR, INVALID_FIELDS_DETAIL, List.of(error)),
-        headers,
-        request);
+    return respond(ex, invalidFields(List.of(error)), headers, request);
   }
 
-  // Framework-built bodies (unknown route, 405, 406, 415, missing parameter...) get the contract's
-  // timestamp and a code from a small fixed set. Keyed by status because this hook never sees the
-  // exception; bodies built by ProblemDetailFactory already carry their code (ORDER_NOT_FOUND is
-  // also a 404) and are never overwritten.
+  // Framework-built bodies (unknown route, 405, 406, 415...) get the timestamp and a code keyed by
+  // status (this hook never sees the exception); codes set by ProblemDetailFactory are kept.
   @Override
   protected ResponseEntity<Object> createResponseEntity(
       Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
     if (body instanceof ProblemDetail problem) {
-      if (!hasProperty(problem, TIMESTAMP)) {
-        problem.setProperty(TIMESTAMP, OffsetDateTime.now(ZoneOffset.UTC));
+      if (!hasProperty(problem, ProblemDetailFactory.TIMESTAMP)) {
+        problem.setProperty(ProblemDetailFactory.TIMESTAMP, ProblemDetailFactory.timestamp());
       }
       ApiErrorCode frameworkCode = FRAMEWORK_CODES.get(problem.getStatus());
-      if (frameworkCode != null && !hasProperty(problem, CODE)) {
-        problem.setProperty(CODE, frameworkCode.name());
+      if (frameworkCode != null && !hasProperty(problem, ProblemDetailFactory.CODE)) {
+        problem.setProperty(ProblemDetailFactory.CODE, frameworkCode.name());
       }
     }
     return super.createResponseEntity(body, headers, statusCode, request);
@@ -235,11 +200,7 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
       Exception ex, String property, WebRequest request) {
     ValidationError error =
         new ValidationError("sort", "propriedade de ordenação inválida: " + property);
-    return respond(
-        ex,
-        ProblemDetailFactory.create(
-            ApiErrorCode.VALIDATION_ERROR, INVALID_FIELDS_DETAIL, List.of(error)),
-        request);
+    return respond(ex, invalidFields(List.of(error)), request);
   }
 
   private ResponseEntity<Object> respond(Exception ex, ProblemDetail problem, WebRequest request) {
@@ -250,6 +211,18 @@ public final class GlobalExceptionHandler extends ResponseEntityExceptionHandler
       Exception ex, ProblemDetail problem, HttpHeaders headers, WebRequest request) {
     return handleExceptionInternal(
         ex, problem, headers, HttpStatusCode.valueOf(problem.getStatus()), request);
+  }
+
+  private static ValidationError toValidationError(
+      MessageSourceResolvable error, String fallbackField) {
+    return new ValidationError(
+        error instanceof FieldError fieldError ? fieldError.getField() : fallbackField,
+        Objects.requireNonNullElse(error.getDefaultMessage(), INVALID_VALUE));
+  }
+
+  private static ProblemDetail invalidFields(List<ValidationError> errors) {
+    return ProblemDetailFactory.create(
+        ApiErrorCode.VALIDATION_ERROR, INVALID_FIELDS_DETAIL, errors);
   }
 
   private static boolean hasProperty(ProblemDetail problem, String name) {

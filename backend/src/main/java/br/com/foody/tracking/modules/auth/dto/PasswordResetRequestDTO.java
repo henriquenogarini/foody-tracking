@@ -1,5 +1,6 @@
 package br.com.foody.tracking.modules.auth.dto;
 
+import br.com.foody.tracking.modules.auth.helper.PasswordPolicy;
 import br.com.foody.tracking.shared.validation.MaxUtf8Bytes;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
@@ -18,11 +19,11 @@ public record PasswordResetRequestDTO(
             example = "nova-senha-456",
             accessMode = Schema.AccessMode.WRITE_ONLY)
         @NotBlank
-        @Size(min = 8, max = MaxUtf8Bytes.BCRYPT_MAX_BYTES)
-        @MaxUtf8Bytes(MaxUtf8Bytes.BCRYPT_MAX_BYTES)
+        @Size(min = PasswordPolicy.MIN_LENGTH, max = PasswordPolicy.MAX_BYTES)
+        @MaxUtf8Bytes(PasswordPolicy.MAX_BYTES)
         String newPassword) {
 
-  // Stripped at construction so @Email validates the clean value (same reason as register).
+  // Stripped here: Jackson builds the record before Bean Validation, so @Email sees it clean.
   public PasswordResetRequestDTO {
     email = email == null ? null : email.strip();
   }

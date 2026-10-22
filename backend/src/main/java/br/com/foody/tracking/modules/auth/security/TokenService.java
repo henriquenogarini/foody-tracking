@@ -1,5 +1,6 @@
 package br.com.foody.tracking.modules.auth.security;
 
+import br.com.foody.tracking.config.JwtConfig;
 import br.com.foody.tracking.config.JwtProperties;
 import br.com.foody.tracking.modules.auth.dto.TokenResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
@@ -25,7 +26,6 @@ public final class TokenService {
     this.expirationSeconds = jwtProperties.expirationSeconds();
   }
 
-  // Claims are the contract's minimum: never the internal id nor the password hash.
   public TokenResponseDTO issue(User user) {
     Instant issuedAt = clock.instant();
     JwtClaimsSet claims =
@@ -35,7 +35,7 @@ public final class TokenService {
             .expiresAt(issuedAt.plusSeconds(expirationSeconds))
             .claim("email", user.getEmail())
             .claim("name", user.getName())
-            .claim("role", user.getRole().name())
+            .claim(JwtConfig.ROLE_CLAIM, user.getRole().name())
             .build();
     JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
     String token = jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();

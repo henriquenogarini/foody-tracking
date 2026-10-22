@@ -192,7 +192,7 @@ class AuthServiceTest {
   void shouldHashOnceAndUpdateUserOnly_whenResettingPassword(String path, int affectedRows) {
     // Given
     clearInvocations(passwordEncoder);
-    when(userRepository.updatePasswordHashOfUser(eq("ana@exemplo.com"), anyString()))
+    when(userRepository.updatePasswordHashForUserRole(eq("ana@exemplo.com"), anyString()))
         .thenReturn(affectedRows);
 
     // When
@@ -201,25 +201,8 @@ class AuthServiceTest {
     // Then
     verify(passwordEncoder, times(1)).encode(any());
     ArgumentCaptor<String> hash = ArgumentCaptor.forClass(String.class);
-    verify(userRepository).updatePasswordHashOfUser(eq("ana@exemplo.com"), hash.capture());
+    verify(userRepository).updatePasswordHashForUserRole(eq("ana@exemplo.com"), hash.capture());
     assertThat(passwordEncoder.matches(NEW_PASSWORD, hash.getValue())).isTrue();
-  }
-
-  @Test
-  void shouldRejectWithoutHashing_whenNewPasswordExceedsBcryptBytes() {
-    // Given 60 characters but 120 UTF-8 bytes (a direct call skips Bean Validation)
-    clearInvocations(passwordEncoder);
-    PasswordResetRequestDTO request =
-        new PasswordResetRequestDTO("ana@exemplo.com", "é".repeat(60));
-
-    // When
-    Throwable thrown = catchThrowable(() -> authService.resetPassword(request));
-
-    // Then
-    assertThat(thrown).isInstanceOf(ApiException.class);
-    assertThat(((ApiException) thrown).getCode()).isEqualTo(ApiErrorCode.VALIDATION_ERROR);
-    verify(passwordEncoder, never()).encode(any());
-    verifyNoInteractions(userRepository);
   }
 
   @Test
@@ -229,7 +212,8 @@ class AuthServiceTest {
     when(userRepository.findByPublicId(user.getPublicId())).thenReturn(Optional.of(user));
 
     // When
-    UserResponseDTO response = authService.me(new AuthenticatedUser(user.getPublicId(), Role.USER));
+    UserResponseDTO response =
+        authService.currentUser(new AuthenticatedUser(user.getPublicId(), Role.USER));
 
     // Then
     assertThat(response.id()).isEqualTo(user.getPublicId());
@@ -244,7 +228,7 @@ class AuthServiceTest {
 
     // When
     Throwable thrown =
-        catchThrowable(() -> authService.me(new AuthenticatedUser(unknown, Role.USER)));
+        catchThrowable(() -> authService.currentUser(new AuthenticatedUser(unknown, Role.USER)));
 
     // Then
     assertThat(thrown).isInstanceOf(ApiException.class);

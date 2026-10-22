@@ -30,9 +30,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-// Own in-memory database: this flow commits rows that must not leak into the classes sharing
-// `memdb`. E-mails stay unique per run and assertions relative (contains / does not contain), so
-// the class does not depend on what else ran in the JVM.
+// `flowdb` (shared with PasswordResetIntegrationTest) keeps committed rows out of `memdb`.
+// E-mails are unique per run and assertions relative, so rows from other classes do not matter.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -40,6 +39,8 @@ import org.springframework.test.web.servlet.ResultActions;
     properties =
         "spring.datasource.url=jdbc:sqlite:file:flowdb?mode=memory&cache=shared&foreign_keys=true")
 class OrderFlowIntegrationTest {
+
+  private static final String PASSWORD = "senha-forte-123";
 
   private static final String ORDER_PAYLOAD =
       """
@@ -77,7 +78,7 @@ class OrderFlowIntegrationTest {
                 .andExpect(jsonPath("$.role").value("USER"))
                 .andExpect(jsonPath("$.email").value(anaEmail)),
             "$.id");
-    String anaToken = login(anaEmail, "senha-forte-123");
+    String anaToken = login(anaEmail, PASSWORD);
     mockMvc
         .perform(get("/api/v1/auth/me").header(HttpHeaders.AUTHORIZATION, bearer(anaToken)))
         .andExpect(status().isOk())
@@ -100,7 +101,7 @@ class OrderFlowIntegrationTest {
     String orderPath = "/api/v1/orders/" + orderId;
     created.andExpect(header().string(HttpHeaders.LOCATION, endsWith(orderPath)));
 
-    // And a later GET returns the same timestamps the POST did (the clock ticks in storage millis)
+    // And a later GET returns the same timestamps (the Clock is truncated to the stored millis)
     mockMvc
         .perform(get(orderPath).header(HttpHeaders.AUTHORIZATION, bearer(anaToken)))
         .andExpect(status().isOk())
@@ -135,7 +136,7 @@ class OrderFlowIntegrationTest {
 
     // Given Bruno, another USER
     register("Bruno Lima", brunoEmail).andExpect(status().isCreated());
-    String brunoToken = login(brunoEmail, "senha-forte-123");
+    String brunoToken = login(brunoEmail, PASSWORD);
 
     // Then Ana's order does not exist for him (404, never 403) and is not in his list
     mockMvc
@@ -227,7 +228,7 @@ class OrderFlowIntegrationTest {
             .getResponse()
             .getContentAsString();
     assertThat(body).contains("/api/v1/orders/{publicId}/status");
-    // And each tag is declared once, with the description from OpenApiConfig
+    // And each tag is declared exactly once
     List<String> tagNames = JsonPath.read(body, "$.tags[*].name");
     assertThat(tagNames).containsExactlyInAnyOrder("Auth", "Users", "Orders");
   }
@@ -238,9 +239,9 @@ class OrderFlowIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content(
                 """
-                {"name": "%s", "email": "%s", "password": "senha-forte-123"}
+                {"name": "%s", "email": "%s", "password": "%s"}
                 """
-                    .formatted(name, email)));
+                    .formatted(name, email, PASSWORD)));
   }
 
   private String login(String email, String password) throws Exception {

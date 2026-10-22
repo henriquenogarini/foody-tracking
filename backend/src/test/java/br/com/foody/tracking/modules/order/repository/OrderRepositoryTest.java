@@ -1,5 +1,8 @@
 package br.com.foody.tracking.modules.order.repository;
 
+import static br.com.foody.tracking.modules.order.OrderFixtures.NOW;
+import static br.com.foody.tracking.modules.order.OrderFixtures.customer;
+import static br.com.foody.tracking.modules.order.OrderFixtures.pizza;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
@@ -16,9 +19,7 @@ import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import jakarta.persistence.EntityManager;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,10 +43,6 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = Replace.NONE)
 class OrderRepositoryTest {
-
-  private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
-  private static final OffsetDateTime NOW =
-      OffsetDateTime.ofInstant(Instant.parse("2026-10-21T17:13:27Z"), APP_ZONE);
 
   private static final Pageable BY_CODE = PageRequest.of(0, 20, Sort.by("code"));
 
@@ -82,6 +79,13 @@ class OrderRepositoryTest {
         "04650-140",
         -23.6578,
         -46.6743);
+  }
+
+  private Statistics clearedStatistics() {
+    Statistics statistics =
+        entityManager.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
+    statistics.clear();
+    return statistics;
   }
 
   private Order persistNamedOrder(User owner, long code, String customerName) {
@@ -191,10 +195,8 @@ class OrderRepositoryTest {
     Order order =
         Order.create(
             ana,
-            new Customer("José da Silva", "+5511987521144", "jose@exemplo.com"),
-            List.of(
-                new OrderItem("Pizza calabresa G", 1, new BigDecimal("59.90")),
-                new OrderItem("Refrigerante", 2, new BigDecimal("7.50"))),
+            customer(),
+            List.of(pizza(), new OrderItem("Refrigerante", 2, new BigDecimal("7.50"))),
             address("São Paulo"),
             "sem cebola",
             1001L,
@@ -238,12 +240,10 @@ class OrderRepositoryTest {
         .containsExactly(
             tuple("Pizza calabresa G", 1, new BigDecimal("59.90"), new BigDecimal("59.90")),
             tuple("Refrigerante", 2, new BigDecimal("7.50"), new BigDecimal("15.00")));
-    assertThat(reloaded.getItems()).allSatisfy(item -> assertThat(item.getId()).isNotNull());
     assertThat(reloaded.getStatusHistory())
         .singleElement()
         .satisfies(
             birth -> {
-              assertThat(birth.getId()).isNotNull();
               assertThat(birth.getFromStatus()).isNull();
               assertThat(birth.getToStatus()).isEqualTo(OrderStatus.RECEBIDO);
               assertThat(birth.getChangedBy()).isEqualTo(ana.getPublicId());
@@ -502,9 +502,7 @@ class OrderRepositoryTest {
     persistOrder(ana, 1002L, NOW.plusMinutes(1), 2);
     persistOrder(ana, 1003L, NOW.plusMinutes(2), 4);
     entityManager.clear();
-    Statistics statistics =
-        entityManager.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
-    statistics.clear();
+    Statistics statistics = clearedStatistics();
 
     // When
     Page<OrderSummaryView> page =
@@ -526,9 +524,7 @@ class OrderRepositoryTest {
     persistOrder(ana, 1003L, NOW.plusMinutes(2), 4);
     persistOrder(bruno, 1004L, NOW.plusMinutes(3), 1);
     entityManager.clear();
-    Statistics statistics =
-        entityManager.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
-    statistics.clear();
+    Statistics statistics = clearedStatistics();
 
     // When
     Page<OrderSummaryView> page =
@@ -647,9 +643,7 @@ class OrderRepositoryTest {
       persistNamedOrder(ana, code, "Ana Souza");
     }
     entityManager.clear();
-    Statistics statistics =
-        entityManager.getEntityManagerFactory().unwrap(SessionFactory.class).getStatistics();
-    statistics.clear();
+    Statistics statistics = clearedStatistics();
 
     // When
     Page<OrderSummaryView> page =

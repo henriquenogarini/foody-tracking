@@ -21,7 +21,6 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,8 +33,7 @@ import org.hibernate.type.SqlTypes;
 /**
  * Aggregate root of a delivery order: it owns its items and its status history, and every change
  * goes through {@link #create} or {@link #changeStatus}. The total is always the sum of the item
- * subtotals so a client can never dictate what is charged. The current instant is passed in by the
- * caller (from the injected {@code Clock}) so the domain stays deterministic and testable.
+ * subtotals so a client can never dictate what is charged.
  */
 @Entity
 @Table(name = "orders")
@@ -139,7 +137,7 @@ public class Order {
       order.items.add(item);
       sum = sum.add(item.getSubtotal());
     }
-    order.total = sum.setScale(2, RoundingMode.HALF_UP);
+    order.total = Money.scaled(sum);
     order.statusHistory.add(
         new OrderStatusHistory(order, null, OrderStatus.RECEBIDO, owner.getPublicId(), now));
     return order;
@@ -204,7 +202,7 @@ public class Order {
   }
 
   public BigDecimal getTotal() {
-    return total.setScale(2, RoundingMode.HALF_UP);
+    return Money.scaled(total);
   }
 
   public List<OrderStatusHistory> getStatusHistory() {

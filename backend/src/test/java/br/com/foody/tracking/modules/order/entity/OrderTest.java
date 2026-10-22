@@ -1,5 +1,8 @@
 package br.com.foody.tracking.modules.order.entity;
 
+import static br.com.foody.tracking.modules.order.OrderFixtures.NOW;
+import static br.com.foody.tracking.modules.order.OrderFixtures.address;
+import static br.com.foody.tracking.modules.order.OrderFixtures.customer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -8,9 +11,7 @@ import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.shared.exception.type.InvalidStatusTransitionException;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -19,29 +20,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 class OrderTest {
 
-  private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
-  private static final OffsetDateTime NOW =
-      OffsetDateTime.ofInstant(Instant.parse("2026-10-21T17:13:27Z"), APP_ZONE);
   private static final OffsetDateTime LATER = NOW.plusMinutes(10);
 
   private final User owner = new User("Ana Souza", "ana@exemplo.com", "hash", Role.USER, NOW);
-
-  private static Customer customer() {
-    return new Customer("José da Silva", "+5511987521144", "jose@exemplo.com");
-  }
-
-  private static DeliveryAddress address() {
-    return new DeliveryAddress(
-        "Rua José Neves",
-        "590",
-        "sala 03",
-        "Vila São Paulo",
-        "São Paulo",
-        "SP",
-        "04650-140",
-        -23.6578,
-        -46.6743);
-  }
 
   private Order newOrder(List<OrderItem> items) {
     return Order.create(owner, customer(), items, address(), "sem cebola", 1001L, NOW);
@@ -90,12 +71,10 @@ class OrderTest {
     assertThat(order.getCreatedAt()).isEqualTo(NOW);
     assertThat(order.getUpdatedAt()).isEqualTo(NOW);
     assertThat(order.getItems()).containsExactly(pizza, soda);
-    assertThat(order.getItems()).allSatisfy(item -> assertThat(item.getOrder()).isSameAs(order));
     assertThat(order.getStatusHistory())
         .singleElement()
         .satisfies(
             birth -> {
-              assertThat(birth.getOrder()).isSameAs(order);
               assertThat(birth.getFromStatus()).isNull();
               assertThat(birth.getToStatus()).isEqualTo(OrderStatus.RECEBIDO);
               assertThat(birth.getChangedBy()).isEqualTo(owner.getPublicId());
@@ -196,7 +175,7 @@ class OrderTest {
     assertThatThrownBy(() -> newOrder(reused))
         .isInstanceOf(IllegalStateException.class)
         .hasMessage("item already belongs to another order");
-    assertThat(pizza.getOrder()).isSameAs(first);
+    assertThat(first.getItems()).containsExactly(pizza);
   }
 
   @ParameterizedTest

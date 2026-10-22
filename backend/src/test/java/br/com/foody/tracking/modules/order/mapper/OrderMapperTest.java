@@ -1,5 +1,8 @@
 package br.com.foody.tracking.modules.order.mapper;
 
+import static br.com.foody.tracking.modules.order.OrderFixtures.NOW;
+import static br.com.foody.tracking.modules.order.OrderFixtures.address;
+import static br.com.foody.tracking.modules.order.OrderFixtures.customer;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.mock;
@@ -21,9 +24,7 @@ import br.com.foody.tracking.modules.order.entity.OrderItem;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.modules.order.repository.OrderSummaryView;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,9 +33,6 @@ import org.mapstruct.factory.Mappers;
 
 class OrderMapperTest {
 
-  private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
-  private static final OffsetDateTime NOW =
-      OffsetDateTime.ofInstant(Instant.parse("2026-10-21T17:13:27Z"), APP_ZONE);
   private static final OffsetDateTime LATER = NOW.plusMinutes(10);
 
   private final OrderMapper mapper = Mappers.getMapper(OrderMapper.class);
@@ -43,20 +41,11 @@ class OrderMapperTest {
   private Order newOrder() {
     return Order.create(
         owner,
-        new Customer("José da Silva", "+5511987521144", "jose@exemplo.com"),
+        customer(),
         List.of(
             new OrderItem("Pizza calabresa G", 2, new BigDecimal("59.90")),
             new OrderItem("Refrigerante", 1, new BigDecimal("8.5"))),
-        new DeliveryAddress(
-            "Rua José Neves",
-            "590",
-            "sala 03",
-            "Vila São Paulo",
-            "São Paulo",
-            "SP",
-            "04650-140",
-            -23.6578,
-            -46.6743),
+        address(),
         "sem cebola",
         1042L,
         NOW);
@@ -118,7 +107,7 @@ class OrderMapperTest {
     when(view.getUpdatedAt()).thenReturn(LATER);
 
     // When
-    OrderSummaryResponseDTO summary = mapper.toSummary(view);
+    OrderSummaryResponseDTO summary = mapper.toSummaryResponse(view);
 
     // Then
     assertThat(summary.id()).isEqualTo(publicId);
@@ -148,7 +137,8 @@ class OrderMapperTest {
 
     // When
     List<StatusHistoryResponseDTO> history =
-        mapper.toHistory(order.getStatusHistory(), Map.of(owner.getPublicId(), "Ana Souza"));
+        mapper.toHistoryResponses(
+            order.getStatusHistory(), Map.of(owner.getPublicId(), "Ana Souza"));
 
     // Then
     assertThat(history)
@@ -272,8 +262,8 @@ class OrderMapperTest {
   void shouldReturnNull_whenSourcesAreNull() {
     // When / Then
     assertThat(mapper.toResponse(null)).isNull();
-    assertThat(mapper.toSummary(null)).isNull();
-    assertThat(mapper.toHistory(null, Map.of())).isNull();
+    assertThat(mapper.toSummaryResponse(null)).isNull();
+    assertThat(mapper.toHistoryResponses(null, Map.of())).isNull();
     assertThat(mapper.toCustomer(null)).isNull();
     assertThat(mapper.toAddress(null)).isNull();
     assertThat(mapper.toItem(null)).isNull();

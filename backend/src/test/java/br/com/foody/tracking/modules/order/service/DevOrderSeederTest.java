@@ -1,5 +1,8 @@
 package br.com.foody.tracking.modules.order.service;
 
+import static br.com.foody.tracking.modules.order.OrderFixtures.APP_ZONE;
+import static br.com.foody.tracking.modules.order.OrderFixtures.NOW;
+import static br.com.foody.tracking.modules.order.OrderFixtures.NOW_INSTANT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
@@ -17,9 +20,6 @@ import br.com.foody.tracking.modules.order.entity.OrderStatusHistory;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.modules.order.repository.OrderRepository;
 import java.time.Clock;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -32,15 +32,12 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 class DevOrderSeederTest {
 
-  private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
-  private static final Instant NOW = Instant.parse("2026-10-21T17:13:27Z");
   private static final String ADMIN_EMAIL = "admin@foody.local";
 
   private final UserRepository userRepository = mock(UserRepository.class);
   private final OrderRepository orderRepository = mock(OrderRepository.class);
-  private final Clock clock = Clock.fixed(NOW, APP_ZONE);
-  private final User admin =
-      new User("Admin", ADMIN_EMAIL, "hash", Role.ADMIN, OffsetDateTime.ofInstant(NOW, APP_ZONE));
+  private final Clock clock = Clock.fixed(NOW_INSTANT, APP_ZONE);
+  private final User admin = new User("Admin", ADMIN_EMAIL, "hash", Role.ADMIN, NOW);
 
   @Test
   void shouldSeedOrdersCoveringEveryStatusWithLegalHistories_whenAdminOwnsNoOrder() {
@@ -93,8 +90,7 @@ class DevOrderSeederTest {
   @Test
   void shouldDoNothing_whenAdminEmailBelongsToUser() {
     // Given
-    User user =
-        new User("Ana", ADMIN_EMAIL, "hash", Role.USER, OffsetDateTime.ofInstant(NOW, APP_ZONE));
+    User user = new User("Ana", ADMIN_EMAIL, "hash", Role.USER, NOW);
     when(userRepository.findByEmail(ADMIN_EMAIL)).thenReturn(Optional.of(user));
 
     // When
@@ -150,7 +146,7 @@ class DevOrderSeederTest {
         .allSatisfy(
             entry -> {
               assertThat(entry.getChangedBy()).isEqualTo(order.getOwner().getPublicId());
-              assertThat(entry.getChangedAt().toInstant()).isBefore(NOW);
+              assertThat(entry.getChangedAt().toInstant()).isBefore(NOW_INSTANT);
             });
   }
 }

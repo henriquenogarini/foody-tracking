@@ -8,17 +8,14 @@ import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.helper.EmailNormalizer;
+import br.com.foody.tracking.modules.auth.helper.PasswordPolicy;
 import br.com.foody.tracking.modules.auth.mapper.UserMapper;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
 import br.com.foody.tracking.modules.auth.security.TokenService;
-import br.com.foody.tracking.shared.exception.model.ApiErrorCode;
-import br.com.foody.tracking.shared.exception.type.ApiException;
 import br.com.foody.tracking.shared.exception.type.InvalidCredentialsException;
 import br.com.foody.tracking.shared.exception.type.InvalidTokenException;
 import br.com.foody.tracking.shared.exception.type.UserEmailAlreadyExistsException;
-import br.com.foody.tracking.shared.validation.MaxUtf8Bytes;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -28,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-// Not final: @Transactional needs a CGLIB subclass proxy.
 @Service
 public class AuthService {
 
@@ -81,7 +77,7 @@ public class AuthService {
 
   // Not transactional: the pool has one connection, and BCrypt plus JWT signing must not hold it.
   public TokenResponseDTO login(LoginRequestDTO request) {
-    if (exceedsBcryptLimit(request.password())) {
+    if (PasswordPolicy.exceedsMaxBytes(request.password())) {
       log.debug("Login rejected: password longer than the BCrypt limit");
       throw new InvalidCredentialsException();
     }
@@ -96,19 +92,13 @@ public class AuthService {
     return tokenService.issue(user.get());
   }
 
-  // Demo feature, no e-mail confirmation. Not transactional, like login: BCrypt runs before the
-  // single short update. The hash is computed on every path (existing USER, unknown e-mail,
-  // ADMIN) so response time does not reveal which accounts exist; the affected-row count never
-  // changes the outcome.
+  // Demo feature, no e-mail confirmation, not transactional (like login). The hash is computed on
+  // every path so response time does not reveal which accounts exist.
   public void resetPassword(PasswordResetRequestDTO request) {
-    if (exceedsBcryptLimit(request.newPassword())) {
-      log.debug("Password reset rejected: password longer than the BCrypt limit");
-      throw new ApiException(
-          ApiErrorCode.VALIDATION_ERROR, "A nova senha excede o limite de 72 bytes.");
-    }
     String hash = passwordEncoder.encode(request.newPassword());
     int updated =
-        userRepository.updatePasswordHashOfUser(EmailNormalizer.normalize(request.email()), hash);
+        userRepository.updatePasswordHashForUserRole(
+            EmailNormalizer.normalize(request.email()), hash);
     if (updated > 0) {
       log.info("Password reset applied");
     } else {
@@ -118,7 +108,7 @@ public class AuthService {
 
   // A valid token whose user no longer exists (database reset) is treated as an invalid token.
   @Transactional(readOnly = true)
-  public UserResponseDTO me(AuthenticatedUser principal) {
+  public UserResponseDTO currentUser(AuthenticatedUser principal) {
     return userRepository
         .findByPublicId(principal.id())
         .map(userMapper::toResponse)
@@ -127,11 +117,5 @@ public class AuthService {
               log.debug("Token subject {} has no matching user", principal.id());
               return new InvalidTokenException();
             });
-  }
-
-  // BCrypt only reads 72 bytes (Spring Security rejects longer input with an exception), so each
-  // caller turns an over-long password into its own contract error instead of a 500.
-  private static boolean exceedsBcryptLimit(String password) {
-    return password.getBytes(StandardCharsets.UTF_8).length > MaxUtf8Bytes.BCRYPT_MAX_BYTES;
   }
 }

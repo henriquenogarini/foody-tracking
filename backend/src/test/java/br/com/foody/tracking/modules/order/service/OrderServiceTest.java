@@ -1,8 +1,12 @@
 package br.com.foody.tracking.modules.order.service;
 
+import static br.com.foody.tracking.modules.order.OrderFixtures.APP_ZONE;
+import static br.com.foody.tracking.modules.order.OrderFixtures.NOW_INSTANT;
+import static br.com.foody.tracking.modules.order.OrderFixtures.newOrder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -19,10 +23,7 @@ import br.com.foody.tracking.modules.order.dto.CustomerRequestDTO;
 import br.com.foody.tracking.modules.order.dto.OrderItemRequestDTO;
 import br.com.foody.tracking.modules.order.dto.OrderResponseDTO;
 import br.com.foody.tracking.modules.order.dto.UpdateStatusRequestDTO;
-import br.com.foody.tracking.modules.order.entity.Customer;
-import br.com.foody.tracking.modules.order.entity.DeliveryAddress;
 import br.com.foody.tracking.modules.order.entity.Order;
-import br.com.foody.tracking.modules.order.entity.OrderItem;
 import br.com.foody.tracking.modules.order.entity.OrderStatusHistory;
 import br.com.foody.tracking.modules.order.enums.OrderStatus;
 import br.com.foody.tracking.modules.order.event.OrderStatusChangedEvent;
@@ -33,9 +34,7 @@ import br.com.foody.tracking.shared.exception.type.InvalidTokenException;
 import br.com.foody.tracking.shared.exception.type.OrderNotFoundException;
 import java.math.BigDecimal;
 import java.time.Clock;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,10 +46,8 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 class OrderServiceTest {
 
-  private static final ZoneId APP_ZONE = ZoneId.of("America/Sao_Paulo");
-  private static final Instant NOW = Instant.parse("2026-10-21T17:13:27Z");
   private static final OffsetDateTime CREATED_AT =
-      OffsetDateTime.ofInstant(NOW.minusSeconds(3600), APP_ZONE);
+      OffsetDateTime.ofInstant(NOW_INSTANT.minusSeconds(3600), APP_ZONE);
 
   private final OrderRepository orderRepository = mock(OrderRepository.class);
   private final UserRepository userRepository = mock(UserRepository.class);
@@ -62,7 +59,7 @@ class OrderServiceTest {
           userRepository,
           Mappers.getMapper(OrderMapper.class),
           eventPublisher,
-          Clock.fixed(NOW, APP_ZONE));
+          Clock.fixed(NOW_INSTANT, APP_ZONE));
 
   private final User owner =
       new User("Ana Souza", "ana@exemplo.com", "hash", Role.USER, CREATED_AT);
@@ -93,8 +90,8 @@ class OrderServiceTest {
     assertThat(response.items()).hasSize(2);
     assertThat(response.customer().name()).isEqualTo("José da Silva");
     assertThat(response.deliveryAddress().city()).isEqualTo("São Paulo");
-    assertThat(response.createdAt().toInstant()).isEqualTo(NOW);
-    assertThat(response.updatedAt().toInstant()).isEqualTo(NOW);
+    assertThat(response.createdAt().toInstant()).isEqualTo(NOW_INSTANT);
+    assertThat(response.updatedAt().toInstant()).isEqualTo(NOW_INSTANT);
   }
 
   @Test
@@ -111,10 +108,9 @@ class OrderServiceTest {
   @Test
   void shouldUseOwnerScopedQuery_whenUserChangesStatus() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, CREATED_AT);
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order)).thenReturn(order);
 
     // When
     OrderResponseDTO response =
@@ -123,16 +119,15 @@ class OrderServiceTest {
 
     // Then
     assertThat(response.status()).isEqualTo(OrderStatus.EM_PREPARO);
-    assertThat(response.updatedAt().toInstant()).isEqualTo(NOW);
+    assertThat(response.updatedAt().toInstant()).isEqualTo(NOW_INSTANT);
     verify(orderRepository, never()).findByPublicId(any());
   }
 
   @Test
   void shouldUseUnscopedQueryAndRecordAdminAsChanger_whenAdminChangesStatus() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, CREATED_AT);
     when(orderRepository.findByPublicId(order.getPublicId())).thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order)).thenReturn(order);
 
     // When
     service.changeStatus(
@@ -165,7 +160,7 @@ class OrderServiceTest {
   @Test
   void shouldRejectAndPublishNothing_whenTransitionIsNotAllowed() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, CREATED_AT);
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
 
@@ -179,14 +174,14 @@ class OrderServiceTest {
         .isInstanceOf(InvalidStatusTransitionException.class)
         .hasMessage("Transição de RECEBIDO para ENTREGUE não é permitida");
     assertThat(order.getStatus()).isEqualTo(OrderStatus.RECEBIDO);
-    verify(orderRepository, never()).saveAndFlush(any());
+    verify(orderRepository, never()).flush();
     verifyNoInteractions(eventPublisher);
   }
 
   @Test
   void shouldReject_whenTargetIsTheCurrentStatus() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, CREATED_AT);
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
 
@@ -204,10 +199,9 @@ class OrderServiceTest {
   @Test
   void shouldPublishStatusChangedEvent_whenTransitionSucceeds() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, CREATED_AT);
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order)).thenReturn(order);
 
     // When
     service.changeStatus(
@@ -222,17 +216,18 @@ class OrderServiceTest {
     assertThat(event.getValue().fromStatus()).isEqualTo(OrderStatus.RECEBIDO);
     assertThat(event.getValue().toStatus()).isEqualTo(OrderStatus.EM_PREPARO);
     assertThat(event.getValue().changedBy()).isEqualTo(owner.getPublicId());
-    assertThat(event.getValue().changedAt().toInstant()).isEqualTo(NOW);
+    assertThat(event.getValue().changedAt().toInstant()).isEqualTo(NOW_INSTANT);
   }
 
   @Test
   void shouldPropagateAndPublishNothing_whenFlushHitsAStaleVersion() {
     // Given
-    Order order = newOrder();
+    Order order = newOrder(owner, 1042L, CREATED_AT);
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order))
-        .thenThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getId()));
+    doThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getPublicId()))
+        .when(orderRepository)
+        .flush();
 
     // When / Then
     assertThatThrownBy(
@@ -276,26 +271,6 @@ class OrderServiceTest {
     assertThat(response.customer().phone()).isNull();
     assertThat(response.customer().email()).isNull();
     assertThat(response.deliveryAddress().complement()).isNull();
-  }
-
-  private Order newOrder() {
-    return Order.create(
-        owner,
-        new Customer("José da Silva", null, null),
-        List.of(new OrderItem("Pizza calabresa G", 1, new BigDecimal("59.90"))),
-        new DeliveryAddress(
-            "Rua José Neves",
-            "590",
-            null,
-            "Vila São Paulo",
-            "São Paulo",
-            "SP",
-            "04650-140",
-            null,
-            null),
-        null,
-        1042L,
-        CREATED_AT);
   }
 
   private static CreateOrderRequestDTO createRequest() {

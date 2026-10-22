@@ -32,7 +32,7 @@ class OrderFinderTest {
     when(orderRepository.findByPublicId(publicId)).thenReturn(Optional.of(order));
 
     // When
-    Order found = finder.findScoped(publicId, adminActor);
+    Order found = finder.getVisibleTo(publicId, adminActor);
 
     // Then
     assertThat(found).isSameAs(order);
@@ -49,7 +49,7 @@ class OrderFinderTest {
         .thenReturn(Optional.of(order));
 
     // When
-    Order found = finder.findScoped(publicId, userActor);
+    Order found = finder.getVisibleTo(publicId, userActor);
 
     // Then
     assertThat(found).isSameAs(order);
@@ -65,7 +65,7 @@ class OrderFinderTest {
         .thenReturn(Optional.empty());
 
     // When / Then
-    assertThatThrownBy(() -> finder.findScoped(publicId, userActor))
+    assertThatThrownBy(() -> finder.getVisibleTo(publicId, userActor))
         .isInstanceOf(OrderNotFoundException.class);
   }
 
@@ -76,7 +76,7 @@ class OrderFinderTest {
     when(orderRepository.findByPublicId(publicId)).thenReturn(Optional.empty());
 
     // When / Then
-    assertThatThrownBy(() -> finder.findScoped(publicId, adminActor))
+    assertThatThrownBy(() -> finder.getVisibleTo(publicId, adminActor))
         .isInstanceOf(OrderNotFoundException.class);
   }
 }

@@ -26,10 +26,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-// Demo data for the dev profile only: orders owned by the bootstrap admin, one or more in every
-// status. Built through the domain (Order.create + changeStatus), so every history row is a legal
-// transition. Runs after AdminBootstrap and only while the admin owns no order, so restarts and a
-// deleted database (reseed) behave predictably. Not final: @Transactional needs a CGLIB proxy.
+// Dev-profile demo data owned by the bootstrap admin, at least one order per status, built through
+// the domain so every history row is legal. Seeds only while the admin owns no order.
 @Component
 @Profile("dev")
 @org.springframework.core.annotation.Order(AdminBootstrap.RUNNER_ORDER + 1)
@@ -57,7 +55,7 @@ public class DevOrderSeeder implements ApplicationRunner {
   @Transactional
   public void run(ApplicationArguments args) {
     Optional<User> admin =
-        adminEmail == null || adminEmail.isBlank()
+        adminEmail.isBlank()
             ? Optional.empty()
             : userRepository
                 .findByEmail(EmailNormalizer.normalize(adminEmail))

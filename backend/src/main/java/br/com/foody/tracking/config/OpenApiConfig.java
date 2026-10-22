@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public final class OpenApiConfig {
 
-  static final String BEARER_AUTH = "bearerAuth";
+  public static final String BEARER_AUTH = "bearerAuth";
 
   // Shared with the controllers' @Tag: springdoc emits one tag entry per distinct
   // (name, description) pair, so a second wording of the same tag shows up twice.
@@ -26,7 +26,6 @@ public final class OpenApiConfig {
   public static final String TAG_ORDERS_DESCRIPTION =
       "Delivery orders, status changes and their history";
 
-  // Rendered by Swagger UI at the top of the page: it doubles as the usage guide of the API.
   private static final String DESCRIPTION =
       """
       REST API to track Foody Delivery orders.

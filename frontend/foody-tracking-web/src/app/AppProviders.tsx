@@ -2,6 +2,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
+import { AuthProvider } from '@/features/auth/AuthProvider'
 import { createQueryClient } from './queryClient'
 import { routes } from './router'
 import { theme } from './theme'
@@ -15,7 +16,9 @@ export function AppProviders() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   )

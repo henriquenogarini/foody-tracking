@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public final class OpenApiConfig {
 
-  static final String BEARER_AUTH = "bearerAuth";
+  public static final String BEARER_AUTH = "bearerAuth";
 
   // Shared with the controllers' @Tag: springdoc emits one tag entry per distinct
   // (name, description) pair, so a second wording of the same tag shows up twice.

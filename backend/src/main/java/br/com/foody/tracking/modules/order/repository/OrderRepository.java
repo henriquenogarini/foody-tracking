@@ -24,12 +24,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           + " o.createdAt as createdAt, o.updatedAt as updatedAt"
           + " from Order o";
 
-  /** Owner scope by the JWT {@code sub}, so the caller needs no extra user lookup. */
-  Optional<Order> findByPublicIdAndOwnerPublicId(UUID publicId, UUID ownerPublicId);
-
-  Optional<Order> findByPublicId(UUID publicId);
-
-  boolean existsByOwnerPublicId(UUID ownerPublicId);
+  String SUMMARY_COUNT = "select count(o) from Order o";
 
   /**
    * Optional filters shared by both scopes: a null parameter disables its condition, so one query
@@ -41,11 +36,16 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
           + " and (:code is null or o.code = :code)"
           + " and (:namePattern is null or lower(o.customer.name) like :namePattern escape '!')";
 
+  /** Owner scope by the JWT {@code sub}, so the caller needs no extra user lookup. */
+  Optional<Order> findByPublicIdAndOwnerPublicId(UUID publicId, UUID ownerPublicId);
+
+  Optional<Order> findByPublicId(UUID publicId);
+
+  boolean existsByOwnerPublicId(UUID ownerPublicId);
+
   @Query(
       value = SUMMARY_SELECT + " where o.owner.publicId = :ownerPublicId and" + SUMMARY_FILTERS,
-      countQuery =
-          "select count(o) from Order o where o.owner.publicId = :ownerPublicId and"
-              + SUMMARY_FILTERS)
+      countQuery = SUMMARY_COUNT + " where o.owner.publicId = :ownerPublicId and" + SUMMARY_FILTERS)
   Page<OrderSummaryView> searchSummariesByOwnerPublicId(
       @Param("ownerPublicId") UUID ownerPublicId,
       @Param("status") OrderStatus status,
@@ -55,7 +55,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
   @Query(
       value = SUMMARY_SELECT + " where" + SUMMARY_FILTERS,
-      countQuery = "select count(o) from Order o where" + SUMMARY_FILTERS)
+      countQuery = SUMMARY_COUNT + " where" + SUMMARY_FILTERS)
   Page<OrderSummaryView> searchSummaries(
       @Param("status") OrderStatus status,
       @Param("code") Long code,

@@ -9,8 +9,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
@@ -26,6 +24,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties(JwtProperties.class)
 public final class JwtConfig {
+
+  public static final String ROLE_CLAIM = "role";
 
   @Bean
   public JwtEncoder jwtEncoder(JwtProperties properties) {
@@ -46,11 +46,6 @@ public final class JwtConfig {
         new DelegatingOAuth2TokenValidator<>(
             timestamps, new JwtClaimValidator<Instant>(JwtClaimNames.EXP, Objects::nonNull)));
     return decoder;
-  }
-
-  @Bean
-  public PasswordEncoder passwordEncoder() {
-    return new BCryptPasswordEncoder();
   }
 
   private static SecretKey secretKey(JwtProperties properties) {

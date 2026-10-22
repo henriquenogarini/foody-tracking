@@ -12,16 +12,13 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-// @Size counts characters, but BCrypt limits bytes: it only accepts 72 bytes and Spring's encoder
-// throws above it, while a 72-character accented password exceeds 72 UTF-8 bytes. Every password
-// path (registration DTO, login pre-check, admin bootstrap) caps at BCRYPT_MAX_BYTES.
+// @Size counts characters, but some limits are in bytes: a 72-character accented string exceeds
+// 72 UTF-8 bytes.
 @Documented
 @Constraint(validatedBy = MaxUtf8BytesValidator.class)
 @Target({FIELD, METHOD, PARAMETER, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 public @interface MaxUtf8Bytes {
-
-  int BCRYPT_MAX_BYTES = 72;
 
   int value();
 

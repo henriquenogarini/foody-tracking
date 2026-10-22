@@ -10,7 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.Objects;
 
 /**
@@ -47,7 +46,7 @@ public class OrderItem {
 
   public OrderItem(String description, int quantity, BigDecimal unitPrice) {
     Objects.requireNonNull(unitPrice, "unitPrice");
-    BigDecimal normalizedPrice = unitPrice.setScale(2, RoundingMode.HALF_UP);
+    BigDecimal normalizedPrice = Money.scaled(unitPrice);
     if (quantity < 1) {
       throw new IllegalArgumentException("quantity must be at least 1");
     }
@@ -57,8 +56,7 @@ public class OrderItem {
     this.description = Objects.requireNonNull(description, "description");
     this.quantity = quantity;
     this.unitPrice = normalizedPrice;
-    this.subtotal =
-        normalizedPrice.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP);
+    this.subtotal = Money.scaled(normalizedPrice.multiply(BigDecimal.valueOf(quantity)));
   }
 
   void attachTo(Order order) {
@@ -77,10 +75,10 @@ public class OrderItem {
   }
 
   public BigDecimal getUnitPrice() {
-    return unitPrice.setScale(2, RoundingMode.HALF_UP);
+    return Money.scaled(unitPrice);
   }
 
   public BigDecimal getSubtotal() {
-    return subtotal.setScale(2, RoundingMode.HALF_UP);
+    return Money.scaled(subtotal);
   }
 }

@@ -8,6 +8,7 @@ import br.com.foody.tracking.modules.auth.dto.UserResponseDTO;
 import br.com.foody.tracking.modules.auth.entity.User;
 import br.com.foody.tracking.modules.auth.enums.Role;
 import br.com.foody.tracking.modules.auth.helper.EmailNormalizer;
+import br.com.foody.tracking.modules.auth.helper.PasswordPolicy;
 import br.com.foody.tracking.modules.auth.mapper.UserMapper;
 import br.com.foody.tracking.modules.auth.repository.UserRepository;
 import br.com.foody.tracking.modules.auth.security.AuthenticatedUser;
@@ -15,8 +16,6 @@ import br.com.foody.tracking.modules.auth.security.TokenService;
 import br.com.foody.tracking.shared.exception.type.InvalidCredentialsException;
 import br.com.foody.tracking.shared.exception.type.InvalidTokenException;
 import br.com.foody.tracking.shared.exception.type.UserEmailAlreadyExistsException;
-import br.com.foody.tracking.shared.validation.MaxUtf8Bytes;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -79,7 +78,7 @@ public class AuthService {
 
   // Not transactional: the pool has one connection, and BCrypt plus JWT signing must not hold it.
   public TokenResponseDTO login(LoginRequestDTO request) {
-    if (exceedsBcryptLimit(request.password())) {
+    if (PasswordPolicy.exceedsMaxBytes(request.password())) {
       log.debug("Login rejected: password longer than the BCrypt limit");
       throw new InvalidCredentialsException();
     }
@@ -120,11 +119,5 @@ public class AuthService {
               log.debug("Token subject {} has no matching user", principal.id());
               return new InvalidTokenException();
             });
-  }
-
-  // BCrypt only reads 72 bytes (Spring Security rejects longer input with an exception), so each
-  // caller turns an over-long password into its own contract error instead of a 500.
-  private static boolean exceedsBcryptLimit(String password) {
-    return password.getBytes(StandardCharsets.UTF_8).length > MaxUtf8Bytes.BCRYPT_MAX_BYTES;
   }
 }

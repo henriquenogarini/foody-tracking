@@ -11,12 +11,12 @@ import br.com.foody.tracking.modules.order.dto.OrderSummaryResponseDTO;
 import br.com.foody.tracking.modules.order.dto.StatusHistoryResponseDTO;
 import br.com.foody.tracking.modules.order.entity.Customer;
 import br.com.foody.tracking.modules.order.entity.DeliveryAddress;
+import br.com.foody.tracking.modules.order.entity.Money;
 import br.com.foody.tracking.modules.order.entity.Order;
 import br.com.foody.tracking.modules.order.entity.OrderItem;
 import br.com.foody.tracking.modules.order.entity.OrderStatusHistory;
 import br.com.foody.tracking.modules.order.repository.OrderSummaryView;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -74,6 +74,6 @@ public interface OrderMapper {
   // The projection reads total straight from SQLite, which drops trailing zeros (59.9).
   @Named("money")
   default BigDecimal money(BigDecimal value) {
-    return value == null ? null : value.setScale(2, RoundingMode.HALF_UP);
+    return value == null ? null : Money.scaled(value);
   }
 }

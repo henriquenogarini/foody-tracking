@@ -6,12 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -39,11 +36,7 @@ public final class ProblemDetailAuthenticationEntryPoint implements Authenticati
         "Unauthenticated request rejected on {} {}", request.getMethod(), request.getRequestURI());
     ProblemDetail problem =
         ProblemDetailFactory.create(ApiErrorCode.AUTH_TOKEN_INVALID, InvalidTokenException.DETAIL);
-    problem.setInstance(URI.create(request.getRequestURI()));
     response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Bearer");
-    response.setStatus(problem.getStatus());
-    response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-    response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-    objectMapper.writeValue(response.getOutputStream(), problem);
+    ProblemDetailWriter.write(request, response, problem, objectMapper);
   }
 }

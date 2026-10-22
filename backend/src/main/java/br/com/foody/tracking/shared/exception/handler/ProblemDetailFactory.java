@@ -11,6 +11,10 @@ import org.springframework.http.ProblemDetail;
 // Static so the security entry point and @WebMvcTest slices can use it without wiring.
 public final class ProblemDetailFactory {
 
+  static final String CODE = "code";
+  static final String TIMESTAMP = "timestamp";
+  static final String ERRORS = "errors";
+
   private ProblemDetailFactory() {}
 
   public static ProblemDetail create(ApiErrorCode code, String detail) {
@@ -21,11 +25,15 @@ public final class ProblemDetailFactory {
       ApiErrorCode code, String detail, List<ValidationError> errors) {
     ProblemDetail problem =
         ProblemDetail.forStatusAndDetail(HttpStatus.valueOf(code.httpStatus()), detail);
-    problem.setProperty("code", code.name());
-    problem.setProperty("timestamp", OffsetDateTime.now(ZoneOffset.UTC));
+    problem.setProperty(CODE, code.name());
+    problem.setProperty(TIMESTAMP, timestamp());
     if (!errors.isEmpty()) {
-      problem.setProperty("errors", List.copyOf(errors));
+      problem.setProperty(ERRORS, List.copyOf(errors));
     }
     return problem;
+  }
+
+  static OffsetDateTime timestamp() {
+    return OffsetDateTime.now(ZoneOffset.UTC);
   }
 }

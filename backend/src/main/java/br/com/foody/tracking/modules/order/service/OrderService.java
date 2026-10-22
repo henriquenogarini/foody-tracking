@@ -86,12 +86,12 @@ public class OrderService {
     }
     // Flushing here makes a stale @Version fail inside this call, so the advice answers 409
     // CONCURRENT_MODIFICATION instead of the commit failing after the controller returned.
-    Order saved = orderRepository.saveAndFlush(order);
+    orderRepository.flush();
     // The listener runs AFTER_COMMIT, so a rolled-back change never notifies anyone; it also
     // writes the INFO line for the status change.
     eventPublisher.publishEvent(
         new OrderStatusChangedEvent(
-            saved.getPublicId(), saved.getCode(), from, target, actor.id(), now));
-    return orderMapper.toResponse(saved);
+            order.getPublicId(), order.getCode(), from, target, actor.id(), now));
+    return orderMapper.toResponse(order);
   }
 }

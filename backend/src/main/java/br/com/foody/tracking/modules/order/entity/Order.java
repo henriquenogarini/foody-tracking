@@ -21,7 +21,6 @@ import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -139,7 +138,7 @@ public class Order {
       order.items.add(item);
       sum = sum.add(item.getSubtotal());
     }
-    order.total = sum.setScale(2, RoundingMode.HALF_UP);
+    order.total = Money.scaled(sum);
     order.statusHistory.add(
         new OrderStatusHistory(order, null, OrderStatus.RECEBIDO, owner.getPublicId(), now));
     return order;
@@ -204,7 +203,7 @@ public class Order {
   }
 
   public BigDecimal getTotal() {
-    return total.setScale(2, RoundingMode.HALF_UP);
+    return Money.scaled(total);
   }
 
   public List<OrderStatusHistory> getStatusHistory() {

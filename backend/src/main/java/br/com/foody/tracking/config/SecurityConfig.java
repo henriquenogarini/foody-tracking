@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.DispatcherType;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +16,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtClaimNames;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
@@ -32,11 +33,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 public final class SecurityConfig {
 
-  private static final String REGISTER_PATH = "/api/v1/auth/register";
-  private static final String LOGIN_PATH = "/api/v1/auth/login";
-  private static final String PASSWORD_RESET_PATH = "/api/v1/auth/password-reset";
-  private static final Set<String> PUBLIC_POST_PATHS =
-      Set.of(REGISTER_PATH, LOGIN_PATH, PASSWORD_RESET_PATH);
+  private static final List<String> PUBLIC_POST_PATHS =
+      List.of("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/password-reset");
 
   @Bean
   public SecurityFilterChain securityFilterChain(HttpSecurity http, ObjectMapper objectMapper)
@@ -57,8 +55,7 @@ public final class SecurityConfig {
             auth ->
                 auth.dispatcherTypeMatchers(DispatcherType.ERROR)
                     .permitAll()
-                    .requestMatchers(
-                        HttpMethod.POST, REGISTER_PATH, LOGIN_PATH, PASSWORD_RESET_PATH)
+                    .requestMatchers(HttpMethod.POST, PUBLIC_POST_PATHS.toArray(String[]::new))
                     .permitAll()
                     .requestMatchers(
                         "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/actuator/health")
@@ -80,6 +77,11 @@ public final class SecurityConfig {
                     .authenticationEntryPoint(entryPoint)
                     .accessDeniedHandler(accessDeniedHandler));
     return http.build();
+  }
+
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
   }
 
   @Bean
@@ -109,7 +111,7 @@ public final class SecurityConfig {
   // no per-request database lookup is needed to build the authorities.
   private static JwtAuthenticationConverter jwtAuthenticationConverter() {
     JwtGrantedAuthoritiesConverter authorities = new JwtGrantedAuthoritiesConverter();
-    authorities.setAuthoritiesClaimName("role");
+    authorities.setAuthoritiesClaimName(JwtConfig.ROLE_CLAIM);
     authorities.setAuthorityPrefix("ROLE_");
     JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
     converter.setJwtGrantedAuthoritiesConverter(authorities);

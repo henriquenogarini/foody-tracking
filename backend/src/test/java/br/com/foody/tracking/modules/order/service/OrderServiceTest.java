@@ -3,6 +3,7 @@ package br.com.foody.tracking.modules.order.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -114,7 +115,6 @@ class OrderServiceTest {
     Order order = newOrder();
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order)).thenReturn(order);
 
     // When
     OrderResponseDTO response =
@@ -132,7 +132,6 @@ class OrderServiceTest {
     // Given
     Order order = newOrder();
     when(orderRepository.findByPublicId(order.getPublicId())).thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order)).thenReturn(order);
 
     // When
     service.changeStatus(
@@ -179,7 +178,7 @@ class OrderServiceTest {
         .isInstanceOf(InvalidStatusTransitionException.class)
         .hasMessage("Transição de RECEBIDO para ENTREGUE não é permitida");
     assertThat(order.getStatus()).isEqualTo(OrderStatus.RECEBIDO);
-    verify(orderRepository, never()).saveAndFlush(any());
+    verify(orderRepository, never()).flush();
     verifyNoInteractions(eventPublisher);
   }
 
@@ -207,7 +206,6 @@ class OrderServiceTest {
     Order order = newOrder();
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order)).thenReturn(order);
 
     // When
     service.changeStatus(
@@ -231,8 +229,9 @@ class OrderServiceTest {
     Order order = newOrder();
     when(orderRepository.findByPublicIdAndOwnerPublicId(order.getPublicId(), owner.getPublicId()))
         .thenReturn(Optional.of(order));
-    when(orderRepository.saveAndFlush(order))
-        .thenThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getPublicId()));
+    doThrow(new ObjectOptimisticLockingFailureException(Order.class, order.getPublicId()))
+        .when(orderRepository)
+        .flush();
 
     // When / Then
     assertThatThrownBy(

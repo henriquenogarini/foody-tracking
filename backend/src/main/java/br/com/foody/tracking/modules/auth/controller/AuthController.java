@@ -109,7 +109,7 @@ public final class AuthController {
   }
 
   @GetMapping("/me")
-  @SecurityRequirement(name = "bearerAuth")
+  @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
   @Operation(
       summary = "Get the authenticated user",
       description = "Returns the account identified by the bearer token.")
